@@ -1,0 +1,13 @@
+{
+  "quality": {
+    "min_score": 80
+  },
+  "rules": {
+    "max_method_length": 120,
+    "max_class_length": 500,
+    "max_arguments": 16,
+    "max_methods_per_class": 21,
+    "max_file_loc": 400,
+    "max_cyclomatic_complexity": 26
+  }
+}

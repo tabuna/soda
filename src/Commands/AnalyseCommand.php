@@ -1,0 +1,81 @@
+<?php
+
+declare(strict_types=1);
+/*
+ * This file is part of Soda.
+ *
+ * (c) Bunnivo
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Bunnivo\Soda\Commands;
+
+use Bunnivo\Soda\Analyser;
+use Bunnivo\Soda\JsonResultFormatter;
+use Bunnivo\Soda\Result;
+use Bunnivo\Soda\TextResultFormatter;
+
+use function file_put_contents;
+
+use Illuminate\Console\Command;
+
+use function json_encode;
+
+use SebastianBergmann\FileIterator\Facade;
+
+final class AnalyseCommand extends Command
+{
+    protected $signature = 'analyse
+        {path?* : Directory or directories to analyse}
+        {--suffix= : Include files with names ending in suffix (default: .php)}
+        {--exclude=* : Exclude files with path in their path}
+        {--debug : Print debugging information}
+        {--report-json= : Write analysis report to JSON file}
+    ';
+
+    protected $description = 'Analyse PHP project size and collect metrics';
+
+    public function handle(): int
+    {
+        /** @var list<non-empty-string> $directories */
+        $directories = (array) $this->argument('path');
+
+        if ($directories === []) {
+            $this->error('No directory specified');
+
+            return self::FAILURE;
+        }
+
+        $suffixOpt = $this->option('suffix');
+        $suffixes = $suffixOpt === null ? ['.php'] : array_merge(['.php'], (array) $suffixOpt);
+        $exclude = (array) ($this->option('exclude') ?? []);
+
+        $files = (new Facade)->getFilesAsArray($directories, $suffixes, '', $exclude);
+
+        if ($files === []) {
+            $this->error('No files found to scan');
+
+            return self::FAILURE;
+        }
+
+        $result = (new Analyser)->analyse($files, (bool) $this->option('debug'));
+        $this->line((new TextResultFormatter)->format($result));
+        $this->writeReportJson($result);
+
+        return self::SUCCESS;
+    }
+
+    private function writeReportJson(Result $result): void
+    {
+        $reportJson = $this->option('report-json');
+        if (! is_string($reportJson) || $reportJson === '') {
+            return;
+        }
+
+        $data = (new JsonResultFormatter)->format($result);
+        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        file_put_contents($reportJson, $json);
+    }
+}

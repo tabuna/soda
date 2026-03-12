@@ -1,0 +1,22 @@
+{
+  "quality": {
+    "min_score": 96
+  },
+  "rules": {
+    "max_method_length": 90,
+    "max_class_length": 350,
+    "max_arguments": 4,
+    "max_methods_per_class": 50,
+    "max_file_loc": 400,
+    "max_cyclomatic_complexity": 16,
+    "max_properties_per_class": 30,
+    "max_public_methods": 50,
+    "max_dependencies": 5,
+    "max_classes_per_file": 1,
+    "max_namespace_depth": 4,
+    "max_classes_per_namespace": 16,
+    "max_traits_per_class": 2,
+    "max_interfaces_per_class": 2,
+    "max_classes_per_project": 1000
+  }
+}

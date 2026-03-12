@@ -1,0 +1,66 @@
+{
+    "name": "bunnivo/soda",
+    "description": "A tool for quickly measuring the size of a PHP project",
+    "homepage": "https://github.com/bunnivo/soda",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Bunnivo",
+            "role": "lead"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/bunnivo/soda/issues"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.27"
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.2",
+        "illuminate/console": "^12.0",
+        "illuminate/container": "^12.0",
+        "illuminate/events": "^12.0",
+        "nikic/php-parser": "^5.0",
+        "phpunit/php-file-iterator": "^5.1",
+        "sebastian/complexity": "^4.0",
+        "sebastian/lines-of-code": "^3.0",
+        "sebastian/version": "^5.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.28",
+        "phpunit/phpunit": "^11.0",
+        "vimeo/psalm": "^6.0"
+    },
+    "scripts": {
+        "test": "phpunit --fail-on-deprecation --display-deprecations",
+        "test:unit": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite end-to-end",
+        "quality": "@php soda quality src",
+        "pint": "pint",
+        "psalm": "psalm --no-progress --shepherd --show-info=false --stats",
+        "ci": [
+            "@pint",
+            "@psalm",
+            "@quality",
+            "@test"
+        ]
+    },
+    "autoload": {
+        "classmap": [
+            "src/"
+        ]
+    },
+    "bin": [
+        "soda"
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-main": "8.0-dev"
+        }
+    }
+}

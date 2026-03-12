@@ -1,0 +1,49 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Bunnivo\Soda\Commands\AnalyseCommand;
+use Bunnivo\Soda\Commands\InitCommand;
+use Bunnivo\Soda\Commands\QualityCommand;
+use Bunnivo\Soda\Application;
+use Illuminate\Events\Dispatcher;
+use Illuminate\Console\Application as ConsoleApplication;
+use SebastianBergmann\Version;
+
+$autoloadPaths = [
+    __DIR__ . '/vendor/autoload.php',
+    __DIR__ . '/../../autoload.php',
+];
+
+$autoloadLoaded = false;
+
+foreach ($autoloadPaths as $path) {
+    if (file_exists($path)) {
+        require $path;
+        $autoloadLoaded = true;
+        break;
+    }
+}
+
+if (!$autoloadLoaded) {
+    fwrite(STDERR, "Dependencies are missing. Run 'composer install'." . PHP_EOL);
+    exit(1);
+}
+
+$container = new Application();
+$events = new Dispatcher($container);
+$version = (new Version('1.0', __DIR__))->asString();
+
+$artisan = new ConsoleApplication($container, $events, $version);
+$artisan->setName('Soda');
+$artisan->setCatchExceptions(true);
+
+// Bind a command
+$artisan->resolveCommands([
+    AnalyseCommand::class, 
+    InitCommand::class, 
+    QualityCommand::class
+]);
+
+return $artisan->run();
