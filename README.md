@@ -2,12 +2,9 @@
 
 ## Introduction
 
-Soda is a lightweight code quality analyzer for PHP projects. It turns structural metrics—lines of code, cyclomatic
-complexity, dependencies—into configurable quality rules. Define limits for method length, class size, and more; Soda
-reports violations and computes a quality score (0–100). Exit code 0 or 1 makes it CI-ready.
+Keep your PHP code **clean, maintainable, and architecturally sound** with Soda.  
+Turn code metrics into enforceable quality rules—no god classes, no 500-line methods, no dependency sprawl.
 
-Traditional tools like PHPStan find type errors and Pint fixes formatting. Soda complements them by enforcing
-architectural rules: no god classes, no 500-line methods, no dependency graphs that spiral out of control.
 
 ## Installation
 
