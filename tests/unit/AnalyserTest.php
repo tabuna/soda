@@ -47,12 +47,17 @@ final class AnalyserTest extends TestCase
         $this->assertSame(2, $result->classesOrTraits());
         $this->assertSame(2, $result->complexity()->methods()['methods']);
 
+        $breathing = $result->breathing();
+        $this->assertNotNull($breathing);
+        $this->assertGreaterThanOrEqual(0, $breathing->cbs());
+
         $structure = $result->structure();
         $this->assertNotNull($structure);
-        $this->assertSame(1, $structure->namespaces());
-        $this->assertSame(1, $structure->interfaces());
-        $this->assertSame(1, $structure->traits());
-        $this->assertSame(1, $structure->classes());
-        $this->assertGreaterThanOrEqual(2, $structure->methods());
+        $arr = $structure->toArray();
+        $this->assertSame(1, $arr['namespaces']);
+        $this->assertSame(1, $arr['interfaces']);
+        $this->assertSame(1, $arr['traits']);
+        $this->assertSame(1, $arr['classes']);
+        $this->assertGreaterThanOrEqual(2, $arr['methods']);
     }
 }

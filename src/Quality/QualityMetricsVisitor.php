@@ -71,21 +71,12 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function enterNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_) {
-            $this->handleClassOrTrait($node);
-
-            return;
-        }
-
-        if ($node instanceof ClassMethod) {
-            $this->handleClassMethod($node);
-
-            return;
-        }
-
-        if ($node instanceof Function_) {
-            $this->handleFunction($node);
-        }
+        match (true) {
+            $node instanceof Class_, $node instanceof Trait_ => $this->handleClassOrTrait($node),
+            $node instanceof ClassMethod => $this->handleClassMethod($node),
+            $node instanceof Function_   => $this->handleFunction($node),
+            default                      => null,
+        };
     }
 
     private function handleClassOrTrait(Class_|Trait_ $node): void
@@ -95,6 +86,7 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
         }
 
         $name = $node->namespacedName?->toString();
+        /** @psalm-suppress TypeDoesNotContainType - Name::toString() can return '' for anonymous */
         if ($name === null || $name === '') {
             return;
         }
@@ -135,6 +127,7 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
     private function handleFunction(Function_ $node): void
     {
         $name = $node->namespacedName?->toString();
+        /** @psalm-suppress TypeDoesNotContainType - Name::toString() can return '' for anonymous */
         if ($name === null || $name === '') {
             return;
         }

@@ -8,6 +8,7 @@ use function array_key_first;
 
 use Bunnivo\Soda\Quality\EvaluationContext;
 use Bunnivo\Soda\Quality\RuleChecker as FluentRuleChecker;
+use Bunnivo\Soda\Quality\Violation;
 use Illuminate\Support\Collection;
 
 final class ProjectChecker implements RuleChecker
@@ -25,6 +26,7 @@ final class ProjectChecker implements RuleChecker
             ->limit($threshold)
             ->result();
 
+        /** @var Collection<int, Violation> */
         return collect($violations);
     }
 }

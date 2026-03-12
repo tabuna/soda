@@ -10,6 +10,9 @@
     <testsuite name="end-to-end">
       <directory suffix=".phpt">tests/end-to-end</directory>
     </testsuite>
+    <testsuite name="verification">
+      <directory>tests/verification</directory>
+    </testsuite>
   </testsuites>
   <source restrictNotices="true" restrictWarnings="true" ignoreIndirectDeprecations="true">
     <include>

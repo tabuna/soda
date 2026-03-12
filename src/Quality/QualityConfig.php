@@ -17,12 +17,18 @@ final readonly class QualityConfig
 {
     private const DEFAULT_MIN_SCORE = 80;
     private const DEFAULT_RULES = [
-        'max_method_length'         => 20,
-        'max_class_length'          => 500,
-        'max_arguments'             => 3,
-        'max_methods_per_class'     => 20,
-        'max_file_loc'              => 400,
-        'max_cyclomatic_complexity' => 10,
+        'max_method_length'                    => 20,
+        'max_class_length'                     => 500,
+        'max_arguments'                        => 3,
+        'max_methods_per_class'                => 20,
+        'max_file_loc'                         => 400,
+        'max_cyclomatic_complexity'            => 10,
+        'min_code_breathing_score'             => 0,
+        'min_visual_breathing_index'           => 12,
+        'min_identifier_readability_score'     => 75,
+        'min_code_oxygen_level'                => 25,
+        'max_weighted_cognitive_density'       => 30,
+        'max_logical_complexity_factor'        => 35,
     ];
 
     /**
@@ -31,13 +37,13 @@ final readonly class QualityConfig
     public int $minScore;
 
     /**
-     * @psalm-var array<string, positive-int>
+     * @psalm-var array<string, int|float>
      */
     public array $rules;
 
     /**
      * @psalm-param positive-int $minScore
-     * @psalm-param array<string, positive-int> $rules
+     * @psalm-param array<string, int|float> $rules
      */
     public function __construct(int $minScore = self::DEFAULT_MIN_SCORE, array $rules = self::DEFAULT_RULES)
     {
@@ -61,6 +67,9 @@ final readonly class QualityConfig
         return new self($minScore, $mergedRules);
     }
 
+    /**
+     * @throws ConfigException
+     */
     private static function assertReadable(string $path): void
     {
         if (! is_readable($path)) {
@@ -68,6 +77,9 @@ final readonly class QualityConfig
         }
     }
 
+    /**
+     * @throws ConfigException
+     */
     private static function readContent(string $path): string
     {
         $content = file_get_contents($path);
@@ -95,20 +107,21 @@ final readonly class QualityConfig
             throw new ConfigException('Config must be a JSON object');
         }
 
+        /** @var array<string, mixed> $data */
         return $data;
     }
 
     /**
      * @param array<string, mixed> $data
      *
+     * @throws ConfigException
+     *
      * @psalm-return positive-int
      */
     private static function parseMinScore(array $data): int
     {
-        $minScore = Arr::get($data, 'quality.min_score', self::DEFAULT_MIN_SCORE);
-        if (! is_int($minScore)) {
-            $minScore = self::DEFAULT_MIN_SCORE;
-        }
+        $raw = Arr::get($data, 'quality.min_score', self::DEFAULT_MIN_SCORE);
+        $minScore = is_int($raw) ? $raw : self::DEFAULT_MIN_SCORE;
 
         if ($minScore < 1 || $minScore > 100) {
             throw new ConfigException('min_score must be between 1 and 100');
@@ -120,16 +133,27 @@ final readonly class QualityConfig
     /**
      * @param array<string, mixed> $data
      *
-     * @psalm-return array<string, positive-int>
+     * @psalm-return array<string, int|float>
      */
     private static function mergeRules(array $data): array
     {
+        /** @var array<array-key, mixed> $rules */
         $rules = $data['rules'] ?? [];
 
-        return array_merge(
-            self::DEFAULT_RULES,
-            collect($rules)->filter(fn ($v) => is_int($v) && $v > 0)->all(),
-        );
+        $filtered = collect($rules)->filter(function (mixed $v, mixed $k): bool {
+            if (! is_numeric($v) || (float) $v < 0) {
+                return false;
+            }
+
+            return (float) $v > 0 || (is_string($k) && str_starts_with($k, 'min_'));
+        })->map(fn (mixed $v): int|float => is_int($v) ? $v : (float) $v)->all();
+
+        if (isset($filtered['min_cbs']) && ! isset($filtered['min_code_breathing_score'])) {
+            $filtered['min_code_breathing_score'] = $filtered['min_cbs'];
+        }
+
+        /** @var array<string, int|float> */
+        return array_merge(self::DEFAULT_RULES, $filtered);
     }
 
     public static function default(): self
@@ -138,10 +162,16 @@ final readonly class QualityConfig
     }
 
     /**
-     * @psalm-return int<0, max>
+     * @psalm-return int|float
      */
-    public function getRule(string $key): int
+    public function getRule(string $key): int|float
     {
-        return $this->rules[$key] ?? 0;
+        $value = $this->rules[$key] ?? 0;
+
+        if ($key === 'min_code_breathing_score' && $value <= 0 && isset($this->rules['min_cbs'])) {
+            return $this->rules['min_cbs'];
+        }
+
+        return $value;
     }
 }

@@ -12,7 +12,7 @@ use function array_merge;
 final class MetricsMerger
 {
     /**
-     * @param array<string, array<string, mixed>> $results
+     * @param array<array-key, array<string, mixed>> $results
      *
      * @return array<string, mixed>
      */

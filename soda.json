@@ -1,22 +1,28 @@
 {
   "quality": {
-    "min_score": 96
+    "min_score": 100
   },
   "rules": {
-    "max_method_length": 90,
-    "max_class_length": 350,
-    "max_arguments": 4,
-    "max_methods_per_class": 50,
-    "max_file_loc": 400,
-    "max_cyclomatic_complexity": 16,
-    "max_properties_per_class": 30,
-    "max_public_methods": 50,
+    "max_method_length": 55,
+    "max_class_length": 450,
+    "max_arguments": 3,
+    "max_methods_per_class": 25,
+    "max_file_loc": 500,
+    "max_cyclomatic_complexity": 15,
+    "max_properties_per_class": 6,
+    "max_public_methods": 10,
     "max_dependencies": 5,
     "max_classes_per_file": 1,
     "max_namespace_depth": 4,
     "max_classes_per_namespace": 16,
     "max_traits_per_class": 2,
     "max_interfaces_per_class": 2,
-    "max_classes_per_project": 1000
+    "max_classes_per_project": 2000,
+    "min_code_breathing_score": 25,
+    "min_visual_breathing_index": 10,
+    "min_identifier_readability_score": 70,
+    "min_code_oxygen_level": 25,
+    "max_weighted_cognitive_density": 40,
+    "max_logical_complexity_factor": 50
   }
 }

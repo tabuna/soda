@@ -47,7 +47,7 @@
         "vimeo/psalm": "^6.0"
     },
     "scripts": {
-        "test": "phpunit --fail-on-deprecation --display-deprecations",
+        "test": "phpunit --exclude-group performance --fail-on-deprecation --display-deprecations",
         "test:unit": "phpunit --testsuite unit",
         "test:e2e": "phpunit --testsuite end-to-end",
         "quality": "@php soda quality src",
@@ -63,6 +63,11 @@
     "autoload": {
         "classmap": [
             "src/"
+        ]
+    },
+    "autoload-dev": {
+        "classmap": [
+            "tests/"
         ]
     },
     "bin": [

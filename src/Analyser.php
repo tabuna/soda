@@ -5,28 +5,22 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use function assert;
+
+use Bunnivo\Soda\Breathing\AirinessFactors;
+use Bunnivo\Soda\Breathing\BreathingFactors;
+use Bunnivo\Soda\Breathing\BreathingMetrics;
+use Bunnivo\Soda\Breathing\CognitiveLoad;
+
 use function count;
 use function dirname;
 use function explode;
-use function file_get_contents;
 
 use Illuminate\Support\Collection;
 
 use function is_string;
 
-use PhpParser\Error;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\NodeVisitor\ParentConnectingVisitor;
-use PhpParser\Parser;
-use PhpParser\ParserFactory;
-use SebastianBergmann\Complexity\ComplexityCalculatingVisitor;
 use SebastianBergmann\Complexity\ComplexityCollection;
-use SebastianBergmann\LinesOfCode\LineCountingVisitor;
 use SebastianBergmann\LinesOfCode\LinesOfCode;
-
-use function sprintf;
-use function substr_count;
 
 final class Analyser
 {
@@ -35,7 +29,7 @@ final class Analyser
      */
     public function analyse(array $files, bool $debug): Result
     {
-        [$errors, $dirs, $complexity, $loc, $structureResults] = $this->collectFileMetrics($files, $debug);
+        [$errors, $dirs, $complexity, $loc, $structureResults, $breathingList] = $this->collectFileMetrics($files, $debug);
         $functionStats = $this->computeFunctionStats($complexity);
         $methodStats = $this->computeMethodStats($complexity);
         $classStats = $this->computeClassStats($complexity);
@@ -68,16 +62,20 @@ final class Analyser
             'classLowest'     => $classStats['minimum'],
             'classAverage'    => $classStats['average'],
             'classHighest'    => $classStats['maximum'],
-            'averagePerLloc'  => $lloc > 0 ? $totalComplexity / $lloc : 0.0,
+            'averagePerLloc'  => $lloc > 0 ? $totalComplexity / (float) $lloc : 0.0,
         ]);
 
-        return new Result($errors, $locMetrics, $complexityMetrics, $structure);
+        $breathing = $this->aggregateBreathing($breathingList);
+        $core = new CoreMetrics($locMetrics, $complexityMetrics);
+        $extended = new ExtendedMetrics($structure, $breathing);
+
+        return new Result($errors, $core, $extended);
     }
 
     /**
      * @psalm-param list<non-empty-string> $files
      *
-     * @psalm-return array{0: list<non-empty-string>, 1: list<string>, 2: ComplexityCollection, 3: LinesOfCode, 4: list<array<string, mixed>>}
+     * @psalm-return array{0: list<non-empty-string>, 1: list<string>, 2: ComplexityCollection, 3: LinesOfCode, 4: list<array<string, mixed>>, 5: list<BreathingMetrics>}
      */
     private function collectFileMetrics(array $files, bool $debug): array
     {
@@ -87,6 +85,7 @@ final class Analyser
         /** @psalm-suppress MissingThrowsDocblock */
         $loc = new LinesOfCode(0, 0, 0, 0);
         $structureResults = [];
+        $breathingList = [];
 
         foreach ($files as $file) {
             if ($debug) {
@@ -99,6 +98,7 @@ final class Analyser
                 $complexity = $complexity->mergeWith($result['complexity']);
                 $loc = $loc->plus($result['linesOfCode']);
                 $structureResults[] = $result['structure'];
+                $breathingList[] = $result['breathing'];
             } catch (ParserException $e) {
                 $message = $e->getMessage();
                 assert(is_string($message) && ! empty($message));
@@ -106,7 +106,31 @@ final class Analyser
             }
         }
 
-        return [$errors, $dirs, $complexity, $loc, $structureResults];
+        return [$errors, $dirs, $complexity, $loc, $structureResults, $breathingList];
+    }
+
+    /**
+     * @param list<BreathingMetrics> $list
+     */
+    private function aggregateBreathing(array $list): ?BreathingMetrics
+    {
+        if ($list === []) {
+            return null;
+        }
+
+        $wcd = collect($list)->avg(fn (BreathingMetrics $m) => $m->wcd()) ?? 0.0;
+        $lcf = collect($list)->avg(fn (BreathingMetrics $m) => $m->lcf()) ?? 0.0;
+        $vbi = collect($list)->avg(fn (BreathingMetrics $m) => $m->vbi()) ?? 0.0;
+        $irs = collect($list)->avg(fn (BreathingMetrics $m) => $m->irs()) ?? 0.0;
+        $col = collect($list)->avg(fn (BreathingMetrics $m) => $m->col()) ?? 0.0;
+        $cbs = collect($list)->avg(fn (BreathingMetrics $m) => $m->cbs()) ?? 0.0;
+
+        $factors = new BreathingFactors(
+            new CognitiveLoad($wcd, $lcf),
+            new AirinessFactors($vbi, $irs, $col),
+        );
+
+        return BreathingMetrics::fromFactors($factors, $cbs);
     }
 
     /**
@@ -157,9 +181,9 @@ final class Analyser
             ->values();
 
         return [
-            'minimum' => $values->min() ?? 0.0,
-            'average' => $values->avg() ?? 0.0,
-            'maximum' => $values->max() ?? 0.0,
+            'minimum' => (float) ($values->min() ?? 0.0),
+            'average' => (float) ($values->avg() ?? 0.0),
+            'maximum' => (float) ($values->max() ?? 0.0),
         ];
     }
 
@@ -173,59 +197,10 @@ final class Analyser
      *
      * @throws ParserException
      *
-     * @psalm-return array{complexity: ComplexityCollection, linesOfCode: LinesOfCode, structure: array<string, mixed>}
+     * @psalm-return array{complexity: ComplexityCollection, linesOfCode: LinesOfCode, structure: array<string, mixed>, breathing: BreathingMetrics}
      */
     private function analyseFile(string $file): array
     {
-        $parser = $this->parser();
-        $source = file_get_contents($file);
-        $lines = substr_count($source, "\n");
-
-        if ($lines === 0 && ! empty($source)) {
-            $lines = 1;
-        }
-
-        assert($lines >= 0);
-
-        try {
-            $nodes = $parser->parse($source);
-
-            assert($nodes !== null);
-
-            $traverser = new NodeTraverser;
-
-            $complexityCalculatingVisitor = new ComplexityCalculatingVisitor(false);
-            $lineCountingVisitor = new LineCountingVisitor($lines);
-            $structureVisitor = new Structure\MetricsVisitor();
-
-            $traverser->addVisitor(new NameResolver);
-            $traverser->addVisitor(new ParentConnectingVisitor);
-            $traverser->addVisitor($complexityCalculatingVisitor);
-            $traverser->addVisitor($lineCountingVisitor);
-            $traverser->addVisitor($structureVisitor);
-
-            $traverser->traverse($nodes);
-        } catch (Error $error) {
-            throw new ParserException(
-                sprintf(
-                    'Cannot parse %s: %s',
-                    $file,
-                    $error->getMessage(),
-                ),
-                $error->getCode(),
-                $error,
-            );
-        }
-
-        return [
-            'complexity'  => $complexityCalculatingVisitor->result(),
-            'linesOfCode' => $lineCountingVisitor->result(),
-            'structure'   => $structureVisitor->result(),
-        ];
-    }
-
-    private function parser(): Parser
-    {
-        return (new ParserFactory())->createForNewestSupportedVersion();
+        return (new FileAnalyser())->analyse($file);
     }
 }

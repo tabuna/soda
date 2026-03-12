@@ -32,7 +32,7 @@ final class ClassChecker
     }
 
     /**
-     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int} $data
+     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace?: string, namespace_depth?: int} $data
      *
      * @psalm-return list<Violation>
      */
@@ -51,7 +51,7 @@ final class ClassChecker
     }
 
     /**
-     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int} $data
+     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace?: string, namespace_depth?: int} $data
      *
      * @psalm-return list<Violation>
      */
@@ -67,7 +67,7 @@ final class ClassChecker
     }
 
     /**
-     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int} $data
+     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace?: string, namespace_depth?: int} $data
      *
      * @psalm-return list<Violation>
      */
@@ -83,7 +83,7 @@ final class ClassChecker
     }
 
     /**
-     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int} $data
+     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace?: string, namespace_depth?: int} $data
      *
      * @psalm-return list<Violation>
      */
@@ -99,7 +99,7 @@ final class ClassChecker
     }
 
     /**
-     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int} $data
+     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace?: string, namespace_depth?: int} $data
      *
      * @psalm-return list<Violation>
      */
@@ -120,7 +120,7 @@ final class ClassChecker
     }
 
     /**
-     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int} $data
+     * @psalm-param array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace?: string, namespace_depth?: int} $data
      *
      * @psalm-return list<Violation>
      */

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Structure\Metrics;
-
 final readonly class Result
 {
+    /**
+     * @param list<non-empty-string> $errors
+     */
     public function __construct(
         private array $errors,
-        private LocMetrics $loc,
-        private ComplexityMetrics $complexity,
-        private ?Metrics $structure = null,
+        private CoreMetrics $core,
+        private ?ExtendedMetrics $extended = null,
     ) {}
 
     /**
@@ -25,21 +25,26 @@ final readonly class Result
 
     public function loc(): LocMetrics
     {
-        return $this->loc;
+        return $this->core->loc();
     }
 
     public function complexity(): ComplexityMetrics
     {
-        return $this->complexity;
+        return $this->core->complexity();
     }
 
     public function classesOrTraits(): int
     {
-        return $this->complexity->methods()['classesOrTraits'];
+        return $this->core->complexity()->methods()['classesOrTraits'];
     }
 
-    public function structure(): ?Metrics
+    public function structure(): ?Structure\Metrics
     {
-        return $this->structure;
+        return $this->extended?->structure();
+    }
+
+    public function breathing(): ?Breathing\BreathingMetrics
+    {
+        return $this->extended?->breathing();
     }
 }

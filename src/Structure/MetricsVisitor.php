@@ -7,21 +7,8 @@ namespace Bunnivo\Soda\Structure;
 use function array_pop;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr\ArrowFunction;
-use PhpParser\Node\Expr\Closure;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\PropertyFetch;
-use PhpParser\Node\Expr\StaticCall;
-use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassConst;
-use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Const_;
-use PhpParser\Node\Stmt\Function_;
-use PhpParser\Node\Stmt\Global_;
-use PhpParser\Node\Stmt\Interface_;
-use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\NodeVisitorAbstract;
 
@@ -67,99 +54,15 @@ final class MetricsVisitor extends NodeVisitorAbstract
 
     private function handleStructureNodes(Node $node): bool
     {
-        if ($node instanceof Namespace_) {
-            $name = $node->name?->toString() ?? '';
-            if ($name !== '') {
-                $this->state->namespaces[$name] = true;
-            }
-
-            return true;
-        }
-
-        if ($node instanceof Interface_) {
-            $this->state->inc('interfaces');
-
-            return true;
-        }
-
-        if ($node instanceof Trait_) {
-            $this->state->inc('traits');
-
-            return true;
-        }
-
-        if ($node instanceof Class_) {
-            NodeHandlers::handleClass($this->state, $node);
-
-            return true;
-        }
-
-        if ($node instanceof ClassMethod) {
-            NodeHandlers::handleClassMethod($this->state, $node);
-
-            return true;
-        }
-
-        if ($node instanceof Function_) {
-            NodeHandlers::handleFunction($this->state, $node);
-
-            return true;
-        }
-
-        if ($node instanceof Closure || $node instanceof ArrowFunction) {
-            NodeHandlers::handleAnonymousFunction($this->state, $node);
-
-            return true;
-        }
-
-        if ($node instanceof ClassConst) {
-            NodeHandlers::handleClassConst($this->state, $node);
-
-            return true;
-        }
-
-        if ($node instanceof Const_) {
-            $this->state->inc('globalConstants');
-
-            return true;
-        }
-
-        if ($node instanceof Global_) {
-            $this->state->inc('globalVariableAccesses');
-
-            return true;
-        }
-
-        return false;
+        return StructureNodeHandlers::handleNamespace($this->state, $node)
+            || StructureNodeHandlers::handleTypeDeclarations($this->state, $node)
+            || StructureNodeHandlers::handleMembers($this->state, $node)
+            || StructureNodeHandlers::handleGlobals($this->state, $node);
     }
 
     private function handleExpressionNodes(Node $node): bool
     {
-        if ($node instanceof StaticCall) {
-            $this->state->inc('staticMethodCalls');
-
-            return true;
-        }
-
-        if ($node instanceof MethodCall) {
-            $this->state->inc('nonStaticMethodCalls');
-
-            return true;
-        }
-
-        if ($node instanceof StaticPropertyFetch) {
-            $this->state->inc('staticAttributeAccesses');
-
-            return true;
-        }
-
-        if ($node instanceof PropertyFetch) {
-            $this->state->inc('nonStaticAttributeAccesses');
-
-            return true;
-        }
-
-        return false;
+        return ExpressionHandlers::handle($this->state, $node);
     }
 
     /**

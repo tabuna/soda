@@ -54,7 +54,13 @@ Or create `soda.json` manually:
     "max_classes_per_namespace": 40,
     "max_traits_per_class": 3,
     "max_interfaces_per_class": 5,
-    "max_classes_per_project": 2000
+    "max_classes_per_project": 2000,
+    "min_code_breathing_score": 25,
+    "min_visual_breathing_index": 10,
+    "min_identifier_readability_score": 70,
+    "min_code_oxygen_level": 25,
+    "max_weighted_cognitive_density": 40,
+    "max_logical_complexity_factor": 50
   }
 }
 ```
@@ -119,8 +125,13 @@ Exit code is 0 when score ≥ min_score, 1 otherwise.
 | `max_traits_per_class`      | Max traits per class                 |
 | `max_interfaces_per_class`  | Max interfaces per class             |
 | `max_classes_per_project`   | Max classes in project               |
+| `min_code_breathing_score`  | Min Code Breathing Score             |
+| `min_visual_breathing_index`| Min Visual Breathing Index           |
+| `min_identifier_readability_score` | Min Identifier Readability Score |
+| `min_code_oxygen_level`     | Min Code Oxygen Level                |
+| `max_weighted_cognitive_density`   | Max Weighted Cognitive Density |
+| `max_logical_complexity_factor`    | Max Logical Complexity Factor  |
 
-Rules not listed in config are disabled.
 
 ## CI Integration
 

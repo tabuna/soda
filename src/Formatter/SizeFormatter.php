@@ -51,9 +51,10 @@ EOT,
 
     private function formatBreakdown(int $lloc, Metrics $structure): string
     {
-        $llocClasses = $structure->llocClasses();
-        $llocFunctions = $structure->llocFunctions();
-        $llocGlobal = $structure->llocGlobal();
+        $arr = $structure->toArray();
+        $llocClasses = $arr['llocClasses'];
+        $llocFunctions = $arr['llocFunctions'];
+        $llocGlobal = $arr['llocGlobal'];
 
         return sprintf(
             <<<'EOT'
@@ -74,18 +75,18 @@ EOT,
 EOT,
             number_format($llocClasses),
             self::pct($llocClasses, $lloc),
-            number_format($structure->classLlocAvg()),
-            number_format($structure->classLlocMin()),
-            number_format($structure->classLlocMax()),
-            number_format($structure->methodLlocAvg()),
-            number_format($structure->methodLlocMin()),
-            number_format($structure->methodLlocMax()),
-            number_format($structure->averageMethodsPerClass()),
-            number_format($structure->minimumMethodsPerClass()),
-            number_format($structure->maximumMethodsPerClass()),
+            number_format($arr['classLlocAvg']),
+            number_format($arr['classLlocMin']),
+            number_format($arr['classLlocMax']),
+            number_format($arr['methodLlocAvg']),
+            number_format($arr['methodLlocMin']),
+            number_format($arr['methodLlocMax']),
+            number_format($arr['averageMethodsPerClass']),
+            number_format($arr['minimumMethodsPerClass']),
+            number_format($arr['maximumMethodsPerClass']),
             number_format($llocFunctions),
             self::pct($llocFunctions, $lloc),
-            number_format($structure->averageFunctionLength()),
+            number_format($arr['averageFunctionLength']),
             number_format($llocGlobal),
             self::pct($llocGlobal, $lloc),
         );

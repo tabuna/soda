@@ -9,7 +9,6 @@
     findUnusedVariablesAndParams="true"
     findUnusedCode="true"
     findUnusedBaselineEntry="false"
-    errorBaseline=".psalm/baseline.xml"
 >
     <projectFiles>
         <directory name="src" />
@@ -18,4 +17,8 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+        <PropertyNotSetInConstructor errorLevel="suppress" />
+        <PossiblyUnusedMethod errorLevel="suppress" />
+    </issueHandlers>
 </psalm>

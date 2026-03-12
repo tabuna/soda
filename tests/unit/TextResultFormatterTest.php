@@ -29,25 +29,28 @@ final class TextResultFormatterTest extends TestCase
             (new TextResultFormatter)->format(
                 new Result(
                     [],
-                    new LocMetrics([
-                        'directories'           => 1,
-                        'files'                 => 2,
-                        'linesOfCode'           => 10,
-                        'commentLinesOfCode'    => 4,
-                        'nonCommentLinesOfCode' => 6,
-                        'logicalLinesOfCode'    => 3,
-                    ]),
-                    new ComplexityMetrics([
-                        'functions'       => 7,
-                        'funcLowest'      => 8,
-                        'funcAverage'     => 9.0,
-                        'funcHighest'     => 10,
-                        'classesOrTraits' => 11,
-                        'methods'         => 12,
-                        'methodLowest'    => 13,
-                        'methodAverage'   => 14.0,
-                        'methodHighest'   => 15,
-                    ]),
+                    new CoreMetrics(
+                        new LocMetrics([
+                            'directories'           => 1,
+                            'files'                 => 2,
+                            'linesOfCode'           => 10,
+                            'commentLinesOfCode'    => 4,
+                            'nonCommentLinesOfCode' => 6,
+                            'logicalLinesOfCode'    => 3,
+                        ]),
+                        new ComplexityMetrics([
+                            'functions'       => 7,
+                            'funcLowest'      => 8,
+                            'funcAverage'     => 9.0,
+                            'funcHighest'     => 10,
+                            'classesOrTraits' => 11,
+                            'methods'         => 12,
+                            'methodLowest'    => 13,
+                            'methodAverage'   => 14.0,
+                            'methodHighest'   => 15,
+                        ]),
+                    ),
+                    null,
                 ),
             ),
         );

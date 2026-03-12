@@ -42,7 +42,7 @@ final class ResultTest extends TestCase
             'methodHighest'   => 15,
         ], $overrides['complexity'] ?? []));
 
-        return new Result($overrides['errors'] ?? [], $loc, $complexity);
+        return new Result($overrides['errors'] ?? [], new CoreMetrics($loc, $complexity), null);
     }
 
     public function testMayHaveNoErrors(): void

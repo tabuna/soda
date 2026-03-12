@@ -14,7 +14,8 @@ final readonly class FileMetrics
      *   classes_count: int,
      *   classes: array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}>,
      *   methods: array<string, array{loc: int, args: int}>,
-     *   namespaces: array<string, int>
+     *   namespaces: array<string, int>,
+     *   breathing?: array<string, mixed>
      * }> $qualityMetrics
      * @psalm-param array<string, positive-int> $complexityByMethod
      * @psalm-param Collection<string, array{count: int, file: string}> $namespacesAggregated

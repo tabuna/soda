@@ -68,37 +68,37 @@ final class StructureMetricsTest extends TestCase
     public function testClassesReturnsSumOfAbstractFinalAndNonFinal(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(6, $m->classes());
+        $this->assertSame(6, $m->get('classes'));
     }
 
     public function testConcreteClassesReturnsFinalPlusNonFinal(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(5, $m->concreteClasses());
+        $this->assertSame(5, $m->get('concreteClasses'));
     }
 
     public function testMethodsReturnsNonStaticPlusStatic(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(12, $m->methods());
+        $this->assertSame(12, $m->get('methods'));
     }
 
     public function testFunctionsReturnsNamedPlusAnonymous(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(3, $m->functions());
+        $this->assertSame(3, $m->get('functions'));
     }
 
     public function testConstantsReturnsGlobalPlusClassConstants(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(6, $m->constants());
+        $this->assertSame(6, $m->get('constants'));
     }
 
     public function testClassConstantsReturnsPublicPlusNonPublic(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(6, $m->classConstants());
+        $this->assertSame(6, $m->get('classConstants'));
     }
 
     public function testGlobalAccessesReturnsSum(): void
@@ -108,37 +108,37 @@ final class StructureMetricsTest extends TestCase
             'superGlobalVariableAccesses' => 3,
             'globalConstantAccesses'      => 1,
         ]);
-        $this->assertSame(6, $m->globalAccesses());
+        $this->assertSame(6, $m->get('globalAccesses'));
     }
 
     public function testAttributeAccessesReturnsSum(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(12, $m->attributeAccesses());
+        $this->assertSame(12, $m->get('attributeAccesses'));
     }
 
     public function testMethodCallsReturnsSum(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(20, $m->methodCalls());
+        $this->assertSame(20, $m->get('methodCalls'));
     }
 
     public function testLlocGetters(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(100, $m->llocClasses());
-        $this->assertSame(20, $m->llocFunctions());
-        $this->assertSame(5, $m->llocGlobal());
+        $this->assertSame(100, $m->get('llocClasses'));
+        $this->assertSame(20, $m->get('llocFunctions'));
+        $this->assertSame(5, $m->get('llocGlobal'));
     }
 
     public function testClassAndMethodLlocStats(): void
     {
         $m = $this->createMetrics();
-        $this->assertSame(5, $m->classLlocMin());
-        $this->assertSame(20, $m->classLlocAvg());
-        $this->assertSame(50, $m->classLlocMax());
-        $this->assertSame(1, $m->methodLlocMin());
-        $this->assertSame(8, $m->methodLlocAvg());
-        $this->assertSame(25, $m->methodLlocMax());
+        $this->assertSame(5, $m->get('classLlocMin'));
+        $this->assertSame(20, $m->get('classLlocAvg'));
+        $this->assertSame(50, $m->get('classLlocMax'));
+        $this->assertSame(1, $m->get('methodLlocMin'));
+        $this->assertSame(8, $m->get('methodLlocAvg'));
+        $this->assertSame(25, $m->get('methodLlocMax'));
     }
 }

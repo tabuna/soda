@@ -29,10 +29,12 @@ final readonly class LocMetrics
             return ['comment' => 0.0, 'nonComment' => 0.0, 'logical' => 0.0];
         }
 
+        $locF = (float) $loc;
+
         return [
-            'comment'    => ($this->data['commentLinesOfCode'] / $loc) * 100,
-            'nonComment' => ($this->data['nonCommentLinesOfCode'] / $loc) * 100,
-            'logical'    => ($this->data['logicalLinesOfCode'] / $loc) * 100,
+            'comment'    => ((float) $this->data['commentLinesOfCode'] / $locF) * 100.0,
+            'nonComment' => ((float) $this->data['nonCommentLinesOfCode'] / $locF) * 100.0,
+            'logical'    => ((float) $this->data['logicalLinesOfCode'] / $locF) * 100.0,
         ];
     }
 }

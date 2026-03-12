@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality;
 
 use Bunnivo\Soda\Analyser;
+use Bunnivo\Soda\Breathing\BreathingAnalyser;
 use Bunnivo\Soda\ParserException;
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
 
@@ -25,6 +26,8 @@ final class QualityAnalyser
     /**
      * @psalm-param list<non-empty-string> $files
      * @psalm-param non-empty-string|null $configPath
+     *
+     * @throws ConfigException
      */
     public function analyse(array $files, bool $debug, ?string $configPath = null): QualityResult
     {
@@ -47,6 +50,7 @@ final class QualityAnalyser
             }
         }
 
+        /** @throws ConfigException */
         $config = ConfigResolver::resolveConfig($files, $configPath);
         $engine = QualityEngine::create($config);
 
@@ -90,7 +94,7 @@ final class QualityAnalyser
 
         $traverser = new NodeTraverser();
         $complexityVisitor = new ComplexityCalculatingVisitor(false);
-        $metricsVisitor = new QualityMetricsVisitor($lines);
+        $metricsVisitor = new QualityMetricsVisitor(max(0, $lines));
 
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor(new ParentConnectingVisitor());
@@ -101,6 +105,8 @@ final class QualityAnalyser
 
         $metrics = $metricsVisitor->result();
         $metrics['file_loc'] = $lines;
+        $breathing = BreathingAnalyser::analyse($source, $nodes);
+        $metrics['breathing'] = $breathing->toArray();
 
         return [
             'metrics'    => $metrics,

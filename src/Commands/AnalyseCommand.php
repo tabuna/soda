@@ -42,8 +42,9 @@ final class AnalyseCommand extends Command
 
         $suffixOpt = $this->option('suffix');
         $suffixes = $suffixOpt === null ? ['.php'] : array_merge(['.php'], (array) $suffixOpt);
+        /** @var list<non-empty-string> $suffixes */
         $exclude = (array) ($this->option('exclude') ?? []);
-
+        /** @var list<non-empty-string> $exclude */
         $files = (new Facade)->getFilesAsArray($directories, $suffixes, '', $exclude);
 
         if ($files === []) {

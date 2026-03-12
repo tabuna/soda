@@ -46,13 +46,40 @@ EOT;
         $label = $this->ruleMetadata->label($v->rule);
         $lim = $v->limits();
 
+        $valueStr = $this->formatLimitValue($v->rule, $lim['value'], $lim['threshold']);
+
         return sprintf(
-            '%s %s'.PHP_EOL.'   %s %d (max %d)'.PHP_EOL.PHP_EOL,
+            '%s %s'.PHP_EOL.'   %s %s'.PHP_EOL.PHP_EOL,
             $icon,
             $target,
             $label,
-            $lim['value'],
-            $lim['threshold'],
+            $valueStr,
         );
+    }
+
+    private const MIN_BREATHING_RULES = [
+        'min_code_breathing_score',
+        'min_visual_breathing_index',
+        'min_identifier_readability_score',
+        'min_code_oxygen_level',
+    ];
+
+    private function formatLimitValue(string $rule, int $value, int $threshold): string
+    {
+        if (in_array($rule, self::MIN_BREATHING_RULES, true)) {
+            return sprintf('%.2f (required ≥ %.2f)', $value / 100, $threshold / 100);
+        }
+
+        if ($rule === 'max_logical_complexity_factor') {
+            return sprintf('%.1f (max %.1f)', $value / 10, $threshold / 10);
+        }
+
+        if ($rule === 'max_weighted_cognitive_density') {
+            return sprintf('%d (max %d)', $value, $threshold);
+        }
+
+        $cmp = $this->ruleMetadata->comparison($rule);
+
+        return sprintf('%d (%s %d)', $value, $cmp, $threshold);
     }
 }

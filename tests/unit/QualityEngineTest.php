@@ -45,7 +45,7 @@ final class QualityEngineTest extends TestCase
             'methodHighest'   => 1,
         ]);
 
-        return new Result([], $loc, $complexity);
+        return new Result([], new CoreMetrics($loc, $complexity), null);
     }
 
     /**

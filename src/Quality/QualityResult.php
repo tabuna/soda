@@ -20,7 +20,7 @@ final readonly class QualityResult
     public Collection $violations;
 
     /**
-     * @psalm-param non-negative-int $score
+     * @psalm-param int $score
      * @psalm-param Collection<int, Violation>|list<Violation> $violations
      */
     public function __construct(
@@ -29,7 +29,9 @@ final readonly class QualityResult
         Collection|array $violations,
     ) {
         $this->score = max(0, min(100, $score));
-        $this->violations = $violations instanceof Collection ? $violations : collect($violations);
+        /** @var Collection<int, Violation> $col */
+        $col = $violations instanceof Collection ? $violations : collect($violations);
+        $this->violations = $col;
     }
 
     public function passes(int $minScore): bool

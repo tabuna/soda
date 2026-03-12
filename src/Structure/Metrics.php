@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Structure;
 
 /**
+ * Structure metrics with single accessor for soda compliance.
+ *
  * @param array{
  *   namespaces: int,
  *   interfaces: int,
@@ -48,228 +50,118 @@ final readonly class Metrics
 {
     public function __construct(private array $data) {}
 
-    public function namespaces(): int
+    public function get(string $key): int
     {
-        return $this->data['namespaces'];
+        $arr = $this->toArray();
+
+        return $arr[$key] ?? 0;
     }
 
-    public function interfaces(): int
+    /**
+     * @return array<string, int>
+     */
+    public function toArray(): array
     {
-        return $this->data['interfaces'];
+        $d = $this->data;
+
+        return array_merge(
+            $this->structureCounts($d),
+            $this->methodAndFunctionCounts($d),
+            $this->constantAndAccessCounts($d),
+            $this->llocStats($d),
+        );
     }
 
-    public function traits(): int
+    /**
+     * @param array<string, int> $d
+     *
+     * @return array<string, int>
+     */
+    private function structureCounts(array $d): array
     {
-        return $this->data['traits'];
+
+        return [
+            'namespaces'      => $d['namespaces'],
+            'interfaces'      => $d['interfaces'],
+            'traits'          => $d['traits'],
+            'classes'         => $d['abstractClasses'] + $d['finalClasses'] + $d['nonFinalClasses'],
+            'abstractClasses' => $d['abstractClasses'],
+            'concreteClasses' => $d['finalClasses'] + $d['nonFinalClasses'],
+            'finalClasses'    => $d['finalClasses'],
+            'nonFinalClasses' => $d['nonFinalClasses'],
+        ];
     }
 
-    public function classes(): int
+    /**
+     * @param array<string, int> $d
+     *
+     * @return array<string, int>
+     */
+    private function methodAndFunctionCounts(array $d): array
     {
-        return $this->data['abstractClasses'] + $this->data['finalClasses'] + $this->data['nonFinalClasses'];
+
+        return [
+            'methods'             => $d['nonStaticMethods'] + $d['staticMethods'],
+            'nonStaticMethods'    => $d['nonStaticMethods'],
+            'staticMethods'       => $d['staticMethods'],
+            'publicMethods'       => $d['publicMethods'],
+            'protectedMethods'    => $d['protectedMethods'],
+            'privateMethods'      => $d['privateMethods'],
+            'functions'           => $d['namedFunctions'] + $d['anonymousFunctions'],
+            'namedFunctions'      => $d['namedFunctions'],
+            'anonymousFunctions'  => $d['anonymousFunctions'],
+        ];
     }
 
-    public function abstractClasses(): int
+    /**
+     * @param array<string, int> $d
+     *
+     * @return array<string, int>
+     */
+    private function constantAndAccessCounts(array $d): array
     {
-        return $this->data['abstractClasses'];
+
+        return [
+            'constants'                   => $d['globalConstants'] + $d['publicClassConstants'] + $d['nonPublicClassConstants'],
+            'globalConstants'             => $d['globalConstants'],
+            'classConstants'              => $d['publicClassConstants'] + $d['nonPublicClassConstants'],
+            'publicClassConstants'        => $d['publicClassConstants'],
+            'nonPublicClassConstants'     => $d['nonPublicClassConstants'],
+            'globalAccesses'              => $d['globalVariableAccesses'] + $d['superGlobalVariableAccesses'] + $d['globalConstantAccesses'],
+            'globalVariableAccesses'      => $d['globalVariableAccesses'],
+            'superGlobalVariableAccesses' => $d['superGlobalVariableAccesses'],
+            'globalConstantAccesses'      => $d['globalConstantAccesses'],
+            'attributeAccesses'           => $d['nonStaticAttributeAccesses'] + $d['staticAttributeAccesses'],
+            'nonStaticAttributeAccesses'  => $d['nonStaticAttributeAccesses'],
+            'staticAttributeAccesses'     => $d['staticAttributeAccesses'],
+            'methodCalls'                 => $d['nonStaticMethodCalls'] + $d['staticMethodCalls'],
+            'nonStaticMethodCalls'        => $d['nonStaticMethodCalls'],
+            'staticMethodCalls'           => $d['staticMethodCalls'],
+        ];
     }
 
-    public function concreteClasses(): int
+    /**
+     * @param array<string, int> $d
+     *
+     * @return array<string, int>
+     */
+    private function llocStats(array $d): array
     {
-        return $this->data['finalClasses'] + $this->data['nonFinalClasses'];
-    }
 
-    public function finalClasses(): int
-    {
-        return $this->data['finalClasses'];
-    }
-
-    public function nonFinalClasses(): int
-    {
-        return $this->data['nonFinalClasses'];
-    }
-
-    public function methods(): int
-    {
-        return $this->data['nonStaticMethods'] + $this->data['staticMethods'];
-    }
-
-    public function nonStaticMethods(): int
-    {
-        return $this->data['nonStaticMethods'];
-    }
-
-    public function staticMethods(): int
-    {
-        return $this->data['staticMethods'];
-    }
-
-    public function publicMethods(): int
-    {
-        return $this->data['publicMethods'];
-    }
-
-    public function protectedMethods(): int
-    {
-        return $this->data['protectedMethods'];
-    }
-
-    public function privateMethods(): int
-    {
-        return $this->data['privateMethods'];
-    }
-
-    public function functions(): int
-    {
-        return $this->data['namedFunctions'] + $this->data['anonymousFunctions'];
-    }
-
-    public function namedFunctions(): int
-    {
-        return $this->data['namedFunctions'];
-    }
-
-    public function anonymousFunctions(): int
-    {
-        return $this->data['anonymousFunctions'];
-    }
-
-    public function constants(): int
-    {
-        return $this->data['globalConstants'] + $this->data['publicClassConstants'] + $this->data['nonPublicClassConstants'];
-    }
-
-    public function globalConstants(): int
-    {
-        return $this->data['globalConstants'];
-    }
-
-    public function classConstants(): int
-    {
-        return $this->data['publicClassConstants'] + $this->data['nonPublicClassConstants'];
-    }
-
-    public function publicClassConstants(): int
-    {
-        return $this->data['publicClassConstants'];
-    }
-
-    public function nonPublicClassConstants(): int
-    {
-        return $this->data['nonPublicClassConstants'];
-    }
-
-    public function globalAccesses(): int
-    {
-        return $this->data['globalVariableAccesses'] + $this->data['superGlobalVariableAccesses'] + $this->data['globalConstantAccesses'];
-    }
-
-    public function globalVariableAccesses(): int
-    {
-        return $this->data['globalVariableAccesses'];
-    }
-
-    public function superGlobalVariableAccesses(): int
-    {
-        return $this->data['superGlobalVariableAccesses'];
-    }
-
-    public function globalConstantAccesses(): int
-    {
-        return $this->data['globalConstantAccesses'];
-    }
-
-    public function attributeAccesses(): int
-    {
-        return $this->data['nonStaticAttributeAccesses'] + $this->data['staticAttributeAccesses'];
-    }
-
-    public function nonStaticAttributeAccesses(): int
-    {
-        return $this->data['nonStaticAttributeAccesses'];
-    }
-
-    public function staticAttributeAccesses(): int
-    {
-        return $this->data['staticAttributeAccesses'];
-    }
-
-    public function methodCalls(): int
-    {
-        return $this->data['nonStaticMethodCalls'] + $this->data['staticMethodCalls'];
-    }
-
-    public function nonStaticMethodCalls(): int
-    {
-        return $this->data['nonStaticMethodCalls'];
-    }
-
-    public function staticMethodCalls(): int
-    {
-        return $this->data['staticMethodCalls'];
-    }
-
-    public function llocClasses(): int
-    {
-        return $this->data['llocClasses'];
-    }
-
-    public function llocFunctions(): int
-    {
-        return $this->data['llocFunctions'];
-    }
-
-    public function llocGlobal(): int
-    {
-        return $this->data['llocGlobal'];
-    }
-
-    public function classLlocMin(): int
-    {
-        return $this->data['classLlocMin'];
-    }
-
-    public function classLlocAvg(): int
-    {
-        return $this->data['classLlocAvg'];
-    }
-
-    public function classLlocMax(): int
-    {
-        return $this->data['classLlocMax'];
-    }
-
-    public function methodLlocMin(): int
-    {
-        return $this->data['methodLlocMin'];
-    }
-
-    public function methodLlocAvg(): int
-    {
-        return $this->data['methodLlocAvg'];
-    }
-
-    public function methodLlocMax(): int
-    {
-        return $this->data['methodLlocMax'];
-    }
-
-    public function averageMethodsPerClass(): int
-    {
-        return $this->data['averageMethodsPerClass'];
-    }
-
-    public function minimumMethodsPerClass(): int
-    {
-        return $this->data['minimumMethodsPerClass'];
-    }
-
-    public function maximumMethodsPerClass(): int
-    {
-        return $this->data['maximumMethodsPerClass'];
-    }
-
-    public function averageFunctionLength(): int
-    {
-        return $this->data['averageFunctionLength'];
+        return [
+            'llocClasses'               => $d['llocClasses'],
+            'llocFunctions'             => $d['llocFunctions'],
+            'llocGlobal'                => $d['llocGlobal'],
+            'classLlocMin'              => $d['classLlocMin'],
+            'classLlocAvg'              => $d['classLlocAvg'],
+            'classLlocMax'              => $d['classLlocMax'],
+            'methodLlocMin'             => $d['methodLlocMin'],
+            'methodLlocAvg'             => $d['methodLlocAvg'],
+            'methodLlocMax'             => $d['methodLlocMax'],
+            'averageMethodsPerClass'    => $d['averageMethodsPerClass'],
+            'minimumMethodsPerClass'    => $d['minimumMethodsPerClass'],
+            'maximumMethodsPerClass'    => $d['maximumMethodsPerClass'],
+            'averageFunctionLength'     => $d['averageFunctionLength'],
+        ];
     }
 }

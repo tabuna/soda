@@ -6,6 +6,7 @@ namespace Bunnivo\Soda\Commands;
 
 use Bunnivo\Soda\JsonResultFormatter;
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
+use Bunnivo\Soda\Quality\ConfigException;
 use Bunnivo\Soda\Quality\QualityAnalyser;
 use Bunnivo\Soda\Quality\QualityResult;
 use Bunnivo\Soda\Quality\ReportFormatter;
@@ -32,8 +33,12 @@ final class QualityCommand extends Command
 
     protected $description = 'Analyse code quality and check against configured thresholds';
 
+    /**
+     * @throws ConfigException
+     */
     public function handle(): int
     {
+        /** @var list<non-empty-string> $directories */
         $directories = (array) $this->argument('path');
         if ($directories === []) {
             $this->error('No directory specified');
@@ -48,13 +53,14 @@ final class QualityCommand extends Command
             return self::FAILURE;
         }
 
-        $configPath = $this->resolveConfigPath();
         $analyser = new QualityAnalyser();
+        $configPath = $this->resolveConfigPath();
         $result = $analyser->analyse($files, (bool) $this->option('debug'), $configPath);
 
         $this->line((new ReportFormatter(RuleMetadata::default()))->format($result));
         $this->writeReportJson($result);
 
+        /** @throws ConfigException */
         $config = ConfigResolver::resolveConfig($files, $configPath);
 
         return $result->passes($config->minScore) ? self::SUCCESS : self::FAILURE;
@@ -69,15 +75,20 @@ final class QualityCommand extends Command
     {
         $suffixOpt = $this->option('suffix');
         $suffixes = $suffixOpt === null ? ['.php'] : array_merge(['.php'], (array) $suffixOpt);
+        /** @var list<non-empty-string> $suffixes */
         $exclude = (array) ($this->option('exclude') ?? []);
+        /** @var list<non-empty-string> $exclude */
 
         return (new Facade)->getFilesAsArray($directories, $suffixes, '', $exclude);
     }
 
+    /**
+     * @return non-empty-string|null
+     */
     private function resolveConfigPath(): ?string
     {
         $configOpt = $this->option('config');
-        if ($configOpt === null || $configOpt === '') {
+        if (! is_string($configOpt) || $configOpt === '') {
             return null;
         }
 

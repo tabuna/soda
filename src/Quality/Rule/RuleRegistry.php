@@ -20,6 +20,7 @@ final class RuleRegistry
     {
         return [
             new LocChecker(),
+            new BreathingChecker(),
             new ClassesChecker(),
             new ClassRules(new ClassChecker($config)),
             new MethodRules(new MethodChecker($config)),

@@ -24,8 +24,8 @@ final class MethodChecker
      */
     public function check(string $file, array $methods, array $complexityByMethod): Collection
     {
-        $maxLoc = $this->config->getRule('max_method_length');
-        $maxArgs = $this->config->getRule('max_arguments');
+        $maxLoc = (int) $this->config->getRule('max_method_length');
+        $maxArgs = (int) $this->config->getRule('max_arguments');
 
         return collect($methods)
             ->flatMap(function (array $data, string $name) use ($file, $maxLoc, $maxArgs, $complexityByMethod) {
@@ -46,7 +46,7 @@ final class MethodChecker
     }
 
     /**
-     * @psalm-param array{fullName: string, class: string|null, loc: int} $info
+     * @psalm-param array{fullName: string, class: string|null, loc: int, args?: int} $info
      *
      * @psalm-return list<Violation>
      */
@@ -63,7 +63,7 @@ final class MethodChecker
     }
 
     /**
-     * @psalm-param array{fullName: string, class: string|null, args: int} $info
+     * @psalm-param array{fullName: string, class: string|null, args: int, loc?: int} $info
      *
      * @psalm-return list<Violation>
      */
@@ -80,7 +80,7 @@ final class MethodChecker
     }
 
     /**
-     * @psalm-param array{fullName: string, class: string|null} $info
+     * @psalm-param array{fullName: string, class: string|null, loc?: int, args?: int} $info
      *
      * @psalm-return list<Violation>
      */

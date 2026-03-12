@@ -29,9 +29,10 @@ final readonly class DependenciesFormatter
 
     private function formatSection(Metrics $structure): string
     {
-        $global = $structure->globalAccesses();
-        $attrs = $structure->attributeAccesses();
-        $calls = $structure->methodCalls();
+        $arr = $structure->toArray();
+        $global = $arr['globalAccesses'];
+        $attrs = $arr['attributeAccesses'];
+        $calls = $arr['methodCalls'];
 
         return sprintf(
             <<<'EOT'
@@ -48,22 +49,22 @@ Dependencies
     Static                                            %20s (%.2f%%)
 EOT,
             number_format($global),
-            number_format($structure->globalConstantAccesses()),
-            self::pct($structure->globalConstantAccesses(), $global),
-            number_format($structure->globalVariableAccesses()),
-            self::pct($structure->globalVariableAccesses(), $global),
-            number_format($structure->superGlobalVariableAccesses()),
-            self::pct($structure->superGlobalVariableAccesses(), $global),
+            number_format($arr['globalConstantAccesses']),
+            self::pct($arr['globalConstantAccesses'], $global),
+            number_format($arr['globalVariableAccesses']),
+            self::pct($arr['globalVariableAccesses'], $global),
+            number_format($arr['superGlobalVariableAccesses']),
+            self::pct($arr['superGlobalVariableAccesses'], $global),
             number_format($attrs),
-            number_format($structure->nonStaticAttributeAccesses()),
-            self::pct($structure->nonStaticAttributeAccesses(), $attrs),
-            number_format($structure->staticAttributeAccesses()),
-            self::pct($structure->staticAttributeAccesses(), $attrs),
+            number_format($arr['nonStaticAttributeAccesses']),
+            self::pct($arr['nonStaticAttributeAccesses'], $attrs),
+            number_format($arr['staticAttributeAccesses']),
+            self::pct($arr['staticAttributeAccesses'], $attrs),
             number_format($calls),
-            number_format($structure->nonStaticMethodCalls()),
-            self::pct($structure->nonStaticMethodCalls(), $calls),
-            number_format($structure->staticMethodCalls()),
-            self::pct($structure->staticMethodCalls(), $calls),
+            number_format($arr['nonStaticMethodCalls']),
+            self::pct($arr['nonStaticMethodCalls'], $calls),
+            number_format($arr['staticMethodCalls']),
+            self::pct($arr['staticMethodCalls'], $calls),
         )."\n";
     }
 }

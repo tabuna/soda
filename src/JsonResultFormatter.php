@@ -30,48 +30,72 @@ final readonly class JsonResultFormatter
      */
     private function formatBase(Result $result): array
     {
-        $loc = $result->loc();
-        $s = $loc->stats();
+        $data = array_merge(
+            $this->formatLoc($result->loc()),
+            ['complexity' => $this->formatComplexity($result->complexity())],
+            ['errors'     => $result->errorInfo()['errors']],
+        );
+
+        $breathing = $result->breathing();
+        if ($breathing !== null) {
+            $data['breathing'] = $breathing->toArray();
+        }
+
+        return $data;
+    }
+
+    /**
+     * @return array{directories: int, files: int, loc: array<string, mixed>}
+     */
+    private function formatLoc(LocMetrics $loc): array
+    {
+        $stats = $loc->stats();
         $pct = $loc->percentages();
-        $c = $result->complexity();
-        $m = $c->methods();
-        $f = $c->functions();
-        $classStats = $c->classes();
 
         return [
-            'directories' => $s['directories'],
-            'files'       => $s['files'],
+            'directories' => $stats['directories'],
+            'files'       => $stats['files'],
             'loc'         => [
-                'linesOfCode'           => $s['linesOfCode'],
-                'commentLinesOfCode'    => $s['commentLinesOfCode'],
+                'linesOfCode'           => $stats['linesOfCode'],
+                'commentLinesOfCode'    => $stats['commentLinesOfCode'],
                 'commentPercentage'     => round($pct['comment'], 2),
-                'nonCommentLinesOfCode' => $s['nonCommentLinesOfCode'],
+                'nonCommentLinesOfCode' => $stats['nonCommentLinesOfCode'],
                 'nonCommentPercentage'  => round($pct['nonComment'], 2),
-                'logicalLinesOfCode'    => $s['logicalLinesOfCode'],
+                'logicalLinesOfCode'    => $stats['logicalLinesOfCode'],
                 'logicalPercentage'     => round($pct['logical'], 2),
             ],
-            'complexity' => [
-                'functions' => [
-                    'count'   => $f['count'],
-                    'lowest'  => $f['lowest'],
-                    'average' => round($f['average'], 2),
-                    'highest' => $f['highest'],
-                ],
-                'methods' => [
-                    'classesOrTraits' => $m['classesOrTraits'],
-                    'count'           => $m['methods'],
-                    'lowest'          => $m['lowest'],
-                    'average'         => round($m['average'], 2),
-                    'highest'         => $m['highest'],
-                ],
-                'classes' => [
-                    'lowest'  => round($classStats['lowest'], 2),
-                    'average' => round($classStats['average'], 2),
-                    'highest' => round($classStats['highest'], 2),
-                ],
-                'averagePerLloc' => round($c->averagePerLloc(), 2),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatComplexity(ComplexityMetrics $complexity): array
+    {
+        $methods = $complexity->methods();
+        $functions = $complexity->functions();
+        $classes = $complexity->classes();
+
+        return [
+            'functions' => [
+                'count'   => $functions['count'],
+                'lowest'  => $functions['lowest'],
+                'average' => round($functions['average'], 2),
+                'highest' => $functions['highest'],
             ],
-            'errors' => $result->errorInfo()['errors'],
+            'methods' => [
+                'classesOrTraits' => $methods['classesOrTraits'],
+                'count'           => $methods['methods'],
+                'lowest'          => $methods['lowest'],
+                'average'         => round($methods['average'], 2),
+                'highest'         => $methods['highest'],
+            ],
+            'classes' => [
+                'lowest'  => round($classes['lowest'], 2),
+                'average' => round($classes['average'], 2),
+                'highest' => round($classes['highest'], 2),
+            ],
+            'averagePerLloc' => round($complexity->averagePerLloc(), 2),
         ];
     }
 
@@ -84,26 +108,26 @@ final readonly class JsonResultFormatter
             $this->formatStructureCounts($structure),
             [
                 'lloc' => [
-                    'classes'   => $structure->llocClasses(),
-                    'functions' => $structure->llocFunctions(),
-                    'global'    => $structure->llocGlobal(),
+                    'classes'   => $structure->get('llocClasses'),
+                    'functions' => $structure->get('llocFunctions'),
+                    'global'    => $structure->get('llocGlobal'),
                 ],
                 'classLength' => [
-                    'min' => $structure->classLlocMin(),
-                    'avg' => $structure->classLlocAvg(),
-                    'max' => $structure->classLlocMax(),
+                    'min' => $structure->get('classLlocMin'),
+                    'avg' => $structure->get('classLlocAvg'),
+                    'max' => $structure->get('classLlocMax'),
                 ],
                 'methodLength' => [
-                    'min' => $structure->methodLlocMin(),
-                    'avg' => $structure->methodLlocAvg(),
-                    'max' => $structure->methodLlocMax(),
+                    'min' => $structure->get('methodLlocMin'),
+                    'avg' => $structure->get('methodLlocAvg'),
+                    'max' => $structure->get('methodLlocMax'),
                 ],
                 'methodsPerClass' => [
-                    'min' => $structure->minimumMethodsPerClass(),
-                    'avg' => $structure->averageMethodsPerClass(),
-                    'max' => $structure->maximumMethodsPerClass(),
+                    'min' => $structure->get('minimumMethodsPerClass'),
+                    'avg' => $structure->get('averageMethodsPerClass'),
+                    'max' => $structure->get('maximumMethodsPerClass'),
                 ],
-                'averageFunctionLength' => $structure->averageFunctionLength(),
+                'averageFunctionLength' => $structure->get('averageFunctionLength'),
                 'dependencies'          => $this->formatStructureDependencies($structure),
             ],
         );
@@ -114,29 +138,31 @@ final readonly class JsonResultFormatter
      */
     private function formatStructureCounts(Metrics $structure): array
     {
+        $arr = $structure->toArray();
+
         return [
-            'namespaces'              => $structure->namespaces(),
-            'interfaces'              => $structure->interfaces(),
-            'traits'                  => $structure->traits(),
-            'classes'                 => $structure->classes(),
-            'abstractClasses'         => $structure->abstractClasses(),
-            'concreteClasses'         => $structure->concreteClasses(),
-            'finalClasses'            => $structure->finalClasses(),
-            'nonFinalClasses'         => $structure->nonFinalClasses(),
-            'methods'                 => $structure->methods(),
-            'nonStaticMethods'        => $structure->nonStaticMethods(),
-            'staticMethods'           => $structure->staticMethods(),
-            'publicMethods'           => $structure->publicMethods(),
-            'protectedMethods'        => $structure->protectedMethods(),
-            'privateMethods'          => $structure->privateMethods(),
-            'functions'               => $structure->functions(),
-            'namedFunctions'          => $structure->namedFunctions(),
-            'anonymousFunctions'      => $structure->anonymousFunctions(),
-            'constants'               => $structure->constants(),
-            'globalConstants'         => $structure->globalConstants(),
-            'classConstants'          => $structure->classConstants(),
-            'publicClassConstants'    => $structure->publicClassConstants(),
-            'nonPublicClassConstants' => $structure->nonPublicClassConstants(),
+            'namespaces'              => $arr['namespaces'],
+            'interfaces'              => $arr['interfaces'],
+            'traits'                  => $arr['traits'],
+            'classes'                 => $arr['classes'],
+            'abstractClasses'         => $arr['abstractClasses'],
+            'concreteClasses'         => $arr['concreteClasses'],
+            'finalClasses'            => $arr['finalClasses'],
+            'nonFinalClasses'         => $arr['nonFinalClasses'],
+            'methods'                 => $arr['methods'],
+            'nonStaticMethods'        => $arr['nonStaticMethods'],
+            'staticMethods'           => $arr['staticMethods'],
+            'publicMethods'           => $arr['publicMethods'],
+            'protectedMethods'        => $arr['protectedMethods'],
+            'privateMethods'          => $arr['privateMethods'],
+            'functions'               => $arr['functions'],
+            'namedFunctions'          => $arr['namedFunctions'],
+            'anonymousFunctions'      => $arr['anonymousFunctions'],
+            'constants'               => $arr['constants'],
+            'globalConstants'         => $arr['globalConstants'],
+            'classConstants'          => $arr['classConstants'],
+            'publicClassConstants'    => $arr['publicClassConstants'],
+            'nonPublicClassConstants' => $arr['nonPublicClassConstants'],
         ];
     }
 
@@ -145,17 +171,19 @@ final readonly class JsonResultFormatter
      */
     private function formatStructureDependencies(Metrics $structure): array
     {
+        $arr = $structure->toArray();
+
         return [
-            'globalAccesses'              => $structure->globalAccesses(),
-            'globalVariableAccesses'      => $structure->globalVariableAccesses(),
-            'superGlobalVariableAccesses' => $structure->superGlobalVariableAccesses(),
-            'globalConstantAccesses'      => $structure->globalConstantAccesses(),
-            'attributeAccesses'           => $structure->attributeAccesses(),
-            'nonStaticAttributeAccesses'  => $structure->nonStaticAttributeAccesses(),
-            'staticAttributeAccesses'     => $structure->staticAttributeAccesses(),
-            'methodCalls'                 => $structure->methodCalls(),
-            'nonStaticMethodCalls'        => $structure->nonStaticMethodCalls(),
-            'staticMethodCalls'           => $structure->staticMethodCalls(),
+            'globalAccesses'              => $arr['globalAccesses'],
+            'globalVariableAccesses'      => $arr['globalVariableAccesses'],
+            'superGlobalVariableAccesses' => $arr['superGlobalVariableAccesses'],
+            'globalConstantAccesses'      => $arr['globalConstantAccesses'],
+            'attributeAccesses'           => $arr['attributeAccesses'],
+            'nonStaticAttributeAccesses'  => $arr['nonStaticAttributeAccesses'],
+            'staticAttributeAccesses'     => $arr['staticAttributeAccesses'],
+            'methodCalls'                 => $arr['methodCalls'],
+            'nonStaticMethodCalls'        => $arr['nonStaticMethodCalls'],
+            'staticMethodCalls'           => $arr['staticMethodCalls'],
         ];
     }
 }

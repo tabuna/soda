@@ -61,7 +61,7 @@ EOT,
         $m = $c->methods();
         $classStats = $c->classes();
 
-        return sprintf(
+        $buf = sprintf(
             <<<'EOT'
 Cyclomatic Complexity
   Average Complexity per LLOC                         %20.2f
@@ -80,5 +80,29 @@ EOT,
             $m['lowest'],
             $m['highest'],
         )."\n";
+
+        $breathing = $result->breathing();
+        if ($breathing !== null) {
+            $buf .= sprintf(
+                <<<'EOT'
+
+Code Breathing Score (CBS)
+  Weighted Cognitive Density (WCD)                     %20.2f
+  Logical Complexity Factor (LCF)                      %20.2f
+  Visual Breathing Index (VBI)                        %20.2f
+  Identifier Readability Score (IRS)                 %20.2f
+  Code Oxygen Level (COL)                              %20.2f
+  Code Breathing Score (CBS)                           %20.2f
+EOT,
+                $breathing->wcd(),
+                $breathing->lcf(),
+                $breathing->vbi(),
+                $breathing->irs(),
+                $breathing->col(),
+                $breathing->cbs(),
+            )."\n";
+        }
+
+        return $buf;
     }
 }

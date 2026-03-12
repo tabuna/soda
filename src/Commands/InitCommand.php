@@ -9,7 +9,6 @@ use function getcwd;
 
 use Illuminate\Console\Command;
 
-use function is_string;
 use function json_encode;
 
 final class InitCommand extends Command
@@ -23,28 +22,35 @@ final class InitCommand extends Command
             'min_score' => 80,
         ],
         'rules' => [
-            'max_method_length'         => 120,
-            'max_class_length'          => 500,
-            'max_arguments'             => 16,
-            'max_methods_per_class'     => 21,
-            'max_file_loc'              => 400,
-            'max_cyclomatic_complexity' => 26,
-            'max_properties_per_class'  => 20,
-            'max_public_methods'        => 15,
-            'max_dependencies'          => 20,
-            'max_classes_per_file'      => 1,
-            'max_namespace_depth'       => 4,
-            'max_classes_per_namespace' => 40,
-            'max_traits_per_class'      => 3,
-            'max_interfaces_per_class'  => 5,
-            'max_classes_per_project'   => 2000,
+            'max_method_length'                    => 120,
+            'max_class_length'                     => 500,
+            'max_arguments'                        => 16,
+            'max_methods_per_class'                => 21,
+            'max_file_loc'                         => 400,
+            'max_cyclomatic_complexity'            => 26,
+            'max_properties_per_class'             => 20,
+            'max_public_methods'                   => 15,
+            'max_dependencies'                     => 20,
+            'max_classes_per_file'                 => 1,
+            'max_namespace_depth'                  => 4,
+            'max_classes_per_namespace'            => 40,
+            'max_traits_per_class'                 => 3,
+            'max_interfaces_per_class'             => 5,
+            'max_classes_per_project'              => 2000,
+            'min_code_breathing_score'             => 40,
+            'min_visual_breathing_index'           => 12,
+            'min_identifier_readability_score'     => 75,
+            'min_code_oxygen_level'                => 25,
+            'max_weighted_cognitive_density'       => 30,
+            'max_logical_complexity_factor'        => 35,
         ],
     ];
 
     public function handle(): int
     {
         $cwd = getcwd();
-        if (! is_string($cwd) || $cwd === '') {
+        /** @psalm-suppress TypeDoesNotContainType - getcwd() can return '' on edge cases */
+        if ($cwd === false || $cwd === '') {
             $this->error('Cannot determine current directory');
 
             return self::FAILURE;
