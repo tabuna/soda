@@ -14,7 +14,6 @@ namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
-use Bunnivo\Soda\Quality\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Small;
@@ -322,7 +321,7 @@ final class QualityEngineTest extends TestCase
         $classesOrTraits = $rule === 'max_classes_per_project' ? 10 : 1;
         $result = $engine->evaluate(self::createResult($classesOrTraits), $metrics, $complexity);
 
-        $rules = array_column(array_map(fn (Violation $v) => ['rule' => $v->rule], $result->violations), 'rule');
+        $rules = $result->violations->pluck('rule')->all();
         $this->assertContains($expectedRule, $rules, "Rule {$expectedRule} should produce violation");
     }
 
@@ -355,6 +354,6 @@ final class QualityEngineTest extends TestCase
 
         $result = $engine->evaluate(self::createResult(5000), $metrics, ['App\Foo::bar' => 100]);
 
-        $this->assertEmpty($result->violations);
+        $this->assertCount(0, $result->violations);
     }
 }

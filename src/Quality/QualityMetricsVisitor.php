@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
 
@@ -109,7 +101,7 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
 
         $this->classStack[] = $name;
         $this->result['classes_count']++;
-        $this->result['classes'][$name] = ClassMetricsExtractor::extract($node);
+        $this->result['classes'][$name] = MetricsExtractor::extract($node);
         $this->updateNamespace($name);
     }
 
@@ -130,13 +122,13 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
             return;
         }
 
-        $className = $this->classStack !== [] ? $this->classStack[array_key_last($this->classStack)] : 'unknown';
-        $fullName = $className.'::'.$node->name->toString();
+        $class = $this->classStack !== [] ? $this->classStack[array_key_last($this->classStack)] : 'unknown';
+        $name = $class.'::'.$node->name->toString();
         $loc = $node->getEndLine() - $node->getStartLine() + 1;
 
-        $this->result['methods'][$fullName] = ['loc' => $loc, 'args' => count($node->params)];
-        if (isset($this->result['classes'][$className])) {
-            $this->result['classes'][$className]['methods']++;
+        $this->result['methods'][$name] = ['loc' => $loc, 'args' => count($node->params)];
+        if (isset($this->result['classes'][$class])) {
+            $this->result['classes'][$class]['methods']++;
         }
     }
 

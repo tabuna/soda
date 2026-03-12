@@ -1,16 +1,10 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality\EvaluationContext;
+
+use Illuminate\Support\Collection;
 
 final readonly class FileMetrics
 {
@@ -23,11 +17,11 @@ final readonly class FileMetrics
      *   namespaces: array<string, int>
      * }> $qualityMetrics
      * @psalm-param array<string, positive-int> $complexityByMethod
-     * @psalm-param array<string, array{count: int, file: string}> $namespacesAggregated
+     * @psalm-param Collection<string, array{count: int, file: string}> $namespacesAggregated
      */
     public function __construct(
         public array $qualityMetrics,
         public array $complexityByMethod,
-        public array $namespacesAggregated,
+        public Collection $namespacesAggregated,
     ) {}
 }

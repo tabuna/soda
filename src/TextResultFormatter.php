@@ -1,22 +1,14 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda;
 
 use function assert;
 
-use Bunnivo\Soda\Formatter\DependenciesSectionFormatter;
-use Bunnivo\Soda\Formatter\SizeSectionFormatter;
-use Bunnivo\Soda\Formatter\StructureSectionFormatter;
+use Bunnivo\Soda\Formatter\DependenciesFormatter;
+use Bunnivo\Soda\Formatter\SizeFormatter;
+use Bunnivo\Soda\Formatter\StructureFormatter;
 
 use function number_format;
 use function sprintf;
@@ -24,9 +16,9 @@ use function sprintf;
 final readonly class TextResultFormatter
 {
     public function __construct(
-        private SizeSectionFormatter $sizeFormatter = new SizeSectionFormatter(),
-        private DependenciesSectionFormatter $depsFormatter = new DependenciesSectionFormatter(),
-        private StructureSectionFormatter $structureFormatter = new StructureSectionFormatter(),
+        private SizeFormatter $sizeFormatter = new SizeFormatter(),
+        private DependenciesFormatter $depsFormatter = new DependenciesFormatter(),
+        private StructureFormatter $structureFormatter = new StructureFormatter(),
     ) {}
 
     /**
@@ -34,15 +26,18 @@ final readonly class TextResultFormatter
      */
     public function format(Result $result): string
     {
-        $buffer = $this->formatHeader($result);
-        $buffer .= $this->sizeFormatter->format($result);
-        $buffer .= $this->formatComplexity($result);
-        $buffer .= $this->depsFormatter->format($result);
-        $buffer .= $this->structureFormatter->format($result);
+        $buf = collect([
+            $this->formatHeader($result),
+            $this->sizeFormatter->format($result),
+            $this->formatComplexity($result),
+            $this->depsFormatter->format($result),
+            $this->structureFormatter->format($result),
+        ])
+            ->implode('');
 
-        assert($buffer !== '');
+        assert($buf !== '');
 
-        return $buffer;
+        return $buf;
     }
 
     private function formatHeader(Result $result): string
@@ -64,7 +59,7 @@ EOT,
     {
         $c = $result->complexity();
         $m = $c->methods();
-        $classCcn = $c->classes();
+        $classStats = $c->classes();
 
         return sprintf(
             <<<'EOT'
@@ -78,9 +73,9 @@ Cyclomatic Complexity
     Maximum Method Complexity                         %20.2f
 EOT,
             $c->averagePerLloc(),
-            $classCcn['average'],
-            $classCcn['lowest'],
-            $classCcn['highest'],
+            $classStats['average'],
+            $classStats['lowest'],
+            $classStats['highest'],
             $m['average'],
             $m['lowest'],
             $m['highest'],

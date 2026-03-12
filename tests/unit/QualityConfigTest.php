@@ -13,8 +13,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
+use Bunnivo\Soda\Quality\ConfigException;
 use Bunnivo\Soda\Quality\QualityConfig;
-use Bunnivo\Soda\Quality\QualityConfigException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
@@ -48,7 +48,7 @@ final class QualityConfigTest extends TestCase
 
     public function testFromFileThrowsWhenNotReadable(): void
     {
-        $this->expectException(QualityConfigException::class);
+        $this->expectException(ConfigException::class);
         $this->expectExceptionMessage('Config file not readable');
 
         QualityConfig::fromFile('/nonexistent/code-quality.json');

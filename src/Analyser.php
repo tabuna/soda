@@ -1,23 +1,17 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda;
 
-use function array_unique;
 use function assert;
 use function count;
 use function dirname;
 use function explode;
 use function file_get_contents;
+
+use Illuminate\Support\Collection;
+
 use function is_string;
 
 use PhpParser\Error;
@@ -41,24 +35,24 @@ final class Analyser
      */
     public function analyse(array $files, bool $debug): Result
     {
-        [$errors, $directories, $complexity, $linesOfCode, $structureResults] = $this->collectFileMetrics($files, $debug);
+        [$errors, $dirs, $complexity, $loc, $structureResults] = $this->collectFileMetrics($files, $debug);
         $functionStats = $this->computeFunctionStats($complexity);
         $methodStats = $this->computeMethodStats($complexity);
         $classStats = $this->computeClassStats($complexity);
-        $lloc = $linesOfCode->logicalLinesOfCode();
-        $mergedStructure = Structure\MetricsMerger::merge($structureResults);
-        $structureStats = Structure\StatsCalculator::compute($mergedStructure, $lloc);
+        $lloc = $loc->logicalLinesOfCode();
+        $merged = Structure\MetricsMerger::merge($structureResults);
+        $structureStats = Structure\StatsCalculator::compute($merged, $lloc);
 
-        $loc = new LocMetrics([
-            'directories'           => count(array_unique($directories)),
+        $locMetrics = new LocMetrics([
+            'directories'           => collect($dirs)->unique()->count(),
             'files'                 => count($files),
-            'linesOfCode'           => $linesOfCode->linesOfCode(),
-            'commentLinesOfCode'    => $linesOfCode->commentLinesOfCode(),
-            'nonCommentLinesOfCode' => $linesOfCode->nonCommentLinesOfCode(),
+            'linesOfCode'           => $loc->linesOfCode(),
+            'commentLinesOfCode'    => $loc->commentLinesOfCode(),
+            'nonCommentLinesOfCode' => $loc->nonCommentLinesOfCode(),
             'logicalLinesOfCode'    => $lloc,
         ]);
 
-        $structure = new Structure\Metrics(array_merge($mergedStructure, $structureStats));
+        $structure = new Structure\Metrics(array_merge($merged, $structureStats));
 
         $totalComplexity = $this->totalComplexity($complexity);
         $complexityMetrics = new ComplexityMetrics([
@@ -77,7 +71,7 @@ final class Analyser
             'averagePerLloc'  => $lloc > 0 ? $totalComplexity / $lloc : 0.0,
         ]);
 
-        return new Result($errors, $loc, $complexityMetrics, $structure);
+        return new Result($errors, $locMetrics, $complexityMetrics, $structure);
     }
 
     /**
@@ -88,22 +82,22 @@ final class Analyser
     private function collectFileMetrics(array $files, bool $debug): array
     {
         $errors = [];
-        $directories = [];
+        $dirs = [];
         $complexity = ComplexityCollection::fromList();
         /** @psalm-suppress MissingThrowsDocblock */
-        $linesOfCode = new LinesOfCode(0, 0, 0, 0);
+        $loc = new LinesOfCode(0, 0, 0, 0);
         $structureResults = [];
 
         foreach ($files as $file) {
             if ($debug) {
                 echo $file.PHP_EOL;
             }
-            $directories[] = dirname($file);
+            $dirs[] = dirname($file);
 
             try {
                 $result = $this->analyseFile($file);
                 $complexity = $complexity->mergeWith($result['complexity']);
-                $linesOfCode = $linesOfCode->plus($result['linesOfCode']);
+                $loc = $loc->plus($result['linesOfCode']);
                 $structureResults[] = $result['structure'];
             } catch (ParserException $e) {
                 $message = $e->getMessage();
@@ -112,7 +106,7 @@ final class Analyser
             }
         }
 
-        return [$errors, $directories, $complexity, $linesOfCode, $structureResults];
+        return [$errors, $dirs, $complexity, $loc, $structureResults];
     }
 
     /**
@@ -137,11 +131,10 @@ final class Analyser
     private function computeMethodStats(ComplexityCollection $complexity): array
     {
         $items = $complexity->isMethod();
-        $classesOrTraits = [];
-        foreach ($items as $item) {
-            $classesOrTraits[] = explode('::', $item->name())[0];
-        }
-        $classesOrTraits = count(array_unique($classesOrTraits));
+        $classesOrTraits = collect($items)
+            ->map(fn ($item) => explode('::', $item->name())[0])
+            ->unique()
+            ->count();
         $stats = ComplexityStatistics::from($items);
 
         return [
@@ -158,29 +151,21 @@ final class Analyser
      */
     private function computeClassStats(ComplexityCollection $complexity): array
     {
-        $items = $complexity->isMethod();
-        $classes = [];
-        foreach ($items as $item) {
-            $class = explode('::', $item->name())[0];
-            $classes[$class] = ($classes[$class] ?? 0) + $item->cyclomaticComplexity();
-        }
-        $values = array_values($classes);
+        $values = collect($complexity->isMethod())
+            ->groupBy(fn ($item) => explode('::', $item->name())[0])
+            ->map(fn (Collection $group) => $group->sum(fn ($item) => $item->cyclomaticComplexity()))
+            ->values();
 
         return [
-            'minimum' => ! empty($values) ? (float) min($values) : 0.0,
-            'average' => ! empty($values) ? array_sum($values) / count($values) : 0.0,
-            'maximum' => ! empty($values) ? (float) max($values) : 0.0,
+            'minimum' => $values->min() ?? 0.0,
+            'average' => $values->avg() ?? 0.0,
+            'maximum' => $values->max() ?? 0.0,
         ];
     }
 
     private function totalComplexity(ComplexityCollection $complexity): float
     {
-        $sum = 0;
-        foreach ($complexity as $item) {
-            $sum += $item->cyclomaticComplexity();
-        }
-
-        return (float) $sum;
+        return (float) collect($complexity)->sum(fn ($item) => $item->cyclomaticComplexity());
     }
 
     /**

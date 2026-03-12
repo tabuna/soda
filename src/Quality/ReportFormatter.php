@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
 
@@ -16,7 +8,7 @@ use const PHP_EOL;
 
 use function sprintf;
 
-final readonly class QualityReportFormatter
+final readonly class ReportFormatter
 {
     public function __construct(
         private RuleMetadata $ruleMetadata,
@@ -24,29 +16,27 @@ final readonly class QualityReportFormatter
 
     public function format(QualityResult $result): string
     {
-        $buffer = <<<'EOT'
+        $buf = <<<'EOT'
 Code Quality Report
 ──────────────────
 
 EOT;
 
-        $buffer .= sprintf('Score: %d / 100'.PHP_EOL.PHP_EOL, $result->score);
+        $buf .= sprintf('Score: %d / 100'.PHP_EOL.PHP_EOL, $result->score);
 
-        if ($result->violations !== []) {
-            $buffer .= 'Violations'.PHP_EOL.'──────────'.PHP_EOL.PHP_EOL;
-
-            foreach ($result->violations as $v) {
-                $buffer .= $this->formatViolation($v);
-            }
-
-            $buffer .= PHP_EOL;
+        if ($result->violations->isNotEmpty()) {
+            $buf .= 'Violations'.PHP_EOL.'──────────'.PHP_EOL.PHP_EOL;
+            $buf .= $result->violations
+                ->map(fn (Violation $v) => $this->formatViolation($v))
+                ->implode('');
+            $buf .= PHP_EOL;
         }
 
-        $buffer .= 'Summary'.PHP_EOL.'───────'.PHP_EOL.PHP_EOL;
-        $buffer .= sprintf('Violations: %d'.PHP_EOL, count($result->violations));
-        $buffer .= sprintf('Score: %d'.PHP_EOL, $result->score);
+        $buf .= 'Summary'.PHP_EOL.'───────'.PHP_EOL.PHP_EOL;
+        $buf .= sprintf('Violations: %d'.PHP_EOL, $result->violations->count());
+        $buf .= sprintf('Score: %d'.PHP_EOL, $result->score);
 
-        return $buffer;
+        return $buf;
     }
 
     private function formatViolation(Violation $v): string

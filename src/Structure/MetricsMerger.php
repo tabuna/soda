@@ -1,21 +1,10 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Structure;
 
-use function array_keys;
 use function array_merge;
-use function count;
-use function is_array;
 
 /**
  * @internal
@@ -35,14 +24,10 @@ final class MetricsMerger
             self::mergeOne($merged, $r);
         }
 
-        $allNamespaces = [];
-        foreach ($results as $r) {
-            $namespaces = $r['namespaces'] ?? [];
-            foreach (is_array($namespaces) ? array_keys($namespaces) : [] as $ns) {
-                $allNamespaces[$ns] = true;
-            }
-        }
-        $merged['namespaces'] = count($allNamespaces);
+        $merged['namespaces'] = collect($results)
+            ->flatMap(fn (array $r) => array_keys($r['namespaces'] ?? []))
+            ->unique()
+            ->count();
 
         return $merged;
     }

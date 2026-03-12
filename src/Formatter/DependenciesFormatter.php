@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Formatter;
 
@@ -21,8 +13,10 @@ use function sprintf;
 /**
  * @internal
  */
-final readonly class DependenciesSectionFormatter
+final readonly class DependenciesFormatter
 {
+    use FormatHelpers;
+
     public function format(Result $result): string
     {
         $structure = $result->structure();
@@ -30,10 +24,10 @@ final readonly class DependenciesSectionFormatter
             return '';
         }
 
-        return $this->formatDependencies($structure);
+        return $this->formatSection($structure);
     }
 
-    private function formatDependencies(Metrics $structure): string
+    private function formatSection(Metrics $structure): string
     {
         $global = $structure->globalAccesses();
         $attrs = $structure->attributeAccesses();
@@ -55,21 +49,21 @@ Dependencies
 EOT,
             number_format($global),
             number_format($structure->globalConstantAccesses()),
-            $global > 0 ? ((float) $structure->globalConstantAccesses() / (float) $global) * 100.0 : 0.0,
+            self::pct($structure->globalConstantAccesses(), $global),
             number_format($structure->globalVariableAccesses()),
-            $global > 0 ? ((float) $structure->globalVariableAccesses() / (float) $global) * 100.0 : 0.0,
+            self::pct($structure->globalVariableAccesses(), $global),
             number_format($structure->superGlobalVariableAccesses()),
-            $global > 0 ? ((float) $structure->superGlobalVariableAccesses() / (float) $global) * 100.0 : 0.0,
+            self::pct($structure->superGlobalVariableAccesses(), $global),
             number_format($attrs),
             number_format($structure->nonStaticAttributeAccesses()),
-            $attrs > 0 ? ((float) $structure->nonStaticAttributeAccesses() / (float) $attrs) * 100.0 : 0.0,
+            self::pct($structure->nonStaticAttributeAccesses(), $attrs),
             number_format($structure->staticAttributeAccesses()),
-            $attrs > 0 ? ((float) $structure->staticAttributeAccesses() / (float) $attrs) * 100.0 : 0.0,
+            self::pct($structure->staticAttributeAccesses(), $attrs),
             number_format($calls),
             number_format($structure->nonStaticMethodCalls()),
-            $calls > 0 ? ((float) $structure->nonStaticMethodCalls() / (float) $calls) * 100.0 : 0.0,
+            self::pct($structure->nonStaticMethodCalls(), $calls),
             number_format($structure->staticMethodCalls()),
-            $calls > 0 ? ((float) $structure->staticMethodCalls() / (float) $calls) * 100.0 : 0.0,
+            self::pct($structure->staticMethodCalls(), $calls),
         )."\n";
     }
 }

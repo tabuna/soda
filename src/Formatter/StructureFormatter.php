@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Formatter;
 
@@ -21,8 +13,10 @@ use function sprintf;
 /**
  * @internal
  */
-final readonly class StructureSectionFormatter
+final readonly class StructureFormatter
 {
+    use FormatHelpers;
+
     public function format(Result $result): string
     {
         $structure = $result->structure();
@@ -37,12 +31,14 @@ final readonly class StructureSectionFormatter
         $constants = $structure->constants();
         $classConstants = $structure->classConstants();
 
-        $header = $this->formatHeader($structure, $classes, $concrete);
-        $methodsBlock = $this->formatMethodsBlock($structure, $methods);
-        $functionsBlock = $this->formatFunctionsBlock($structure, $functions);
-        $constantsBlock = $this->formatConstantsBlock($structure, $constants, $classConstants);
-
-        return $header.$methodsBlock.$functionsBlock.$constantsBlock."\n";
+        return collect([
+            $this->formatHeader($structure, $classes, $concrete),
+            $this->formatMethods($structure, $methods),
+            $this->formatFunctions($structure, $functions),
+            $this->formatConstants($structure, $constants, $classConstants),
+        ])
+            ->implode('')
+            ."\n";
     }
 
     private function formatHeader(
@@ -77,7 +73,7 @@ EOT,
         );
     }
 
-    private function formatMethodsBlock(
+    private function formatMethods(
         Metrics $structure,
         int $methods,
     ): string {
@@ -106,7 +102,7 @@ EOT,
         );
     }
 
-    private function formatFunctionsBlock(
+    private function formatFunctions(
         Metrics $structure,
         int $functions,
     ): string {
@@ -124,7 +120,7 @@ EOT,
         );
     }
 
-    private function formatConstantsBlock(
+    private function formatConstants(
         Metrics $structure,
         int $constants,
         int $classConstants,
@@ -147,10 +143,5 @@ EOT,
             number_format($structure->nonPublicClassConstants()),
             self::pct($structure->nonPublicClassConstants(), $classConstants),
         );
-    }
-
-    private static function pct(int $part, int $total): float
-    {
-        return $total > 0 ? ((float) $part / (float) $total) * 100.0 : 0.0;
     }
 }

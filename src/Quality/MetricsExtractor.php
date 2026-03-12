@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
 
@@ -20,14 +12,14 @@ use function implode;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Trait_;
 
-final class ClassMetricsExtractor
+final class MetricsExtractor
 {
     /**
      * @return array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}
      */
     public static function extract(Class_|Trait_ $node): array
     {
-        [$namespace, $namespaceDepth] = self::extractNamespace($node);
+        [$namespace, $depth] = self::extractNamespace($node);
 
         return [
             'loc'             => $node->getEndLine() - $node->getStartLine() + 1,
@@ -38,7 +30,7 @@ final class ClassMetricsExtractor
             'traits'          => self::countTraits($node),
             'interfaces'      => $node instanceof Class_ ? count($node->implements) : 0,
             'namespace'       => $namespace,
-            'namespace_depth' => $namespaceDepth,
+            'namespace_depth' => $depth,
         ];
     }
 

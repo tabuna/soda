@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Formatter;
 
@@ -21,8 +13,10 @@ use function sprintf;
 /**
  * @internal
  */
-final readonly class SizeSectionFormatter
+final readonly class SizeFormatter
 {
+    use FormatHelpers;
+
     public function format(Result $result): string
     {
         $s = $result->loc()->stats();
@@ -46,14 +40,16 @@ EOT,
             $pct['logical'],
         );
 
-        if ($structure !== null && $s['logicalLinesOfCode'] > 0) {
-            $buffer .= $this->formatStructureBreakdown($s['logicalLinesOfCode'], $structure);
+        if ($structure === null || $s['logicalLinesOfCode'] <= 0) {
+            return $buffer."\n";
         }
 
-        return $buffer."\n";
+        return $buffer
+            .$this->formatBreakdown($s['logicalLinesOfCode'], $structure)
+            ."\n";
     }
 
-    private function formatStructureBreakdown(int $lloc, Metrics $structure): string
+    private function formatBreakdown(int $lloc, Metrics $structure): string
     {
         $llocClasses = $structure->llocClasses();
         $llocFunctions = $structure->llocFunctions();
@@ -77,7 +73,7 @@ EOT,
     Not in classes or functions                       %20s (%.2f%%)
 EOT,
             number_format($llocClasses),
-            $lloc > 0 ? ((float) $llocClasses / (float) $lloc) * 100.0 : 0.0,
+            self::pct($llocClasses, $lloc),
             number_format($structure->classLlocAvg()),
             number_format($structure->classLlocMin()),
             number_format($structure->classLlocMax()),
@@ -88,10 +84,10 @@ EOT,
             number_format($structure->minimumMethodsPerClass()),
             number_format($structure->maximumMethodsPerClass()),
             number_format($llocFunctions),
-            $lloc > 0 ? ((float) $llocFunctions / (float) $lloc) * 100.0 : 0.0,
+            self::pct($llocFunctions, $lloc),
             number_format($structure->averageFunctionLength()),
             number_format($llocGlobal),
-            $lloc > 0 ? ((float) $llocGlobal / (float) $lloc) * 100.0 : 0.0,
+            self::pct($llocGlobal, $lloc),
         );
     }
 }

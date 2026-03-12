@@ -1,60 +1,46 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality\Rule;
 
 use Bunnivo\Soda\Quality\EvaluationContext;
-use Bunnivo\Soda\Quality\Limits;
-use Bunnivo\Soda\Quality\Violation;
-use Bunnivo\Soda\Quality\ViolationBuilder;
+use Bunnivo\Soda\Quality\RuleChecker as FluentRuleChecker;
+use Illuminate\Support\Collection;
 
 final class NamespaceChecker implements RuleChecker
 {
-    /**
-     * @return Violation[]
-     *
-     * @psalm-return list<Bunnivo\Soda\Quality\Violation>
-     */
     #[\Override]
-    public function check(EvaluationContext $context): array
+    public function check(EvaluationContext $context): Collection
     {
-        $violations = [];
         $maxDepth = $context->config->getRule('max_namespace_depth');
         $maxPerNamespace = $context->config->getRule('max_classes_per_namespace');
 
-        foreach ($context->fileMetrics->qualityMetrics as $file => $data) {
-            foreach ($data['classes'] ?? [] as $className => $classData) {
-                if ($maxDepth > 0 && $classData['namespace_depth'] > $maxDepth) {
-                    $violations[] = ViolationBuilder::of(
-                        'max_namespace_depth',
-                        $file,
-                        new Limits($classData['namespace_depth'], $maxDepth),
-                    )->atClass($className)->build();
-                }
-            }
-        }
+        $depthViolations = collect($context->fileMetrics->qualityMetrics)
+            ->flatMap(function (array $data, string $file) use ($maxDepth) {
+                return collect($data['classes'] ?? [])
+                    ->flatMap(function (array $classData, string $className) use ($file, $maxDepth) {
+                        return FluentRuleChecker::whenExceeded('max_namespace_depth')
+                            ->file($file)
+                            ->class($className)
+                            ->forValue($classData['namespace_depth'])
+                            ->limit($maxDepth)
+                            ->result();
+                    });
+            })
+            ->values();
 
-        foreach ($context->fileMetrics->namespacesAggregated as $namespace => $data) {
-            $count = $data['count'];
-            $file = $data['file'];
-            if ($maxPerNamespace > 0 && $count > $maxPerNamespace) {
-                $violations[] = ViolationBuilder::of(
-                    'max_classes_per_namespace',
-                    $file,
-                    new Limits($count, $maxPerNamespace),
-                )->atClass($namespace)->build();
-            }
-        }
+        $namespacesViolations = $context->fileMetrics->namespacesAggregated
+            ->flatMap(function (array $data, string $namespace) use ($maxPerNamespace) {
+                return FluentRuleChecker::whenExceeded('max_classes_per_namespace')
+                    ->file($data['file'])
+                    ->class($namespace)
+                    ->forValue($data['count'])
+                    ->limit($maxPerNamespace)
+                    ->result();
+            })
+            ->values();
 
-        return $violations;
+        return $depthViolations->merge($namespacesViolations);
     }
 }

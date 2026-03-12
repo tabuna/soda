@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality\Rule;
 
@@ -27,10 +19,10 @@ final class RuleRegistry
     public static function default(QualityConfig $config): array
     {
         return [
-            new FileLocChecker(),
-            new ClassesPerFileChecker(),
-            new ClassRulesChecker(new ClassChecker($config)),
-            new MethodRulesChecker(new MethodChecker($config)),
+            new LocChecker(),
+            new ClassesChecker(),
+            new ClassRules(new ClassChecker($config)),
+            new MethodRules(new MethodChecker($config)),
             new NamespaceChecker(),
             new ProjectChecker(),
         ];

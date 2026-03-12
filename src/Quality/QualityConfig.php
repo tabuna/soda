@@ -1,18 +1,13 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
 
 use function file_get_contents;
+
+use Illuminate\Support\Arr;
+
 use function is_array;
 use function json_decode;
 
@@ -53,7 +48,7 @@ final readonly class QualityConfig
     /**
      * @psalm-param non-empty-string $path
      *
-     * @throws QualityConfigException
+     * @throws ConfigException
      */
     public static function fromFile(string $path): self
     {
@@ -69,7 +64,7 @@ final readonly class QualityConfig
     private static function assertReadable(string $path): void
     {
         if (! is_readable($path)) {
-            throw new QualityConfigException("Config file not readable: {$path}");
+            throw new ConfigException("Config file not readable: {$path}");
         }
     }
 
@@ -77,14 +72,14 @@ final readonly class QualityConfig
     {
         $content = file_get_contents($path);
         if ($content === false) {
-            throw new QualityConfigException("Cannot read config file: {$path}");
+            throw new ConfigException("Cannot read config file: {$path}");
         }
 
         return $content;
     }
 
     /**
-     * @throws QualityConfigException
+     * @throws ConfigException
      *
      * @return array<string, mixed>
      */
@@ -93,11 +88,11 @@ final readonly class QualityConfig
         try {
             $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw new QualityConfigException("Invalid JSON in config file {$path}: ".$e->getMessage());
+            throw new ConfigException("Invalid JSON in config file {$path}: ".$e->getMessage());
         }
 
         if (! is_array($data)) {
-            throw new QualityConfigException('Config must be a JSON object');
+            throw new ConfigException('Config must be a JSON object');
         }
 
         return $data;
@@ -110,13 +105,13 @@ final readonly class QualityConfig
      */
     private static function parseMinScore(array $data): int
     {
-        $quality = $data['quality'] ?? [];
-        $minScore = isset($quality['min_score']) && is_int($quality['min_score'])
-            ? $quality['min_score']
-            : self::DEFAULT_MIN_SCORE;
+        $minScore = Arr::get($data, 'quality.min_score', self::DEFAULT_MIN_SCORE);
+        if (! is_int($minScore)) {
+            $minScore = self::DEFAULT_MIN_SCORE;
+        }
 
         if ($minScore < 1 || $minScore > 100) {
-            throw new QualityConfigException('min_score must be between 1 and 100');
+            throw new ConfigException('min_score must be between 1 and 100');
         }
 
         return $minScore;
@@ -130,14 +125,11 @@ final readonly class QualityConfig
     private static function mergeRules(array $data): array
     {
         $rules = $data['rules'] ?? [];
-        $mergedRules = self::DEFAULT_RULES;
-        foreach ($rules as $key => $value) {
-            if (is_int($value) && $value > 0) {
-                $mergedRules[$key] = $value;
-            }
-        }
 
-        return $mergedRules;
+        return array_merge(
+            self::DEFAULT_RULES,
+            collect($rules)->filter(fn ($v) => is_int($v) && $v > 0)->all(),
+        );
     }
 
     public static function default(): self

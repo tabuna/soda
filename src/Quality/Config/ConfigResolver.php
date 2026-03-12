@@ -1,19 +1,11 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality\Config;
 
+use Bunnivo\Soda\Quality\ConfigException;
 use Bunnivo\Soda\Quality\QualityConfig;
-use Bunnivo\Soda\Quality\QualityConfigException;
 
 /**
  * Resolves QualityConfig from project files or explicit path.
@@ -28,7 +20,7 @@ final class ConfigResolver
     /**
      * @psalm-param list<non-empty-string> $files
      *
-     * @throws QualityConfigException
+     * @throws ConfigException
      */
     public function resolve(array $files, ?string $explicitPath = null): QualityConfig
     {
@@ -40,7 +32,7 @@ final class ConfigResolver
     /**
      * @psalm-param list<non-empty-string> $files
      *
-     * @throws QualityConfigException
+     * @throws ConfigException
      */
     public static function resolveConfig(array $files, ?string $explicitPath = null): QualityConfig
     {

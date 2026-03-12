@@ -1,21 +1,11 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Structure;
 
 use function array_sum;
-use function count;
 use function max;
-use function min;
 use function round;
 
 /**
@@ -68,7 +58,7 @@ final class StatsCalculator
      */
     private static function safeMin(array $arr): int
     {
-        return $arr !== [] ? min($arr) : 0;
+        return collect($arr)->min() ?? 0;
     }
 
     /**
@@ -76,7 +66,7 @@ final class StatsCalculator
      */
     private static function safeMax(array $arr): int
     {
-        return $arr !== [] ? max($arr) : 0;
+        return collect($arr)->max() ?? 0;
     }
 
     /**
@@ -84,9 +74,7 @@ final class StatsCalculator
      */
     private static function safeAvg(array $arr): int
     {
-        $n = count($arr);
-
-        return $n > 0 ? (int) round(array_sum($arr) / $n) : 0;
+        return (int) round(collect($arr)->avg() ?? 0.0);
     }
 
     /**

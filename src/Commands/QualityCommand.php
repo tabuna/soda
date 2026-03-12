@@ -1,22 +1,14 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Commands;
 
 use Bunnivo\Soda\JsonResultFormatter;
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
 use Bunnivo\Soda\Quality\QualityAnalyser;
-use Bunnivo\Soda\Quality\QualityReportFormatter;
 use Bunnivo\Soda\Quality\QualityResult;
+use Bunnivo\Soda\Quality\ReportFormatter;
 use Bunnivo\Soda\Quality\RuleMetadata;
 
 use function file_put_contents;
@@ -58,14 +50,14 @@ final class QualityCommand extends Command
 
         $configPath = $this->resolveConfigPath();
         $analyser = new QualityAnalyser();
-        $qualityResult = $analyser->analyse($files, (bool) $this->option('debug'), $configPath);
+        $result = $analyser->analyse($files, (bool) $this->option('debug'), $configPath);
 
-        $this->line((new QualityReportFormatter(RuleMetadata::default()))->format($qualityResult));
-        $this->writeReportJson($qualityResult);
+        $this->line((new ReportFormatter(RuleMetadata::default()))->format($result));
+        $this->writeReportJson($result);
 
         $config = ConfigResolver::resolveConfig($files, $configPath);
 
-        return $qualityResult->passes($config->minScore) ? self::SUCCESS : self::FAILURE;
+        return $result->passes($config->minScore) ? self::SUCCESS : self::FAILURE;
     }
 
     /**
@@ -85,22 +77,26 @@ final class QualityCommand extends Command
     private function resolveConfigPath(): ?string
     {
         $configOpt = $this->option('config');
+        if ($configOpt === null || $configOpt === '') {
+            return null;
+        }
 
-        return $configOpt !== null && $configOpt !== '' ? $configOpt : null;
+        return $configOpt;
     }
 
-    private function writeReportJson(QualityResult $qualityResult): void
+    private function writeReportJson(QualityResult $result): void
     {
         $reportJson = $this->option('report-json');
         if (! is_string($reportJson) || $reportJson === '') {
             return;
         }
 
-        $json = json_encode([
-            'score'      => $qualityResult->score,
-            'metrics'    => (new JsonResultFormatter)->format($qualityResult->metrics),
-            'violations' => array_map(static fn ($v) => $v->toArray(), $qualityResult->violations),
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        $data = [
+            'score'      => $result->score,
+            'metrics'    => (new JsonResultFormatter)->format($result->metrics),
+            'violations' => $result->violations->map(fn ($v) => $v->toArray())->all(),
+        ];
+        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         file_put_contents($reportJson, $json);
     }
 }

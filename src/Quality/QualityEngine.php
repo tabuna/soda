@@ -1,23 +1,14 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
-
-use function array_merge;
 
 use Bunnivo\Soda\Quality\EvaluationContext\FileMetrics;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
 use Bunnivo\Soda\Quality\Rule\RuleRegistry;
 use Bunnivo\Soda\Result;
+use Illuminate\Support\Collection;
 
 final class QualityEngine
 {
@@ -63,11 +54,9 @@ final class QualityEngine
         $fileMetrics = new FileMetrics($qualityMetrics, $complexityByMethod, $namespacesAggregated);
         $context = new EvaluationContext($this->config, $metrics, $fileMetrics);
 
-        $violations = [];
-        foreach ($this->checkers as $checker) {
-            $violations = array_merge($violations, $checker->check($context));
-        }
-
+        $violations = collect($this->checkers)
+            ->flatMap(fn (RuleChecker $checker) => $checker->check($context))
+            ->values();
         $score = $this->calculateScore($violations);
 
         return new QualityResult($metrics, $score, $violations);
@@ -76,33 +65,30 @@ final class QualityEngine
     /**
      * @psalm-param array<string, array{namespaces?: array<string, int>}> $qualityMetrics
      *
-     * @return array<string, array{count: int, file: string}>
+     * @return Collection<string, array{count: int, file: string}>
      */
-    private function aggregateNamespaces(array $qualityMetrics): array
+    private function aggregateNamespaces(array $qualityMetrics): Collection
     {
-        $aggregated = [];
-
-        foreach ($qualityMetrics as $file => $data) {
-            foreach ($data['namespaces'] ?? [] as $ns => $count) {
-                if (! isset($aggregated[$ns])) {
-                    $aggregated[$ns] = ['count' => 0, 'file' => $file];
-                }
-                $aggregated[$ns]['count'] += $count;
-            }
-        }
-
-        return $aggregated;
+        return collect($qualityMetrics)
+            ->flatMap(fn (array $data, string $file) => collect($data['namespaces'] ?? [])
+                ->map(fn (int $count, string $namespace) => [
+                    'ns'    => $namespace,
+                    'count' => $count,
+                    'file'  => $file,
+                ]))
+            ->groupBy('ns')
+            ->map(fn ($group) => [
+                'count' => $group->sum('count'),
+                'file'  => $group->first()['file'] ?? '',
+            ]);
     }
 
     /**
-     * @param list<Violation> $violations
+     * @param Collection<int, Violation> $violations
      */
-    private function calculateScore(array $violations): int
+    private function calculateScore(Collection $violations): int
     {
-        $penalty = 0;
-        foreach ($violations as $v) {
-            $penalty += self::PENALTIES[$v->rule] ?? 2;
-        }
+        $penalty = $violations->sum(fn (Violation $v) => self::PENALTIES[$v->rule] ?? 2);
 
         return max(0, 100 - $penalty);
     }

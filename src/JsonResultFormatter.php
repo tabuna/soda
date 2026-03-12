@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda;
 
@@ -23,9 +15,12 @@ final readonly class JsonResultFormatter
     {
         $data = $this->formatBase($result);
         $structure = $result->structure();
-        if ($structure !== null) {
-            $data['structure'] = $this->formatStructure($structure);
+
+        if ($structure === null) {
+            return $data;
         }
+
+        $data['structure'] = $this->formatStructure($structure);
 
         return $data;
     }
@@ -41,7 +36,7 @@ final readonly class JsonResultFormatter
         $c = $result->complexity();
         $m = $c->methods();
         $f = $c->functions();
-        $cc = $c->classes();
+        $classStats = $c->classes();
 
         return [
             'directories' => $s['directories'],
@@ -70,9 +65,9 @@ final readonly class JsonResultFormatter
                     'highest'         => $m['highest'],
                 ],
                 'classes' => [
-                    'lowest'  => round($cc['lowest'], 2),
-                    'average' => round($cc['average'], 2),
-                    'highest' => round($cc['highest'], 2),
+                    'lowest'  => round($classStats['lowest'], 2),
+                    'average' => round($classStats['average'], 2),
+                    'highest' => round($classStats['highest'], 2),
                 ],
                 'averagePerLloc' => round($c->averagePerLloc(), 2),
             ],

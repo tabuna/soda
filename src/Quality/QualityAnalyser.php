@@ -1,14 +1,6 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
 
@@ -46,6 +38,7 @@ final class QualityAnalyser
             try {
                 $fileResult = $this->analyseFile($file);
                 $qualityMetrics[$file] = $fileResult['metrics'];
+
                 foreach ($fileResult['complexity']->asArray() as $item) {
                     $complexityByMethod[$item->name()] = $item->cyclomaticComplexity();
                 }
@@ -56,9 +49,8 @@ final class QualityAnalyser
 
         $config = ConfigResolver::resolveConfig($files, $configPath);
         $engine = QualityEngine::create($config);
-        $qualityResult = $engine->evaluate($result, $qualityMetrics, $complexityByMethod);
 
-        return $qualityResult;
+        return $engine->evaluate($result, $qualityMetrics, $complexityByMethod);
     }
 
     /**

@@ -1,18 +1,10 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
 
-use function array_merge;
+use Illuminate\Support\Collection;
 
 final class ClassChecker
 {
@@ -23,24 +15,20 @@ final class ClassChecker
     /**
      * @psalm-param array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}> $classes
      *
-     * @psalm-return list<Violation>
+     * @return Collection<int, Violation>
      */
-    public function check(string $file, array $classes): array
+    public function check(string $file, array $classes): Collection
     {
-        $violations = [];
-        foreach ($classes as $className => $data) {
-            $violations = array_merge(
-                $violations,
-                $this->checkClassLength($file, $className, $data),
-                $this->checkMethodsCount($file, $className, $data),
-                $this->checkPropertiesCount($file, $className, $data),
-                $this->checkPublicMethods($file, $className, $data),
-                $this->checkDependencies($file, $className, $data),
-                $this->checkTraitsAndInterfaces($file, $className, $data),
-            );
-        }
-
-        return $violations;
+        return collect($classes)
+            ->flatMap(fn (array $data, string $class) => array_merge(
+                $this->checkLoc($file, $class, $data),
+                $this->checkMethods($file, $class, $data),
+                $this->checkProperties($file, $class, $data),
+                $this->checkPublic($file, $class, $data),
+                $this->checkDependencies($file, $class, $data),
+                $this->checkTraits($file, $class, $data),
+            ))
+            ->values();
     }
 
     /**
@@ -48,14 +36,18 @@ final class ClassChecker
      *
      * @psalm-return list<Violation>
      */
-    private function checkClassLength(string $file, string $className, array $data): array
+    private function checkLoc(string $file, string $class, array $data): array
     {
+        $lines = $data['loc'];
         $max = $this->config->getRule('max_class_length');
-        if ($max <= 0 || $data['loc'] <= $max) {
-            return [];
-        }
 
-        return [ViolationBuilder::of('max_class_length', $file, new Limits($data['loc'], $max))->atClass($className)->build()];
+        return $this
+            ->whenExceeded('max_class_length')
+            ->file($file)
+            ->class($class)
+            ->forValue($lines)
+            ->limit($max)
+            ->result();
     }
 
     /**
@@ -63,14 +55,15 @@ final class ClassChecker
      *
      * @psalm-return list<Violation>
      */
-    private function checkMethodsCount(string $file, string $className, array $data): array
+    private function checkMethods(string $file, string $class, array $data): array
     {
-        $max = $this->config->getRule('max_methods_per_class');
-        if ($max <= 0 || $data['methods'] <= $max) {
-            return [];
-        }
-
-        return [ViolationBuilder::of('max_methods_per_class', $file, new Limits($data['methods'], $max))->atClass($className)->build()];
+        return $this
+            ->whenExceeded('max_methods_per_class')
+            ->file($file)
+            ->class($class)
+            ->forValue($data['methods'])
+            ->limit($this->config->getRule('max_methods_per_class'))
+            ->result();
     }
 
     /**
@@ -78,14 +71,15 @@ final class ClassChecker
      *
      * @psalm-return list<Violation>
      */
-    private function checkPropertiesCount(string $file, string $className, array $data): array
+    private function checkProperties(string $file, string $class, array $data): array
     {
-        $max = $this->config->getRule('max_properties_per_class');
-        if ($max <= 0 || $data['properties'] <= $max) {
-            return [];
-        }
-
-        return [ViolationBuilder::of('max_properties_per_class', $file, new Limits($data['properties'], $max))->atClass($className)->build()];
+        return $this
+            ->whenExceeded('max_properties_per_class')
+            ->file($file)
+            ->class($class)
+            ->forValue($data['properties'])
+            ->limit($this->config->getRule('max_properties_per_class'))
+            ->result();
     }
 
     /**
@@ -93,14 +87,15 @@ final class ClassChecker
      *
      * @psalm-return list<Violation>
      */
-    private function checkPublicMethods(string $file, string $className, array $data): array
+    private function checkPublic(string $file, string $class, array $data): array
     {
-        $max = $this->config->getRule('max_public_methods');
-        if ($max <= 0 || $data['public_methods'] <= $max) {
-            return [];
-        }
-
-        return [ViolationBuilder::of('max_public_methods', $file, new Limits($data['public_methods'], $max))->atClass($className)->build()];
+        return $this
+            ->whenExceeded('max_public_methods')
+            ->file($file)
+            ->class($class)
+            ->forValue($data['public_methods'])
+            ->limit($this->config->getRule('max_public_methods'))
+            ->result();
     }
 
     /**
@@ -108,14 +103,20 @@ final class ClassChecker
      *
      * @psalm-return list<Violation>
      */
-    private function checkDependencies(string $file, string $className, array $data): array
+    private function checkDependencies(string $file, string $class, array $data): array
     {
-        $max = $this->config->getRule('max_dependencies');
-        if ($max <= 0 || $data['dependencies'] <= $max) {
-            return [];
-        }
+        return $this
+            ->whenExceeded('max_dependencies')
+            ->file($file)
+            ->class($class)
+            ->forValue($data['dependencies'])
+            ->limit($this->config->getRule('max_dependencies'))
+            ->result();
+    }
 
-        return [ViolationBuilder::of('max_dependencies', $file, new Limits($data['dependencies'], $max))->atClass($className)->build()];
+    private function whenExceeded(string $rule): RuleChecker
+    {
+        return RuleChecker::whenExceeded($rule);
     }
 
     /**
@@ -123,18 +124,24 @@ final class ClassChecker
      *
      * @psalm-return list<Violation>
      */
-    private function checkTraitsAndInterfaces(string $file, string $className, array $data): array
+    private function checkTraits(string $file, string $class, array $data): array
     {
-        $violations = [];
-        $maxTraits = $this->config->getRule('max_traits_per_class');
-        if ($maxTraits > 0 && $data['traits'] > $maxTraits) {
-            $violations[] = ViolationBuilder::of('max_traits_per_class', $file, new Limits($data['traits'], $maxTraits))->atClass($className)->build();
-        }
-        $maxInterfaces = $this->config->getRule('max_interfaces_per_class');
-        if ($maxInterfaces > 0 && $data['interfaces'] > $maxInterfaces) {
-            $violations[] = ViolationBuilder::of('max_interfaces_per_class', $file, new Limits($data['interfaces'], $maxInterfaces))->atClass($className)->build();
-        }
+        $traits = $this
+            ->whenExceeded('max_traits_per_class')
+            ->file($file)
+            ->class($class)
+            ->forValue($data['traits'])
+            ->limit($this->config->getRule('max_traits_per_class'))
+            ->result();
 
-        return $violations;
+        $interfaces = $this
+            ->whenExceeded('max_interfaces_per_class')
+            ->file($file)
+            ->class($class)
+            ->forValue($data['interfaces'])
+            ->limit($this->config->getRule('max_interfaces_per_class'))
+            ->result();
+
+        return array_merge($traits, $interfaces);
     }
 }

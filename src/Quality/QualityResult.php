@@ -1,18 +1,11 @@
 <?php
 
 declare(strict_types=1);
-/*
- * This file is part of Soda.
- *
- * (c) Bunnivo
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
 
 namespace Bunnivo\Soda\Quality;
 
 use Bunnivo\Soda\Result;
+use Illuminate\Support\Collection;
 
 final readonly class QualityResult
 {
@@ -22,21 +15,21 @@ final readonly class QualityResult
     public int $score;
 
     /**
-     * @psalm-var list<Violation>
+     * @psalm-var Collection<int, Violation>
      */
-    public array $violations;
+    public Collection $violations;
 
     /**
      * @psalm-param non-negative-int $score
-     * @psalm-param list<Violation> $violations
+     * @psalm-param Collection<int, Violation>|list<Violation> $violations
      */
     public function __construct(
         public Result $metrics,
         int $score,
-        array $violations,
+        Collection|array $violations,
     ) {
         $this->score = max(0, min(100, $score));
-        $this->violations = $violations;
+        $this->violations = $violations instanceof Collection ? $violations : collect($violations);
     }
 
     public function passes(int $minScore): bool
