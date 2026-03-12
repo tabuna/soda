@@ -1,6 +1,15 @@
 {
     "name": "bunnivo/soda",
-    "description": "A tool for quickly measuring the size of a PHP project",
+    "description": "Keep your PHP code clean and maintainable by enforcing quality rules based on metrics",
+    "keywords": [
+        "php",
+        "code-quality",
+        "metrics",
+        "architecture",
+        "static-analysis",
+        "ci",
+        "developer-tools"
+    ],
     "homepage": "https://github.com/bunnivo/soda",
     "license": "BSD-3-Clause",
     "authors": [
@@ -60,7 +69,7 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-main": "8.0-dev"
+            "dev-main": "1.0-dev"
         }
     }
 }
