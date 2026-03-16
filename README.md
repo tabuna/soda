@@ -1,7 +1,5 @@
 # Soda
 
-## Introduction
-
 Keep your PHP code **clean, maintainable, and architecturally sound** with Soda.  
 Turn code metrics into enforceable quality rules—no god classes, no 500-line methods, no dependency sprawl.
 
