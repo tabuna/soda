@@ -28,6 +28,7 @@ final class InitCommand extends Command
             'max_methods_per_class'                => 21,
             'max_file_loc'                         => 400,
             'max_cyclomatic_complexity'            => 26,
+            'max_control_nesting'                  => 4,
             'max_properties_per_class'             => 20,
             'max_public_methods'                   => 15,
             'max_dependencies'                     => 20,
@@ -43,6 +44,8 @@ final class InitCommand extends Command
             'min_code_oxygen_level'                => 25,
             'max_weighted_cognitive_density'       => 30,
             'max_logical_complexity_factor'        => 35,
+            'max_return_statements'                => 4,
+            'max_boolean_conditions'               => 3,
         ],
     ];
 

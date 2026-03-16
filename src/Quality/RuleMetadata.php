@@ -58,4 +58,12 @@ final readonly class RuleMetadata
     {
         return $this->rules[$rule]['comparison'] ?? self::COMPARISON_MAX;
     }
+
+    /**
+     * @return list<string>
+     */
+    public function ruleKeys(): array
+    {
+        return array_keys($this->rules);
+    }
 }
