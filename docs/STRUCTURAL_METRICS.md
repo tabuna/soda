@@ -2,7 +2,20 @@
 
 Metrics that measure **size**, **structure**, and **coupling** of code. They are easy to count and enforce.
 
-Defaults: `QualityConfig::DEFAULT_RULES`. Run `php soda init` for a full `soda.json`.
+**Config:** Rules live under `rules.structural` in `soda.json`. Defaults: `QualityConfig::DEFAULT_RULES`. Run `php soda init` for a full config.
+
+```json
+{
+  "rules": {
+    "structural": {
+      "max_method_length": 50,
+      "max_class_length": 500,
+      "max_file_loc": 400,
+      "max_arguments": 3
+    }
+  }
+}
+```
 
 ---
 

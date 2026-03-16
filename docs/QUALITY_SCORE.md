@@ -42,7 +42,7 @@ Score = max(0, 100 - sum(penalties))
 
 ## min_score Gate
 
-`quality.min_score` in `soda.json` is the **pass threshold**:
+`quality.min_score` in `soda.json` is the **pass threshold**. Rules live in `rules.structural`, `rules.complexity`, and `rules.breathing` — see [soda.json Reference](../README.md#sodajson-reference).
 
 - **Exit code 0** (success) when `Score ≥ min_score`
 - **Exit code 1** (failure) when `Score < min_score`

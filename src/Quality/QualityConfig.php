@@ -143,23 +143,42 @@ final readonly class QualityConfig
      */
     private static function mergeRules(array $data): array
     {
-        /** @var array<array-key, mixed> $rules */
-        $rules = $data['rules'] ?? [];
+        /** @var array<array-key, mixed> $raw */
+        $raw = $data['rules'] ?? [];
 
-        $filtered = collect($rules)->filter(function (mixed $v, mixed $k): bool {
-            if (! is_numeric($v) || (float) $v < 0) {
-                return false;
-            }
-
-            return true;
-        })->map(fn (mixed $v): int|float => is_int($v) ? $v : (float) $v)->all();
-
-        if (isset($filtered['min_cbs']) && ! isset($filtered['min_code_breathing_score'])) {
-            $filtered['min_code_breathing_score'] = $filtered['min_cbs'];
-        }
+        $flattened = self::flattenRules($raw);
+        $filtered = collect($flattened)->filter(function (mixed $v, mixed $k): bool {
+            return is_numeric($v) && (float) $v >= 0;
+        })->map(fn (mixed $v): int|float => is_int($v) ? $v : $v)->all();
 
         /** @var array<string, int|float> */
         return array_merge(self::DEFAULT_RULES, $filtered);
+    }
+
+    /**
+     * @param array<array-key, mixed> $rules Nested {structural: {...}, complexity: {...}, breathing: {...}}
+     *
+     * @return array<string, int|float>
+     */
+    private static function flattenRules(array $rules): array
+    {
+        $result = [];
+
+        foreach (RuleSections::sectionNames() as $section) {
+            $sectionRules = $rules[$section] ?? [];
+
+            if (! is_array($sectionRules)) {
+                continue;
+            }
+
+            foreach ($sectionRules as $key => $value) {
+                if (is_string($key) && is_numeric($value)) {
+                    $result[$key] = is_int($value) ? $value : (float) $value;
+                }
+            }
+        }
+
+        return $result;
     }
 
     public static function default(): self
@@ -172,12 +191,6 @@ final readonly class QualityConfig
      */
     public function getRule(string $key): int|float
     {
-        $value = $this->rules[$key] ?? 0;
-
-        if ($key === 'min_code_breathing_score' && $value <= 0 && isset($this->rules['min_cbs'])) {
-            return $this->rules['min_cbs'];
-        }
-
-        return $value;
+        return $this->rules[$key] ?? 0;
     }
 }

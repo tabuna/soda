@@ -216,7 +216,24 @@ Size factor and divisor depend on file length. Array/fluent blocks get special h
 
 ## Configuration in soda.json
 
-Config uses 0–100 scale for min_* (internal 0–1). Set to `0` to disable.
+Breathing rules live under `rules.breathing`; WCD and LCF under `rules.complexity`. Config uses 0–100 scale for min_* (internal 0–1). Set to `0` to disable.
+
+```json
+{
+  "rules": {
+    "breathing": {
+      "min_code_breathing_score": 25,
+      "min_visual_breathing_index": 12,
+      "min_identifier_readability_score": 75,
+      "min_code_oxygen_level": 25
+    },
+    "complexity": {
+      "max_weighted_cognitive_density": 30,
+      "max_logical_complexity_factor": 35
+    }
+  }
+}
+```
 
 | Rule | Default | Scale |
 |------|---------|-------|

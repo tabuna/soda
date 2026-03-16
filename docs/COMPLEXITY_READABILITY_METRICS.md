@@ -2,7 +2,7 @@
 
 Metrics that measure **cognitive load**, **control flow complexity**, and **visual readability** of code.
 
-Defaults: `QualityConfig::DEFAULT_RULES`. Breathing metrics use config scale 0–100 for min_* (internal 0–1); WCD/LCF use raw/scaled values.
+**Config:** Complexity rules (`max_cyclomatic_complexity`, `max_control_nesting`, WCD, LCF, etc.) live under `rules.complexity`; breathing rules under `rules.breathing`. Defaults: `QualityConfig::DEFAULT_RULES`. Breathing metrics use config scale 0–100 for min_* (internal 0–1); WCD/LCF use raw/scaled values.
 
 ### max_cyclomatic_complexity
 
@@ -292,13 +292,13 @@ foreach ($this->filterValid($items) as $item) {
 
 ## Summary: Breathing config values
 
-| Rule | Config range | Disable |
-|------|--------------|---------|
-| `min_code_breathing_score` | 25–80 | `0` |
-| `min_visual_breathing_index` | 10–40 | `0` |
-| `min_identifier_readability_score` | 70–100 | `0` |
-| `min_code_oxygen_level` | 25–65 | `0` |
-| `max_weighted_cognitive_density` | 10–40 | `0` |
-| `max_logical_complexity_factor` | 20–50 | `0` |
+| Rule | Section | Config range | Disable |
+|------|---------|--------------|---------|
+| `min_code_breathing_score` | `breathing` | 25–80 | `0` |
+| `min_visual_breathing_index` | `breathing` | 10–40 | `0` |
+| `min_identifier_readability_score` | `breathing` | 70–100 | `0` |
+| `min_code_oxygen_level` | `breathing` | 25–65 | `0` |
+| `max_weighted_cognitive_density` | `complexity` | 10–40 | `0` |
+| `max_logical_complexity_factor` | `complexity` | 20–50 | `0` |
 
 See [BREATHING_METRICS.md](BREATHING_METRICS.md) for overview.

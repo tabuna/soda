@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
+use Bunnivo\Soda\Quality\QualityConfig;
+use Bunnivo\Soda\Quality\RuleSections;
+
 use function file_put_contents;
 use function getcwd;
 
@@ -17,37 +20,36 @@ final class InitCommand extends Command
 
     protected $description = 'Create soda.json with default quality rules';
 
-    private const array INIT_CONFIG = [
-        'quality' => [
-            'min_score' => 80,
-        ],
-        'rules' => [
-            'max_method_length'                    => 120,
-            'max_class_length'                     => 500,
-            'max_arguments'                        => 16,
-            'max_methods_per_class'                => 21,
-            'max_file_loc'                         => 400,
-            'max_cyclomatic_complexity'            => 26,
-            'max_control_nesting'                  => 4,
-            'max_properties_per_class'             => 20,
-            'max_public_methods'                   => 15,
-            'max_dependencies'                     => 20,
-            'max_classes_per_file'                 => 1,
-            'max_namespace_depth'                  => 4,
-            'max_classes_per_namespace'            => 40,
-            'max_traits_per_class'                 => 3,
-            'max_interfaces_per_class'             => 5,
-            'max_classes_per_project'              => 2000,
-            'min_code_breathing_score'             => 40,
-            'min_visual_breathing_index'           => 12,
-            'min_identifier_readability_score'     => 75,
-            'min_code_oxygen_level'                => 25,
-            'max_weighted_cognitive_density'       => 30,
-            'max_logical_complexity_factor'        => 35,
-            'max_return_statements'                => 4,
-            'max_boolean_conditions'               => 3,
-        ],
-    ];
+    private function buildRulesConfig(): array
+    {
+        $defaults = QualityConfig::default()->rules;
+        $overrides = [
+            'max_method_length'         => 120,
+            'max_class_length'          => 500,
+            'max_arguments'             => 16,
+            'max_methods_per_class'     => 21,
+            'max_file_loc'              => 400,
+            'max_cyclomatic_complexity' => 26,
+            'max_control_nesting'       => 4,
+            'min_code_breathing_score'  => 40,
+        ];
+
+        $rules = [
+            RuleSections::STRUCTURAL => [],
+            RuleSections::COMPLEXITY => [],
+            RuleSections::BREATHING  => [],
+        ];
+
+        foreach (RuleSections::ruleToSection() as $ruleKey => $section) {
+            $value = $overrides[$ruleKey] ?? $defaults[$ruleKey] ?? null;
+
+            if ($value !== null) {
+                $rules[$section][$ruleKey] = $value;
+            }
+        }
+
+        return $rules;
+    }
 
     public function handle(): int
     {
@@ -57,7 +59,11 @@ final class InitCommand extends Command
         }
 
         $path = getcwd().'/soda.json';
-        $json = json_encode(self::INIT_CONFIG, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $config = [
+            'quality' => ['min_score' => 80],
+            'rules'   => $this->buildRulesConfig(),
+        ];
+        $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($json === false || file_put_contents($path, $json) === false) {
             $this->error($json === false ? 'Failed to encode config' : 'Failed to write soda.json');
 

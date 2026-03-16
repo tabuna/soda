@@ -3,11 +3,16 @@
     "min_score": 75
   },
   "rules": {
-    "max_method_length": 30,
-    "max_class_length": 600,
-    "max_arguments": 4,
-    "max_methods_per_class": 25,
-    "max_file_loc": 500,
-    "max_cyclomatic_complexity": 12
+    "structural": {
+      "max_method_length": 30,
+      "max_class_length": 600,
+      "max_arguments": 4,
+      "max_methods_per_class": 25,
+      "max_file_loc": 500
+    },
+    "complexity": {
+      "max_cyclomatic_complexity": 12
+    },
+    "breathing": {}
   }
 }

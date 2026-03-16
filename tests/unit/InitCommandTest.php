@@ -50,7 +50,17 @@ final class InitCommandTest extends TestCase
             $this->assertArrayHasKey('rules', $data);
             $this->assertIsArray($data['rules']);
 
-            $createdRules = array_keys($data['rules']);
+            $this->assertArrayHasKey('structural', $data['rules']);
+            $this->assertArrayHasKey('complexity', $data['rules']);
+            $this->assertArrayHasKey('breathing', $data['rules']);
+
+            $createdRules = [];
+            foreach (['structural', 'complexity', 'breathing'] as $section) {
+                foreach ($data['rules'][$section] ?? [] as $key => $value) {
+                    $createdRules[$key] = $value;
+                }
+            }
+            $createdRules = array_keys($createdRules);
             $expectedKeys = RuleMetadata::default()->ruleKeys();
 
             foreach ($expectedKeys as $key) {

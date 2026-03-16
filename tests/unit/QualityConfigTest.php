@@ -68,8 +68,8 @@ final class QualityConfigTest extends TestCase
         mkdir($dir, 0700, true);
         $sodaPath = $dir.'/soda.json';
         $codeQualityPath = $dir.'/code-quality.json';
-        file_put_contents($sodaPath, '{"quality":{"min_score":90},"rules":{}}');
-        file_put_contents($codeQualityPath, '{"quality":{"min_score":75},"rules":{}}');
+        file_put_contents($sodaPath, '{"quality":{"min_score":90},"rules":{"structural":{},"complexity":{},"breathing":{}}}');
+        file_put_contents($codeQualityPath, '{"quality":{"min_score":75},"rules":{"structural":{},"complexity":{},"breathing":{}}}');
 
         try {
             $config = ConfigResolver::resolveConfig([$dir.'/dummy.php']);
@@ -99,12 +99,29 @@ final class QualityConfigTest extends TestCase
         $dir = sys_get_temp_dir().'/soda-disable-'.uniqid();
         mkdir($dir, 0700, true);
         $path = $dir.'/soda.json';
-        file_put_contents($path, '{"quality":{"min_score":80},"rules":{"max_control_nesting":0,"min_code_breathing_score":0}}');
+        file_put_contents($path, '{"quality":{"min_score":80},"rules":{"structural":{},"complexity":{"max_control_nesting":0},"breathing":{"min_code_breathing_score":0}}}');
 
         try {
             $config = QualityConfig::fromFile($path);
             $this->assertSame(0, $config->getRule('max_control_nesting'));
             $this->assertSame(0, $config->getRule('min_code_breathing_score'));
+        } finally {
+            unlink($path);
+            rmdir($dir);
+        }
+    }
+
+    public function testFromFileUsesDefaultsForMissingSections(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-partial-'.uniqid();
+        mkdir($dir, 0700, true);
+        $path = $dir.'/soda.json';
+        file_put_contents($path, '{"quality":{"min_score":80},"rules":{"structural":{"max_method_length":50},"complexity":{},"breathing":{}}}');
+
+        try {
+            $config = QualityConfig::fromFile($path);
+            $this->assertSame(50, $config->getRule('max_method_length'));
+            $this->assertSame(500, $config->getRule('max_class_length'));
         } finally {
             unlink($path);
             rmdir($dir);

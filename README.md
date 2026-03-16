@@ -1,20 +1,22 @@
 # Soda
 
-## Introduction
+**Quality gates for PHP.** Enforce structure, complexity, and readability — no god classes, no 500-line methods, no dependency sprawl.
 
-Keep your PHP code **clean, maintainable, and architecturally sound** with Soda.  
-Turn code metrics into enforceable quality rules—no god classes, no 500-line methods, no dependency sprawl.
+---
 
-AI writes faster than ever. Mistakes happen.
-What if your code could **catch them first—before anyone else notices**? Soda quietly keeps your code consistent, safe, and review-ready.
+## Why Soda?
 
-> **Don't trust the prompt. Trust PHP Quality Gates!**
+- **Clear rules.** Method length, class size, nesting depth, breathing metrics — all configurable.
+- **Fast feedback.** Run locally or in CI. Get a score and violations in seconds.
+- **AI-era ready.** Much code is now written with AI/LLM. Reviewing it takes time. Soda catches structural and readability issues *before* human review — so code can "self-correct" in CI.
 
+> **Don't rely on the prompt. Rely on control.**
+
+---
 
 ## Installation
 
-Requires PHP 8.4 or higher.
-
+PHP 8.4+ required.
 
 > [!WARNING]
 > Composer currently does not work. Use `git clone` as a temporary workaround.
@@ -24,19 +26,19 @@ composer require bunnivo/soda --dev
 ```
 
 
-## Usage
+## Quick Start
 
-### Analyse project metrics
+### 1. Analyse metrics
 
-Measure project size and structure. No configuration required.
+See project size and structure. No config needed.
 
 ```bash
 php soda analyse src
 ```
 
-### Quality checks
+### 2. Run quality checks
 
-Create a configuration file:
+Create a config:
 
 ```bash
 php soda init
@@ -46,37 +48,43 @@ Or create `soda.json` manually:
 
 ```json
 {
-  "quality": {
-    "min_score": 100
-  },
+  "quality": { "min_score": 100 },
   "rules": {
-    "max_method_length": 100,
-    "max_class_length": 800,
-    "max_arguments": 3,
-    "max_methods_per_class": 40,
-    "max_file_loc": 1000,
-    "max_cyclomatic_complexity": 15,
-    "max_control_nesting": 3,
-    "max_properties_per_class": 6,
-    "max_public_methods": 40,
-    "max_dependencies": 8,
-    "max_classes_per_file": 1,
-    "max_namespace_depth": 4,
-    "max_classes_per_namespace": 16,
-    "max_traits_per_class": 100,
-    "max_interfaces_per_class": 100,
-    "max_classes_per_project": 2000,
-    "min_code_breathing_score": 25,
-    "min_visual_breathing_index": 10,
-    "min_identifier_readability_score": 70,
-    "min_code_oxygen_level": 25,
-    "max_weighted_cognitive_density": 40,
-    "max_logical_complexity_factor": 50
+    "structural": {
+      "max_method_length": 100,
+      "max_class_length": 800,
+      "max_arguments": 3,
+      "max_methods_per_class": 40,
+      "max_file_loc": 1000,
+      "max_properties_per_class": 6,
+      "max_public_methods": 40,
+      "max_dependencies": 8,
+      "max_classes_per_file": 1,
+      "max_namespace_depth": 4,
+      "max_classes_per_namespace": 16,
+      "max_traits_per_class": 100,
+      "max_interfaces_per_class": 100,
+      "max_classes_per_project": 2000
+    },
+    "complexity": {
+      "max_cyclomatic_complexity": 15,
+      "max_control_nesting": 3,
+      "max_weighted_cognitive_density": 40,
+      "max_logical_complexity_factor": 50,
+      "max_return_statements": 4,
+      "max_boolean_conditions": 3
+    },
+    "breathing": {
+      "min_code_breathing_score": 25,
+      "min_visual_breathing_index": 10,
+      "min_identifier_readability_score": 70,
+      "min_code_oxygen_level": 25
+    }
   }
 }
 ```
 
-Run the quality check:
+Then run:
 
 ```bash
 php soda quality src
@@ -119,24 +127,27 @@ Score: 82
 
 ## soda.json Reference
 
-`soda.json` has two sections: `quality` (pass threshold) and `rules` (per-metric limits).
+`soda.json` has two top-level keys: `quality` (pass threshold) and `rules` (grouped into `structural`, `complexity`, `breathing`).
 
 ### quality.min_score
 
 Minimum overall score (1–100). Exit code 1 when score &lt; min_score. See [How Score is calculated](docs/QUALITY_SCORE.md).
 
-### rules — Metrics by Type
+### rules — Sections
 
-| Type | Rules | Docs |
-|------|-------|------|
-| **Structural** | `max_method_length`, `max_class_length`, `max_file_loc`, `max_arguments`, `max_dependencies`, `max_properties_per_class`, `max_public_methods`, `max_methods_per_class`, `max_classes_per_file`, `max_namespace_depth`, `max_classes_per_namespace`, `max_traits_per_class`, `max_interfaces_per_class`, `max_classes_per_project`, `max_return_statements`, `max_boolean_conditions` | [Structural Metrics](docs/STRUCTURAL_METRICS.md) |
-| **Complexity / Readability** | `max_cyclomatic_complexity`, `max_control_nesting`, `min_code_breathing_score`, `min_visual_breathing_index`, `min_identifier_readability_score`, `min_code_oxygen_level`, `max_weighted_cognitive_density`, `max_logical_complexity_factor` | [Complexity & Readability](docs/COMPLEXITY_READABILITY_METRICS.md) |
+Rules are grouped into `structural`, `complexity`, and `breathing` sections.
 
-Each doc includes **good/bad examples** (in English), **possible values**, and **breathing metric ranges**.
+| Section | Rules | Docs |
+|---------|-------|------|
+| **structural** | `max_method_length`, `max_class_length`, `max_file_loc`, `max_arguments`, `max_dependencies`, `max_properties_per_class`, `max_public_methods`, `max_methods_per_class`, `max_classes_per_file`, `max_namespace_depth`, `max_classes_per_namespace`, `max_traits_per_class`, `max_interfaces_per_class`, `max_classes_per_project` | [Structural Metrics](docs/STRUCTURAL_METRICS.md) |
+| **complexity** | `max_cyclomatic_complexity`, `max_control_nesting`, `max_weighted_cognitive_density`, `max_logical_complexity_factor`, `max_return_statements`, `max_boolean_conditions` | [Complexity & Readability](docs/COMPLEXITY_READABILITY_METRICS.md) |
+| **breathing** | `min_code_breathing_score`, `min_visual_breathing_index`, `min_identifier_readability_score`, `min_code_oxygen_level` | [Breathing Metrics](docs/BREATHING_METRICS.md) |
+
+Each doc includes **good/bad examples**, **possible values**, and **breathing metric ranges**.
 
 ### Disabling rules
 
-Set limit to `0` to disable: `"max_control_nesting": 0`, `"min_code_breathing_score": 0`.
+Set limit to `0` to disable: `"complexity": {"max_control_nesting": 0}`, `"breathing": {"min_code_breathing_score": 0}`.
 
 ### Defaults
 
@@ -157,8 +168,8 @@ Rules not in `soda.json` use `QualityConfig::DEFAULT_RULES`. Run `php soda init`
 
 Recommended order:
 
-1. **Laravel Pint** (or similar) — formatting
-2. **Rector** — refactoring
+1. **Rector** — refactoring
+2. **Laravel Pint** (or similar) — formatting
 3. **PHPStan** (or Psalm) — static analysis
 4. **Soda** — quality gates (structure, complexity, breathing)
 

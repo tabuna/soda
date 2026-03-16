@@ -64,29 +64,6 @@ final class BreathingCheckerTest extends TestCase
         $this->assertSame('min_code_breathing_score', $result->violations->first()->rule);
     }
 
-    public function testProducesViolationWhenCbsBelowMinLegacyMinCbs(): void
-    {
-        $config = new QualityConfig(80, ['min_cbs' => 40]);
-        $engine = new QualityEngine($config, [new BreathingChecker()]);
-
-        $metrics = [
-            '/file.php' => [
-                'file_loc'      => 50,
-                'classes_count' => 1,
-                'classes'       => [],
-                'methods'       => [],
-                'namespaces'    => [],
-                'breathing'     => ['wcd' => 10, 'lcf' => 1, 'vbi' => 0.2, 'irs' => 0.9, 'col' => 0.2, 'cbs' => 0.15],
-            ],
-        ];
-
-        $input = EvaluateInput::fromArrays($metrics, []);
-        $result = $engine->evaluate($this->createResult(), $input);
-
-        $this->assertCount(1, $result->violations);
-        $this->assertSame('min_code_breathing_score', $result->violations->first()->rule);
-    }
-
     public function testNoViolationWhenCbsAboveMin(): void
     {
         $config = new QualityConfig(80, ['min_code_breathing_score' => 40]);
