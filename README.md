@@ -16,8 +16,21 @@ Requires PHP 8.4 or higher.
 > [!WARNING]
 > Composer currently does not work. Use `git clone` as a temporary workaround.
 
+<details>
+<summary>Try with Composer (spoiler)</summary>
+  
 ```bash
 composer require bunnivo/soda --dev
+```
+
+</details>
+
+Or temporarily via `git clone`:
+
+```bash
+git clone https://github.com/tabuna/soda.git
+cd soda
+composer install
 ```
 
 ## Usage
