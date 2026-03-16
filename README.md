@@ -5,6 +5,11 @@
 Keep your PHP code **clean, maintainable, and architecturally sound** with Soda.  
 Turn code metrics into enforceable quality rules—no god classes, no 500-line methods, no dependency sprawl.
 
+AI writes faster than ever. Mistakes happen.
+What if your code could **catch them first—before anyone else notices**? Soda quietly keeps your code consistent, safe, and review-ready.
+
+> **Don't trust the prompt. Trust PHP Quality Gates!**
+
 
 ## Installation
 
@@ -42,23 +47,24 @@ Or create `soda.json` manually:
 ```json
 {
   "quality": {
-    "min_score": 80
+    "min_score": 100
   },
   "rules": {
-    "max_method_length": 120,
-    "max_class_length": 500,
-    "max_arguments": 5,
-    "max_methods_per_class": 20,
-    "max_file_loc": 400,
-    "max_cyclomatic_complexity": 10,
-    "max_properties_per_class": 15,
-    "max_public_methods": 15,
-    "max_dependencies": 12,
+    "max_method_length": 100,
+    "max_class_length": 800,
+    "max_arguments": 3,
+    "max_methods_per_class": 40,
+    "max_file_loc": 1000,
+    "max_cyclomatic_complexity": 15,
+    "max_control_nesting": 3,
+    "max_properties_per_class": 6,
+    "max_public_methods": 40,
+    "max_dependencies": 8,
     "max_classes_per_file": 1,
     "max_namespace_depth": 4,
-    "max_classes_per_namespace": 40,
-    "max_traits_per_class": 3,
-    "max_interfaces_per_class": 5,
+    "max_classes_per_namespace": 16,
+    "max_traits_per_class": 100,
+    "max_interfaces_per_class": 100,
     "max_classes_per_project": 2000,
     "min_code_breathing_score": 25,
     "min_visual_breathing_index": 10,
@@ -100,7 +106,7 @@ Violations: 2
 Score: 82
 ```
 
-Exit code is 0 when score ≥ min_score, 1 otherwise.
+**Exit code:** 0 when score ≥ min_score, 1 otherwise.
 
 ### Options
 
@@ -111,34 +117,60 @@ Exit code is 0 when score ≥ min_score, 1 otherwise.
 | `--suffix=`      | File suffix (default: `.php`) |
 | `--exclude=`     | Exclude paths (repeatable)    |
 
-## Supported Rules
+## soda.json Reference
 
-| Rule                        | Description                          |
-|-----------------------------|--------------------------------------|
-| `max_method_length`         | Max lines per method                 |
-| `max_class_length`          | Max lines per class                  |
-| `max_arguments`             | Max method arguments                 |
-| `max_methods_per_class`     | Max methods per class                |
-| `max_file_loc`              | Max lines per file                   |
-| `max_cyclomatic_complexity` | Max cyclomatic complexity per method |
-| `max_properties_per_class`  | Max properties per class             |
-| `max_public_methods`        | Max public methods per class         |
-| `max_dependencies`          | Max constructor parameters           |
-| `max_classes_per_file`      | Max classes per file                 |
-| `max_namespace_depth`       | Max namespace depth                  |
-| `max_classes_per_namespace` | Max classes per namespace            |
-| `max_traits_per_class`      | Max traits per class                 |
-| `max_interfaces_per_class`  | Max interfaces per class             |
-| `max_classes_per_project`   | Max classes in project               |
-| `min_code_breathing_score`  | Min Code Breathing Score             |
-| `min_visual_breathing_index`| Min Visual Breathing Index           |
-| `min_identifier_readability_score` | Min Identifier Readability Score |
-| `min_code_oxygen_level`     | Min Code Oxygen Level                |
-| `max_weighted_cognitive_density`   | Max Weighted Cognitive Density |
-| `max_logical_complexity_factor`    | Max Logical Complexity Factor  |
+`soda.json` has two sections: `quality` (pass threshold) and `rules` (per-metric limits).
 
+### quality.min_score
+
+Minimum overall score (1–100). Exit code 1 when score &lt; min_score. See [How Score is calculated](docs/QUALITY_SCORE.md).
+
+### rules — Metrics by Type
+
+| Type | Rules | Docs |
+|------|-------|------|
+| **Structural** | `max_method_length`, `max_class_length`, `max_file_loc`, `max_arguments`, `max_dependencies`, `max_properties_per_class`, `max_public_methods`, `max_methods_per_class`, `max_classes_per_file`, `max_namespace_depth`, `max_classes_per_namespace`, `max_traits_per_class`, `max_interfaces_per_class`, `max_classes_per_project`, `max_return_statements`, `max_boolean_conditions` | [Structural Metrics](docs/STRUCTURAL_METRICS.md) |
+| **Complexity / Readability** | `max_cyclomatic_complexity`, `max_control_nesting`, `min_code_breathing_score`, `min_visual_breathing_index`, `min_identifier_readability_score`, `min_code_oxygen_level`, `max_weighted_cognitive_density`, `max_logical_complexity_factor` | [Complexity & Readability](docs/COMPLEXITY_READABILITY_METRICS.md) |
+
+Each doc includes **good/bad examples** (in English), **possible values**, and **breathing metric ranges**.
+
+### Disabling rules
+
+Set limit to `0` to disable: `"max_control_nesting": 0`, `"min_code_breathing_score": 0`.
+
+### Defaults
+
+Rules not in `soda.json` use `QualityConfig::DEFAULT_RULES`. Run `php soda init` to create a full config with all rules.
+
+### Documentation
+
+| Document | Content |
+|----------|---------|
+| [Structural Metrics](docs/STRUCTURAL_METRICS.md) | Size, dependencies, structure — good/bad examples, possible values |
+| [Complexity & Readability](docs/COMPLEXITY_READABILITY_METRICS.md) | Cyclomatic complexity, nesting, breathing metrics — examples, config ranges |
+| [Quality Score](docs/QUALITY_SCORE.md) | How score is calculated, penalties, min_score gate |
+| [Breathing Metrics](docs/BREATHING_METRICS.md) | Breathing metrics overview |
 
 ## CI Integration
+
+**Run Soda after** linters and static analyzers. It checks structure and readability — not syntax or types.
+
+Recommended order:
+
+1. **Laravel Pint** (or similar) — formatting
+2. **Rector** — refactoring
+3. **PHPStan** (or Psalm) — static analysis
+4. **Soda** — quality gates (structure, complexity, breathing)
+
+```yaml
+- run: composer install --no-interaction
+- run: ./vendor/bin/pint
+- run: ./vendor/bin/rector process --no-progress-bar
+- run: ./vendor/bin/phpstan analyse
+- run: php soda quality src
+```
+
+Minimal (Soda only):
 
 ```yaml
 - run: composer install --no-interaction

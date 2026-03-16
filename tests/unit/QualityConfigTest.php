@@ -93,4 +93,21 @@ final class QualityConfigTest extends TestCase
             rmdir($noConfigDir);
         }
     }
+
+    public function testRuleWithZeroDisablesRule(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-disable-'.uniqid();
+        mkdir($dir, 0700, true);
+        $path = $dir.'/soda.json';
+        file_put_contents($path, '{"quality":{"min_score":80},"rules":{"max_control_nesting":0,"min_code_breathing_score":0}}');
+
+        try {
+            $config = QualityConfig::fromFile($path);
+            $this->assertSame(0, $config->getRule('max_control_nesting'));
+            $this->assertSame(0, $config->getRule('min_code_breathing_score'));
+        } finally {
+            unlink($path);
+            rmdir($dir);
+        }
+    }
 }

@@ -25,6 +25,15 @@ final readonly class QualityConfig
         'max_methods_per_class'                 => 20,
         'max_file_loc'                          => 400,
         'max_cyclomatic_complexity'             => 10,
+        'max_properties_per_class'              => 20,
+        'max_public_methods'                    => 20,
+        'max_dependencies'                      => 10,
+        'max_classes_per_file'                  => 1,
+        'max_namespace_depth'                   => 4,
+        'max_classes_per_namespace'             => 40,
+        'max_traits_per_class'                  => 5,
+        'max_interfaces_per_class'              => 5,
+        'max_classes_per_project'               => 2000,
         'min_code_breathing_score'              => 0,
         'min_visual_breathing_index'            => 12,
         'min_identifier_readability_score'      => 75,
@@ -142,7 +151,7 @@ final readonly class QualityConfig
                 return false;
             }
 
-            return (float) $v > 0 || (is_string($k) && str_starts_with($k, 'min_'));
+            return true;
         })->map(fn (mixed $v): int|float => is_int($v) ? $v : (float) $v)->all();
 
         if (isset($filtered['min_cbs']) && ! isset($filtered['min_code_breathing_score'])) {
