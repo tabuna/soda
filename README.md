@@ -8,11 +8,16 @@ Turn code metrics into enforceable quality rules—no god classes, no 500-line m
 
 ## Installation
 
-Requires PHP 8.2 or higher.
+Requires PHP 8.4 or higher.
+
+
+> [!WARNING]
+> Composer currently does not work. Use `git clone` as a temporary workaround.
 
 ```bash
 composer require bunnivo/soda --dev
 ```
+
 
 ## Usage
 
