@@ -1,22 +1,20 @@
 # Soda
 
-**Quality gates for PHP.** Enforce structure, complexity, and readability — no god classes, no 500-line methods, no dependency sprawl.
+## Introduction
 
----
+Keep your PHP code **clean, maintainable, and architecturally sound** with Soda.  
+Turn code metrics into enforceable quality rules—no god classes, no 500-line methods, no dependency sprawl.
 
-## Why Soda?
+AI writes faster than ever. Mistakes happen.
+What if your code could **catch them first—before anyone else notices**? Soda quietly keeps your code consistent, safe,
+and review-ready.
 
-- **Clear rules.** Method length, class size, nesting depth, breathing metrics — all configurable.
-- **Fast feedback.** Run locally or in CI. Get a score and violations in seconds.
-- **AI-era ready.** Much code is now written with AI/LLM. Reviewing it takes time. Soda catches structural and readability issues *before* human review — so code can "self-correct" in CI.
-
-> **Don't rely on the prompt. Rely on control.**
-
----
+> **Don't trust the prompt. Trust PHP Quality Gates!**
 
 ## Installation
 
-PHP 8.4+ required.
+Requires PHP 8.4 or higher.
+
 
 > [!WARNING]
 > Composer currently does not work. Use `git clone` as a temporary workaround.
@@ -25,20 +23,19 @@ PHP 8.4+ required.
 composer require bunnivo/soda --dev
 ```
 
+## Usage
 
-## Quick Start
+### Analyze project metrics
 
-### 1. Analyse metrics
-
-See project size and structure. No config needed.
+Measure project size and structure. No configuration required.
 
 ```bash
 php soda analyse src
 ```
 
-### 2. Run quality checks
+### Quality checks
 
-Create a config:
+Create a configuration file:
 
 ```bash
 php soda init
@@ -48,7 +45,9 @@ Or create `soda.json` manually:
 
 ```json
 {
-  "quality": { "min_score": 100 },
+  "quality": {
+    "min_score": 100
+  },
   "rules": {
     "structural": {
       "max_method_length": 100,
@@ -84,7 +83,7 @@ Or create `soda.json` manually:
 }
 ```
 
-Then run:
+Run the quality check:
 
 ```bash
 php soda quality src
@@ -125,42 +124,23 @@ Score: 82
 | `--suffix=`      | File suffix (default: `.php`) |
 | `--exclude=`     | Exclude paths (repeatable)    |
 
-## soda.json Reference
+### Disabling rules
 
-`soda.json` has two top-level keys: `quality` (pass threshold) and `rules` (grouped into `structural`, `complexity`, `breathing`).
+Set limit to `0` to disable: `"max_control_nesting": 0`, `"min_code_breathing_score": 0`.
 
 ### quality.min_score
 
-Minimum overall score (1–100). Exit code 1 when score &lt; min_score. See [How Score is calculated](docs/QUALITY_SCORE.md).
-
-### rules — Sections
-
-Rules are grouped into `structural`, `complexity`, and `breathing` sections.
-
-| Section | Rules | Docs |
-|---------|-------|------|
-| **structural** | `max_method_length`, `max_class_length`, `max_file_loc`, `max_arguments`, `max_dependencies`, `max_properties_per_class`, `max_public_methods`, `max_methods_per_class`, `max_classes_per_file`, `max_namespace_depth`, `max_classes_per_namespace`, `max_traits_per_class`, `max_interfaces_per_class`, `max_classes_per_project` | [Structural Metrics](docs/STRUCTURAL_METRICS.md) |
-| **complexity** | `max_cyclomatic_complexity`, `max_control_nesting`, `max_weighted_cognitive_density`, `max_logical_complexity_factor`, `max_return_statements`, `max_boolean_conditions` | [Complexity & Readability](docs/COMPLEXITY_READABILITY_METRICS.md) |
-| **breathing** | `min_code_breathing_score`, `min_visual_breathing_index`, `min_identifier_readability_score`, `min_code_oxygen_level` | [Breathing Metrics](docs/BREATHING_METRICS.md) |
-
-Each doc includes **good/bad examples**, **possible values**, and **breathing metric ranges**.
-
-### Disabling rules
-
-Set limit to `0` to disable: `"complexity": {"max_control_nesting": 0}`, `"breathing": {"min_code_breathing_score": 0}`.
-
-### Defaults
-
-Rules not in `soda.json` use `QualityConfig::DEFAULT_RULES`. Run `php soda init` to create a full config with all rules.
+Minimum overall score (1–100). Exit code 1 when score &lt; min_score.
+See [How Score is calculated](docs/QUALITY_SCORE.md).
 
 ### Documentation
 
-| Document | Content |
-|----------|---------|
-| [Structural Metrics](docs/STRUCTURAL_METRICS.md) | Size, dependencies, structure — good/bad examples, possible values |
+| Document                                                           | Content                                                                     |
+|--------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [Structural Metrics](docs/STRUCTURAL_METRICS.md)                   | Size, dependencies, structure — good/bad examples, possible values          |
 | [Complexity & Readability](docs/COMPLEXITY_READABILITY_METRICS.md) | Cyclomatic complexity, nesting, breathing metrics — examples, config ranges |
-| [Quality Score](docs/QUALITY_SCORE.md) | How score is calculated, penalties, min_score gate |
-| [Breathing Metrics](docs/BREATHING_METRICS.md) | Breathing metrics overview |
+| [Quality Score](docs/QUALITY_SCORE.md)                             | How score is calculated, penalties, min_score gate                          |
+| [Breathing Metrics](docs/BREATHING_METRICS.md)                     | Breathing metrics overview                                                  |
 
 ## CI Integration
 
@@ -168,24 +148,20 @@ Rules not in `soda.json` use `QualityConfig::DEFAULT_RULES`. Run `php soda init`
 
 Recommended order:
 
-1. **Rector** — refactoring
-2. **Laravel Pint** (or similar) — formatting
+1. **Laravel Pint** (or similar) — formatting
+2. **Rector** — refactoring
 3. **PHPStan** (or Psalm) — static analysis
 4. **Soda** — quality gates (structure, complexity, breathing)
 
 ```yaml
-- run: composer install --no-interaction
-- run: ./vendor/bin/pint
-- run: ./vendor/bin/rector process --no-progress-bar
-- run: ./vendor/bin/phpstan analyse
-- run: php soda quality src
-```
+- name: Install composer dependencies
+  run: composer install --no-interaction
 
-Minimal (Soda only):
+- name: Run other tools
+  run: echo "This is a placeholder for other tools"
 
-```yaml
-- run: composer install --no-interaction
-- run: php soda quality src
+- name: Run Soda quality check
+  run: php soda quality src
 ```
 
 ## Contributing
