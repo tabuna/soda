@@ -145,9 +145,9 @@ See [How Score is calculated](docs/QUALITY_SCORE.md).
 
 Recommended order:
 
-1. **Laravel Pint** (or similar) — formatting
-2. **Rector** — refactoring
-3. **PHPStan** (or Psalm) — static analysis
+1. **Rector** — refactoring
+2. **PHPStan** (or Psalm) — static analysis
+3. **Laravel Pint** (or similar) — formatting
 4. **Soda** — quality gates (structure, complexity, breathing)
 
 ```yaml
