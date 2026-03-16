@@ -23,7 +23,7 @@ final class BreathingPerformanceTest extends TestCase
     public function test10kLinesUnder2Seconds(): void
     {
         $line = "<?php\n\$x = 1;\n\$y = 2;\nreturn \$x + \$y;\n";
-        $lines = (int) (10_000 / 4);
+        $lines = 10_000 / 4;
         $code = str_repeat($line, $lines);
 
         $start = microtime(true);

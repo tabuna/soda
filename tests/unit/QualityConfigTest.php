@@ -72,7 +72,7 @@ final class QualityConfigTest extends TestCase
         file_put_contents($codeQualityPath, '{"quality":{"min_score":75},"rules":{}}');
 
         try {
-            $config = ConfigResolver::resolveConfig([$dir.'/dummy.php'], null);
+            $config = ConfigResolver::resolveConfig([$dir.'/dummy.php']);
             $this->assertSame(90, $config->minScore);
         } finally {
             unlink($sodaPath);
@@ -87,7 +87,7 @@ final class QualityConfigTest extends TestCase
         mkdir($noConfigDir, 0700, true);
 
         try {
-            $config = ConfigResolver::resolveConfig([$noConfigDir.'/dummy.php'], null);
+            $config = ConfigResolver::resolveConfig([$noConfigDir.'/dummy.php']);
             $this->assertSame(80, $config->minScore);
         } finally {
             rmdir($noConfigDir);

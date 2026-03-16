@@ -23,7 +23,11 @@ final class DeclarativeBonusCalculator
         $detector = new DeclarativeBlockDetector();
 
         foreach ($blocks as $i => $size) {
-            if ($size < 4 || ! isset($blockLines[$i])) {
+            if ($size < 4) {
+                continue;
+            }
+
+            if (! isset($blockLines[$i])) {
                 continue;
             }
 

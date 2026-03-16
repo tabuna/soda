@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Breathing\BreathingMetrics;
 use Bunnivo\Soda\Structure\Metrics;
 
 /**
@@ -16,7 +17,7 @@ final readonly class JsonResultFormatter
         $data = $this->formatBase($result);
         $structure = $result->structure();
 
-        if ($structure === null) {
+        if (! $structure instanceof Metrics) {
             return $data;
         }
 
@@ -37,7 +38,7 @@ final readonly class JsonResultFormatter
         );
 
         $breathing = $result->breathing();
-        if ($breathing !== null) {
+        if ($breathing instanceof BreathingMetrics) {
             $data['breathing'] = $breathing->toArray();
         }
 

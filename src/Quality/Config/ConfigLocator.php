@@ -12,8 +12,9 @@ use function is_readable;
  */
 final class ConfigLocator
 {
-    private const CONFIG_NAMES = ['soda.json', '.soda.json', 'code-quality.json', '.code-quality.json'];
-    private const MAX_DEPTH = 10;
+    private const array CONFIG_NAMES = ['soda.json', '.soda.json', 'code-quality.json', '.code-quality.json'];
+
+    private const int MAX_DEPTH = 10;
 
     /**
      * @psalm-param list<non-empty-string> $files
@@ -55,10 +56,12 @@ final class ConfigLocator
                     return $path;
                 }
             }
+
             $parent = dirname($current);
             if ($parent === $current) {
                 break;
             }
+
             $current = $parent;
         }
 

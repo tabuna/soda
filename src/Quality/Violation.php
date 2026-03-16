@@ -14,12 +14,17 @@ final readonly class Violation
 
     public function method(): ?string
     {
-        return $this->context->method;
+        return $this->context->method();
     }
 
     public function class(): ?string
     {
-        return $this->context->class;
+        return $this->context->class();
+    }
+
+    public function line(): ?int
+    {
+        return $this->context->line();
     }
 
     /**
@@ -38,8 +43,8 @@ final readonly class Violation
         return [
             'rule'      => $this->rule,
             'file'      => $this->file,
-            'method'    => $this->context->method,
-            'class'     => $this->context->class,
+            'method'    => $this->context->method(),
+            'class'     => $this->context->class(),
             'value'     => $this->limits()['value'],
             'threshold' => $this->limits()['threshold'],
         ];

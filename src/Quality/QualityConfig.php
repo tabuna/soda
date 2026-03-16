@@ -15,41 +15,40 @@ use JsonException;
 
 final readonly class QualityConfig
 {
-    private const DEFAULT_MIN_SCORE = 80;
-    private const DEFAULT_RULES = [
-        'max_method_length'                    => 20,
-        'max_class_length'                     => 500,
-        'max_arguments'                        => 3,
-        'max_methods_per_class'                => 20,
-        'max_file_loc'                         => 400,
-        'max_cyclomatic_complexity'            => 10,
-        'min_code_breathing_score'             => 0,
-        'min_visual_breathing_index'           => 12,
-        'min_identifier_readability_score'     => 75,
-        'min_code_oxygen_level'                => 25,
-        'max_weighted_cognitive_density'       => 30,
-        'max_logical_complexity_factor'        => 35,
+    private const int DEFAULT_MIN_SCORE = 80;
+
+    private const array DEFAULT_RULES = [
+        'max_method_length'                     => 20,
+        'max_class_length'                      => 500,
+        'max_arguments'                         => 3,
+        'max_control_nesting'                   => 3,
+        'max_methods_per_class'                 => 20,
+        'max_file_loc'                          => 400,
+        'max_cyclomatic_complexity'             => 10,
+        'min_code_breathing_score'              => 0,
+        'min_visual_breathing_index'            => 12,
+        'min_identifier_readability_score'      => 75,
+        'min_code_oxygen_level'                 => 25,
+        'max_weighted_cognitive_density'        => 30,
+        'max_logical_complexity_factor'         => 35,
+        'max_return_statements'                 => 4,
+        'max_boolean_conditions'                => 3,
     ];
-
-    /**
-     * @psalm-var positive-int
-     */
-    public int $minScore;
-
-    /**
-     * @psalm-var array<string, int|float>
-     */
-    public array $rules;
 
     /**
      * @psalm-param positive-int $minScore
      * @psalm-param array<string, int|float> $rules
      */
-    public function __construct(int $minScore = self::DEFAULT_MIN_SCORE, array $rules = self::DEFAULT_RULES)
-    {
-        $this->minScore = $minScore;
-        $this->rules = $rules;
-    }
+    public function __construct(
+        /**
+         * @psalm-var positive-int
+         */
+        public int $minScore = self::DEFAULT_MIN_SCORE,
+        /**
+         * @psalm-var array<string, int|float>
+         */
+        public array $rules = self::DEFAULT_RULES
+    ) {}
 
     /**
      * @psalm-param non-empty-string $path
@@ -72,20 +71,22 @@ final readonly class QualityConfig
      */
     private static function assertReadable(string $path): void
     {
-        if (! is_readable($path)) {
-            throw new ConfigException("Config file not readable: {$path}");
-        }
+        throw_unless(is_readable($path), ConfigException::class, 'Config file not readable: '.$path);
     }
 
     /**
      * @throws ConfigException
+     * @throws \Throwable
      */
     private static function readContent(string $path): string
     {
         $content = file_get_contents($path);
-        if ($content === false) {
-            throw new ConfigException("Cannot read config file: {$path}");
-        }
+
+        throw_if(
+            $content === false,
+            ConfigException::class,
+            'Cannot read config file: '.$path
+        );
 
         return $content;
     }
@@ -99,13 +100,11 @@ final readonly class QualityConfig
     {
         try {
             $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {
-            throw new ConfigException("Invalid JSON in config file {$path}: ".$e->getMessage());
+        } catch (JsonException $jsonException) {
+            throw new ConfigException(sprintf('Invalid JSON in config file %s: ', $path).$jsonException->getMessage(), $jsonException->getCode(), $jsonException);
         }
 
-        if (! is_array($data)) {
-            throw new ConfigException('Config must be a JSON object');
-        }
+        throw_unless(is_array($data), ConfigException::class, 'Config must be a JSON object');
 
         /** @var array<string, mixed> $data */
         return $data;
@@ -123,9 +122,7 @@ final readonly class QualityConfig
         $raw = Arr::get($data, 'quality.min_score', self::DEFAULT_MIN_SCORE);
         $minScore = is_int($raw) ? $raw : self::DEFAULT_MIN_SCORE;
 
-        if ($minScore < 1 || $minScore > 100) {
-            throw new ConfigException('min_score must be between 1 and 100');
-        }
+        throw_if($minScore < 1 || $minScore > 100, ConfigException::class, 'min_score must be between 1 and 100');
 
         return $minScore;
     }

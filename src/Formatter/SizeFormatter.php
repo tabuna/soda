@@ -40,7 +40,7 @@ EOT,
             $pct['logical'],
         );
 
-        if ($structure === null || $s['logicalLinesOfCode'] <= 0) {
+        if (! $structure instanceof Metrics || $s['logicalLinesOfCode'] <= 0) {
             return $buffer."\n";
         }
 

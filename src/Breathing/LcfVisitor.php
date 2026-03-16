@@ -19,8 +19,11 @@ use PhpParser\NodeVisitorAbstract;
 final class LcfVisitor extends NodeVisitorAbstract
 {
     private int $nCond = 0;
+
     private int $nLoop = 0;
+
     private int $depth = 0;
+
     private int $depthMax = 0;
 
     #[\Override]
@@ -30,7 +33,7 @@ final class LcfVisitor extends NodeVisitorAbstract
             $this->nCond++;
         }
 
-        if ($node instanceof For_ || $node instanceof Foreach_ || $node instanceof While_ || $node instanceof Do_) {
+        if ($this->isLoop($node)) {
             $this->nLoop++;
         }
 
@@ -53,13 +56,29 @@ final class LcfVisitor extends NodeVisitorAbstract
         return 1.0 + 0.3 * (float) $this->nCond + 0.2 * (float) $this->nLoop + 0.4 * (float) $this->depthMax;
     }
 
+    private const array BODY_NODES = [
+        If_::class,
+        Switch_::class,
+        For_::class,
+        Foreach_::class,
+        While_::class,
+        Do_::class,
+    ];
+
+    private const array LOOP_NODES = [
+        For_::class,
+        Foreach_::class,
+        While_::class,
+        Do_::class,
+    ];
+
+    private function isLoop(Node $node): bool
+    {
+        return in_array($node::class, self::LOOP_NODES, true);
+    }
+
     private function hasBody(Node $node): bool
     {
-        return $node instanceof If_
-            || $node instanceof Switch_
-            || $node instanceof For_
-            || $node instanceof Foreach_
-            || $node instanceof While_
-            || $node instanceof Do_;
+        return in_array($node::class, self::BODY_NODES, true);
     }
 }

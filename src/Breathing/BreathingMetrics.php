@@ -46,9 +46,6 @@ final readonly class BreathingMetrics
         return $this->cbs;
     }
 
-    /**
-     * @return float
-     */
     public function get(string $key): float
     {
         return match ($key) {
@@ -58,7 +55,7 @@ final readonly class BreathingMetrics
             'irs'   => $this->irs(),
             'col'   => $this->col(),
             'cbs'   => $this->cbs(),
-            default => throw new \InvalidArgumentException("Unknown metric: {$key}"),
+            default => throw new \InvalidArgumentException('Unknown metric: '.$key),
         };
     }
 

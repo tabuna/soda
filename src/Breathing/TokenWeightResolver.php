@@ -54,14 +54,19 @@ use const T_XOR_EQUAL;
  */
 final class TokenWeightResolver
 {
-    private const BOILERPLATE = 0.0;
-    private const DELIMITER = 0.5;
-    private const LITERAL = 0.8;
-    private const IDENTIFIER = 1.0;
-    private const KEYWORD = 1.2;
-    private const OPERATOR = 1.5;
+    private const float BOILERPLATE = 0.0;
 
-    private const WEIGHTS = [
+    private const float DELIMITER = 0.5;
+
+    private const float LITERAL = 0.8;
+
+    private const float IDENTIFIER = 1.0;
+
+    private const float KEYWORD = 1.2;
+
+    private const float OPERATOR = 1.5;
+
+    private const array WEIGHTS = [
         T_USE                      => self::BOILERPLATE,
         T_NAMESPACE                => self::BOILERPLATE,
         T_DECLARE                  => self::BOILERPLATE,
@@ -108,41 +113,67 @@ final class TokenWeightResolver
             return self::OPERATOR;
         }
 
-        $id = $token[0];
-        $text = $token[1];
+        return $this->weightForToken($token[0], $token[1]);
+    }
 
-        if (array_key_exists($id, self::WEIGHTS)) {
-            return self::WEIGHTS[$id];
-        }
+    private function weightForToken(int $id, string $text): float
+    {
+        return array_key_exists($id, self::WEIGHTS)
+            ? self::WEIGHTS[$id]
+            : $this->resolveWeight($id, $text);
+    }
 
-        if ($id === T_OPEN_TAG || $id === T_OPEN_TAG_WITH_ECHO || $id === T_CLOSE_TAG) {
+    private function resolveWeight(int $id, string $text): float
+    {
+        $w = $this->weightForDelimiter($id)
+            ?? $this->weightForKeywordOrLiteral($id)
+            ?? $this->weightForIdentifier($id, $text)
+            ?? $this->weightForOperator($id);
+
+        return $w ?? self::DELIMITER;
+    }
+
+    private function weightForDelimiter(int $id): ?float
+    {
+        if (in_array($id, [T_OPEN_TAG, T_OPEN_TAG_WITH_ECHO, T_CLOSE_TAG], true)) {
             return self::DELIMITER;
         }
 
-        if ($id === T_WHITESPACE || $id === T_COMMENT || $id === T_DOC_COMMENT) {
+        if (in_array($id, [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
             return 0.0;
         }
 
+        return null;
+    }
+
+    private function weightForKeywordOrLiteral(int $id): ?float
+    {
         if (TokenKeywordDetector::isKeyword($id)) {
             return self::KEYWORD;
-        }
-
-        if ($id === T_STRING && $text !== '') {
-            return self::IDENTIFIER;
-        }
-
-        if ($id === T_VARIABLE) {
-            return self::IDENTIFIER;
         }
 
         if (TokenKeywordDetector::isLiteral($id)) {
             return self::LITERAL;
         }
 
+        return null;
+    }
+
+    private function weightForIdentifier(int $id, string $text): ?float
+    {
+        if (($id === T_STRING && $text !== '') || $id === T_VARIABLE) {
+            return self::IDENTIFIER;
+        }
+
+        return null;
+    }
+
+    private function weightForOperator(int $id): ?float
+    {
         if (TokenKeywordDetector::isOperator($id)) {
             return self::OPERATOR;
         }
 
-        return self::DELIMITER;
+        return null;
     }
 }

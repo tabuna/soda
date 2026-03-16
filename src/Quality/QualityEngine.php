@@ -5,60 +5,54 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality;
 
 use Bunnivo\Soda\Quality\EvaluationContext\FileMetrics;
+use Bunnivo\Soda\Quality\EvaluationContext\QualityCore;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
 use Bunnivo\Soda\Quality\Rule\RuleRegistry;
 use Bunnivo\Soda\Result;
 use Illuminate\Support\Collection;
 
-final class QualityEngine
+final readonly class QualityEngine
 {
-    private const PENALTIES = [
-        'max_method_length'                    => 2,
-        'max_class_length'                     => 3,
-        'max_cyclomatic_complexity'            => 3,
-        'max_arguments'                        => 2,
-        'max_file_loc'                         => 2,
-        'max_methods_per_class'                => 2,
-        'max_properties_per_class'             => 2,
-        'max_public_methods'                   => 2,
-        'max_dependencies'                     => 2,
-        'max_classes_per_file'                 => 2,
-        'max_namespace_depth'                  => 2,
-        'max_classes_per_namespace'            => 2,
-        'max_traits_per_class'                 => 2,
-        'max_interfaces_per_class'             => 2,
-        'max_classes_per_project'              => 3,
-        'min_code_breathing_score'             => 2,
-        'min_visual_breathing_index'           => 2,
-        'min_identifier_readability_score'     => 2,
-        'min_code_oxygen_level'                => 2,
-        'max_weighted_cognitive_density'       => 2,
-        'max_logical_complexity_factor'        => 2,
+    private const array PENALTIES = [
+        'max_method_length'                     => 2,
+        'max_class_length'                      => 3,
+        'max_cyclomatic_complexity'             => 3,
+        'max_control_nesting'                   => 2,
+        'max_arguments'                         => 2,
+        'max_file_loc'                          => 2,
+        'max_methods_per_class'                 => 2,
+        'max_properties_per_class'              => 2,
+        'max_public_methods'                    => 2,
+        'max_dependencies'                      => 2,
+        'max_classes_per_file'                  => 2,
+        'max_namespace_depth'                   => 2,
+        'max_classes_per_namespace'             => 2,
+        'max_traits_per_class'                  => 2,
+        'max_interfaces_per_class'              => 2,
+        'max_classes_per_project'               => 3,
+        'min_code_breathing_score'              => 2,
+        'min_visual_breathing_index'            => 2,
+        'min_identifier_readability_score'      => 2,
+        'min_code_oxygen_level'                 => 2,
+        'max_weighted_cognitive_density'        => 2,
+        'max_logical_complexity_factor'         => 2,
+        'max_return_statements'                 => 2,
+        'max_boolean_conditions'                => 2,
     ];
 
     /**
      * @param list<RuleChecker> $checkers
      */
     public function __construct(
-        private readonly QualityConfig $config,
-        private readonly array $checkers,
+        private QualityConfig $config,
+        private array $checkers,
     ) {}
 
-    /**
-     * @psalm-param array<string, array{
-     *   file_loc: int,
-     *   classes_count: int,
-     *   classes: array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}>,
-     *   methods: array<string, array{loc: int, args: int}>,
-     *   namespaces: array<string, int>,
-     *   breathing?: array<string, mixed>
-     * }> $qualityMetrics
-     * @psalm-param array<string, positive-int> $complexityByMethod
-     */
-    public function evaluate(Result $metrics, array $qualityMetrics, array $complexityByMethod): QualityResult
+    public function evaluate(Result $metrics, EvaluateInput $input): QualityResult
     {
-        $namespacesAggregated = $this->aggregateNamespaces($qualityMetrics);
-        $fileMetrics = new FileMetrics($qualityMetrics, $complexityByMethod, $namespacesAggregated);
+        $namespacesAggregated = $this->aggregateNamespaces($input->qualityMetrics);
+        $core = new QualityCore($input->qualityMetrics, $input->methodMetrics->complexityByMethod);
+        $fileMetrics = new FileMetrics($core, $namespacesAggregated, $input->methodMetrics);
         $context = new EvaluationContext($this->config, $metrics, $fileMetrics);
 
         $violations = collect($this->checkers)

@@ -6,6 +6,7 @@ namespace Bunnivo\Soda;
 
 use function assert;
 
+use Bunnivo\Soda\Breathing\BreathingMetrics;
 use Bunnivo\Soda\Formatter\DependenciesFormatter;
 use Bunnivo\Soda\Formatter\SizeFormatter;
 use Bunnivo\Soda\Formatter\StructureFormatter;
@@ -82,7 +83,7 @@ EOT,
         )."\n";
 
         $breathing = $result->breathing();
-        if ($breathing !== null) {
+        if ($breathing instanceof BreathingMetrics) {
             $buf .= sprintf(
                 <<<'EOT'
 

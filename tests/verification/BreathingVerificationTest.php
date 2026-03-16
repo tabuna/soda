@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
 #[Group('verification')]
 final class BreathingVerificationTest extends TestCase
 {
-    private const TOLERANCE = 0.0001;
+    private const float TOLERANCE = 0.0001;
 
     /**
      * 4.1 Unit Verification — manual computation.
@@ -85,7 +85,7 @@ PHP;
 
         $metrics = BreathingAnalyser::analyse($code, $nodes);
 
-        $expectedLcf = 1.0 + 0.3 * 2 + 0.2 * 1 + 0.4 * 3;
+        $expectedLcf = 1.0 + 0.3 * 2 + 0.2 + 0.4 * 3;
         $this->assertEqualsWithDelta($expectedLcf, $metrics->lcf(), self::TOLERANCE, 'LCF formula: 1 + 0.3*N_cond + 0.2*N_loop + 0.4*depth_max');
     }
 
@@ -111,10 +111,12 @@ PHP;
         } elseif ($totalLines < 250 && $totalLines >= 50) {
             $divisor *= 2.9;
         }
+
         $sizeFactor = max(1.0, min(10.0, 2400.0 / ($totalLines + 50)));
         if ($totalLines > 400) {
             $sizeFactor = min(10.0, $sizeFactor * 2.0);
         }
+
         $effectiveLcf = min($metrics->lcf(), 4.0);
         $numerator = $metrics->vbi() * $metrics->irs() * $metrics->col();
         $denominator = 1 + ($metrics->wcd() * $effectiveLcf) / $divisor;
@@ -131,10 +133,10 @@ PHP;
     {
         $metrics = BreathingAnalyser::analyse('');
 
-        $this->assertEquals(0.0, $metrics->wcd(), 'WCD for empty file');
-        $this->assertEquals(0.0, $metrics->vbi(), 'VBI for empty file');
-        $this->assertEquals(0.0, $metrics->col(), 'COL for empty file');
-        $this->assertEquals(0.0, $metrics->cbs(), 'CBS for empty file');
+        $this->assertEqualsWithDelta(0.0, $metrics->wcd(), PHP_FLOAT_EPSILON, 'WCD for empty file');
+        $this->assertEqualsWithDelta(0.0, $metrics->vbi(), PHP_FLOAT_EPSILON, 'VBI for empty file');
+        $this->assertEqualsWithDelta(0.0, $metrics->col(), PHP_FLOAT_EPSILON, 'COL for empty file');
+        $this->assertEqualsWithDelta(0.0, $metrics->cbs(), PHP_FLOAT_EPSILON, 'CBS for empty file');
     }
 
     /**
@@ -146,7 +148,7 @@ PHP;
         $metrics = BreathingAnalyser::analyse('<?php $a=1;');
 
         $this->assertGreaterThan(0, $metrics->wcd());
-        $this->assertEquals(0.0, $metrics->vbi(), 'No blank lines => VBI=0');
+        $this->assertEqualsWithDelta(0.0, $metrics->vbi(), PHP_FLOAT_EPSILON, 'No blank lines => VBI=0');
         $this->assertGreaterThan(0, $metrics->col(), 'Single block ≤3 lines counts as short block');
     }
 
@@ -159,7 +161,7 @@ PHP;
         $code = "<?php\n\$a=1;\n\$b=2;\n\$c=\$a+\$b;";
         $metrics = BreathingAnalyser::analyse($code);
 
-        $this->assertEquals(0.0, $metrics->vbi(), 'No blank lines => VBI=0');
+        $this->assertEqualsWithDelta(0.0, $metrics->vbi(), PHP_FLOAT_EPSILON, 'No blank lines => VBI=0');
     }
 
     /**
@@ -198,12 +200,12 @@ PHP;
 
         $first = $results[0];
         foreach ($results as $r) {
-            $this->assertEquals($first[0], $r[0], 'WCD deterministic');
-            $this->assertEquals($first[1], $r[1], 'LCF deterministic');
-            $this->assertEquals($first[2], $r[2], 'VBI deterministic');
-            $this->assertEquals($first[3], $r[3], 'IRS deterministic');
-            $this->assertEquals($first[4], $r[4], 'COL deterministic');
-            $this->assertEquals($first[5], $r[5], 'CBS deterministic');
+            $this->assertSame($first[0], $r[0], 'WCD deterministic');
+            $this->assertSame($first[1], $r[1], 'LCF deterministic');
+            $this->assertSame($first[2], $r[2], 'VBI deterministic');
+            $this->assertSame($first[3], $r[3], 'IRS deterministic');
+            $this->assertSame($first[4], $r[4], 'COL deterministic');
+            $this->assertSame($first[5], $r[5], 'CBS deterministic');
         }
     }
 
@@ -224,8 +226,8 @@ PHP;
         $metrics = BreathingAnalyser::analyse($code);
 
         $lines = explode("\n", $code);
-        $nBlank = count(array_filter($lines, fn ($l) => trim($l) === ''));
-        $nLines = count(array_filter($lines, fn ($l) => trim($l) !== ''));
+        $nBlank = count(array_filter($lines, fn (string $l) => trim($l) === ''));
+        $nLines = count(array_filter($lines, fn (string $l) => trim($l) !== ''));
         $ratio = $nBlank / max(1, $nLines);
 
         $this->assertGreaterThan(0, $metrics->vbi(), 'Code with blank lines should have VBI > 0');
@@ -364,7 +366,7 @@ PHP;
         foreach (array_keys($expected) as $key) {
             $value = $expected[$key];
             $actual = $metrics->get($key);
-            $this->assertEqualsWithDelta($value, $actual, self::TOLERANCE, "Regression: {$key}");
+            $this->assertEqualsWithDelta($value, $actual, self::TOLERANCE, 'Regression: '.$key);
         }
     }
 }

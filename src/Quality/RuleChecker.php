@@ -80,7 +80,7 @@ final readonly class RuleChecker
     /**
      * @psalm-suppress UnusedParam Extensibility hook for severity/message
      */
-    public function meta(?string $severity, ?string $message = null): self
+    public function meta(): self
     {
         return $this;
     }
@@ -111,6 +111,7 @@ final readonly class RuleChecker
         )
             ->atClass($context->class())
             ->atMethod($context->method())
+            ->atLine($context->line())
             ->build();
 
         return [$violation];

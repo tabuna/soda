@@ -20,7 +20,7 @@ final readonly class StructureFormatter
     public function format(Result $result): string
     {
         $structure = $result->structure();
-        if ($structure === null) {
+        if (! $structure instanceof Metrics) {
             return '';
         }
 

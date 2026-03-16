@@ -48,7 +48,6 @@ final class JsonResultFormatterTest extends TestCase
                     'methodHighest'   => 8,
                 ]),
             ),
-            null,
         );
 
         $data = (new JsonResultFormatter())->format($result);
@@ -120,7 +119,6 @@ final class JsonResultFormatterTest extends TestCase
                     'classesOrTraits' => 0, 'methods' => 0, 'methodLowest' => 0, 'methodAverage' => 0.0, 'methodHighest' => 0,
                 ]),
             ),
-            null,
         );
 
         $data = (new JsonResultFormatter())->format($result);
@@ -142,7 +140,6 @@ final class JsonResultFormatterTest extends TestCase
                     'classesOrTraits' => 1, 'methods' => 3, 'methodLowest' => 1, 'methodAverage' => 2.0, 'methodHighest' => 3,
                 ]),
             ),
-            null,
         );
 
         $data = (new JsonResultFormatter())->format($result);

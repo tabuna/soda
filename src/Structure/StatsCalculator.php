@@ -86,6 +86,7 @@ final class StatsCalculator
         if ($total <= $lloc || $total <= 0) {
             return [$llocClasses, $llocFunctions];
         }
+
         $scale = (float) $lloc / (float) $total;
 
         return [

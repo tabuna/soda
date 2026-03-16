@@ -10,11 +10,11 @@ use Bunnivo\Soda\Quality\QualityConfig;
 /**
  * Resolves QualityConfig from project files or explicit path.
  */
-final class ConfigResolver
+final readonly class ConfigResolver
 {
     public function __construct(
-        private readonly ConfigLocator $locator,
-        private readonly ConfigLoader $loader,
+        private ConfigLocator $locator,
+        private ConfigLoader $loader,
     ) {}
 
     /**

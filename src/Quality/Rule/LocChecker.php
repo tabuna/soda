@@ -15,7 +15,7 @@ final class LocChecker implements RuleChecker
     {
         $threshold = $context->config->getRule('max_file_loc');
 
-        return collect($context->fileMetrics->qualityMetrics)
+        return collect($context->fileMetrics->qualityMetrics())
             ->flatMap(function (array $data, string $file) use ($threshold) {
                 return FluentRuleChecker::whenExceeded('max_file_loc')
                     ->file($file)

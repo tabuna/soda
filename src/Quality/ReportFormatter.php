@@ -34,15 +34,18 @@ EOT;
 
         $buf .= 'Summary'.PHP_EOL.'───────'.PHP_EOL.PHP_EOL;
         $buf .= sprintf('Violations: %d'.PHP_EOL, $result->violations->count());
-        $buf .= sprintf('Score: %d'.PHP_EOL, $result->score);
 
-        return $buf;
+        return $buf.sprintf('Score: %d'.PHP_EOL, $result->score);
     }
 
     private function formatViolation(Violation $v): string
     {
         $icon = $this->ruleMetadata->severity($v->rule) === RuleMetadata::SEVERITY_ERROR ? '❌' : '⚠️';
         $target = $v->method() ?? $v->class() ?? $v->file;
+        if ($v->line() !== null) {
+            $target = $v->file.':'.$v->line();
+        }
+
         $label = $this->ruleMetadata->label($v->rule);
         $lim = $v->limits();
 
@@ -57,7 +60,7 @@ EOT;
         );
     }
 
-    private const MIN_BREATHING_RULES = [
+    private const array MIN_BREATHING_RULES = [
         'min_code_breathing_score',
         'min_visual_breathing_index',
         'min_identifier_readability_score',

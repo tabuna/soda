@@ -6,10 +6,10 @@ namespace Bunnivo\Soda\Quality;
 
 use Illuminate\Support\Collection;
 
-final class ClassChecker
+final readonly class ClassChecker
 {
     public function __construct(
-        private readonly QualityConfig $config,
+        private QualityConfig $config,
     ) {}
 
     /**

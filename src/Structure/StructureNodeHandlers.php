@@ -61,31 +61,42 @@ final class StructureNodeHandlers
 
     public static function handleMembers(MetricsState $state, Node $node): bool
     {
-        if ($node instanceof ClassMethod) {
-            NodeHandlers::handleClassMethod($state, $node);
+        return match (true) {
+            $node instanceof ClassMethod => self::handleClassMethodMember($state, $node),
+            $node instanceof Function_   => self::handleFunctionMember($state, $node),
+            $node instanceof Closure,
+            $node instanceof ArrowFunction => self::handleAnonymousMember($state, $node),
+            $node instanceof ClassConst    => self::handleClassConstMember($state, $node),
+            default                        => false,
+        };
+    }
 
-            return true;
-        }
+    private static function handleClassMethodMember(MetricsState $state, ClassMethod $node): bool
+    {
+        NodeHandlers::handleClassMethod($state, $node);
 
-        if ($node instanceof Function_) {
-            NodeHandlers::handleFunction($state, $node);
+        return true;
+    }
 
-            return true;
-        }
+    private static function handleFunctionMember(MetricsState $state, Function_ $node): bool
+    {
+        NodeHandlers::handleFunction($state, $node);
 
-        if ($node instanceof Closure || $node instanceof ArrowFunction) {
-            NodeHandlers::handleAnonymousFunction($state, $node);
+        return true;
+    }
 
-            return true;
-        }
+    private static function handleAnonymousMember(MetricsState $state, Closure|ArrowFunction $node): bool
+    {
+        NodeHandlers::handleAnonymousFunction($state, $node);
 
-        if ($node instanceof ClassConst) {
-            NodeHandlers::handleClassConst($state, $node);
+        return true;
+    }
 
-            return true;
-        }
+    private static function handleClassConstMember(MetricsState $state, ClassConst $node): bool
+    {
+        NodeHandlers::handleClassConst($state, $node);
 
-        return false;
+        return true;
     }
 
     public static function handleGlobals(MetricsState $state, Node $node): bool

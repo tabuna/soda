@@ -31,15 +31,13 @@ final class RuleCheckerTest extends TestCase
     }
 
     /**
-     * @return array<string, array{value: int, limit: int}>
+     * @return \Iterator<string, array{value: int, limit: int}>
      */
-    public static function noViolationProvider(): array
+    public static function noViolationProvider(): \Iterator
     {
-        return [
-            'value equals limit' => ['value' => 100, 'limit' => 100],
-            'value below limit'  => ['value' => 50, 'limit' => 100],
-            'limit disabled'     => ['value' => 1000, 'limit' => 0],
-        ];
+        yield 'value equals limit' => ['value' => 100, 'limit' => 100];
+        yield 'value below limit' => ['value' => 50, 'limit' => 100];
+        yield 'limit disabled' => ['value' => 1000, 'limit' => 0];
     }
 
     public function testReturnsViolationWhenExceeded(): void
@@ -96,8 +94,7 @@ final class RuleCheckerTest extends TestCase
         $result = RuleChecker::whenExceeded('max_class_length')
             ->file('/file.php')
             ->class('Foo')
-            ->line(42)
-            ->meta('warning', 'Class too long')
+            ->line(42)->meta()
             ->forValue(100)
             ->limit(50)
             ->result();

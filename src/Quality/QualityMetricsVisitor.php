@@ -51,11 +51,6 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
     ];
 
     /**
-     * @psalm-var non-negative-int
-     */
-    private int $fileLines;
-
-    /**
      * @psalm-var list<non-empty-string>
      */
     private array $classStack = [];
@@ -63,10 +58,12 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
     /**
      * @psalm-param non-negative-int $fileLines
      */
-    public function __construct(int $fileLines)
-    {
-        $this->fileLines = $fileLines;
-    }
+    public function __construct(
+        /**
+         * @psalm-var non-negative-int
+         */
+        private readonly int $fileLines
+    ) {}
 
     #[\Override]
     public function enterNode(Node $node): void
@@ -110,6 +107,7 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
         if ($node->getAttribute('parent') instanceof Interface_) {
             return;
         }
+
         if ($node->isAbstract()) {
             return;
         }
@@ -131,6 +129,7 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
         if ($name === null || $name === '') {
             return;
         }
+
         $loc = $node->getEndLine() - $node->getStartLine() + 1;
         $this->result['methods'][$name] = ['loc' => $loc, 'args' => count($node->params)];
     }
@@ -138,10 +137,8 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function leaveNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_) {
-            if ($this->classStack !== []) {
-                array_pop($this->classStack);
-            }
+        if (($node instanceof Class_ || $node instanceof Trait_) && $this->classStack !== []) {
+            array_pop($this->classStack);
         }
     }
 

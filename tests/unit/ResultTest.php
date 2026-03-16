@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 #[Small]
 final class ResultTest extends TestCase
 {
-    private static function createResult(array $overrides = []): Result
+    private function createResult(array $overrides = []): Result
     {
         $loc = new LocMetrics(array_merge([
             'directories'           => 1,
@@ -42,12 +42,12 @@ final class ResultTest extends TestCase
             'methodHighest'   => 15,
         ], $overrides['complexity'] ?? []));
 
-        return new Result($overrides['errors'] ?? [], new CoreMetrics($loc, $complexity), null);
+        return new Result($overrides['errors'] ?? [], new CoreMetrics($loc, $complexity));
     }
 
     public function testMayHaveNoErrors(): void
     {
-        $result = self::createResult();
+        $result = $this->createResult();
         $info = $result->errorInfo();
 
         $this->assertFalse($info['hasErrors']);
@@ -56,7 +56,7 @@ final class ResultTest extends TestCase
 
     public function testMayHaveErrors(): void
     {
-        $result = self::createResult(['errors' => ['error']]);
+        $result = $this->createResult(['errors' => ['error']]);
         $info = $result->errorInfo();
 
         $this->assertTrue($info['hasErrors']);
@@ -65,7 +65,7 @@ final class ResultTest extends TestCase
 
     public function testHasLocStats(): void
     {
-        $result = self::createResult();
+        $result = $this->createResult();
         $s = $result->loc()->stats();
 
         $this->assertSame(1, $s['directories']);
@@ -78,72 +78,72 @@ final class ResultTest extends TestCase
 
     public function testHasCommentLinesOfCodePercentage(): void
     {
-        $result = self::createResult();
-        $this->assertSame(40.0, $result->loc()->percentages()['comment']);
+        $result = $this->createResult();
+        $this->assertEqualsWithDelta(40.0, $result->loc()->percentages()['comment'], PHP_FLOAT_EPSILON);
 
-        $result = self::createResult([
+        $result = $this->createResult([
             'loc' => [
                 'directories'        => 1, 'files' => 2, 'linesOfCode' => 0,
                 'commentLinesOfCode' => 0, 'nonCommentLinesOfCode' => 0, 'logicalLinesOfCode' => 0,
             ],
         ]);
-        $this->assertSame(0.0, $result->loc()->percentages()['comment']);
+        $this->assertEqualsWithDelta(0.0, $result->loc()->percentages()['comment'], PHP_FLOAT_EPSILON);
     }
 
     public function testHasNonCommentLinesOfCodePercentage(): void
     {
-        $result = self::createResult();
-        $this->assertSame(60.0, $result->loc()->percentages()['nonComment']);
+        $result = $this->createResult();
+        $this->assertEqualsWithDelta(60.0, $result->loc()->percentages()['nonComment'], PHP_FLOAT_EPSILON);
 
-        $result = self::createResult([
+        $result = $this->createResult([
             'loc' => [
                 'directories'        => 1, 'files' => 2, 'linesOfCode' => 0,
                 'commentLinesOfCode' => 0, 'nonCommentLinesOfCode' => 0, 'logicalLinesOfCode' => 0,
             ],
         ]);
-        $this->assertSame(0.0, $result->loc()->percentages()['nonComment']);
+        $this->assertEqualsWithDelta(0.0, $result->loc()->percentages()['nonComment'], PHP_FLOAT_EPSILON);
     }
 
     public function testHasLogicalLinesOfCodePercentage(): void
     {
-        $result = self::createResult();
-        $this->assertSame(30.0, $result->loc()->percentages()['logical']);
+        $result = $this->createResult();
+        $this->assertEqualsWithDelta(30.0, $result->loc()->percentages()['logical'], PHP_FLOAT_EPSILON);
 
-        $result = self::createResult([
+        $result = $this->createResult([
             'loc' => [
                 'directories'        => 1, 'files' => 2, 'linesOfCode' => 0,
                 'commentLinesOfCode' => 0, 'nonCommentLinesOfCode' => 0, 'logicalLinesOfCode' => 0,
             ],
         ]);
-        $this->assertSame(0.0, $result->loc()->percentages()['logical']);
+        $this->assertEqualsWithDelta(0.0, $result->loc()->percentages()['logical'], PHP_FLOAT_EPSILON);
     }
 
     public function testHasFunctions(): void
     {
-        $result = self::createResult();
+        $result = $this->createResult();
         $f = $result->complexity()->functions();
 
         $this->assertSame(7, $f['count']);
         $this->assertSame(8, $f['lowest']);
-        $this->assertSame(9.0, $f['average']);
+        $this->assertEqualsWithDelta(9.0, $f['average'], PHP_FLOAT_EPSILON);
         $this->assertSame(10, $f['highest']);
     }
 
     public function testHasClassesOrTraits(): void
     {
-        $result = self::createResult();
+        $result = $this->createResult();
 
         $this->assertSame(11, $result->classesOrTraits());
     }
 
     public function testHasMethods(): void
     {
-        $result = self::createResult();
+        $result = $this->createResult();
         $m = $result->complexity()->methods();
 
         $this->assertSame(12, $m['methods']);
         $this->assertSame(13, $m['lowest']);
-        $this->assertSame(14.0, $m['average']);
+        $this->assertEqualsWithDelta(14.0, $m['average'], PHP_FLOAT_EPSILON);
         $this->assertSame(15, $m['highest']);
     }
 }

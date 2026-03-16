@@ -50,7 +50,6 @@ final class TextResultFormatterTest extends TestCase
                             'methodHighest'   => 15,
                         ]),
                     ),
-                    null,
                 ),
             ),
         );

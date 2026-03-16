@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Breathing\BreathingMetrics;
+use Bunnivo\Soda\Structure\Metrics;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -19,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Analyser::class)]
 #[UsesClass(Result::class)]
-#[UsesClass(Structure\Metrics::class)]
+#[UsesClass(Metrics::class)]
 #[Small]
 final class AnalyserTest extends TestCase
 {
@@ -48,11 +50,11 @@ final class AnalyserTest extends TestCase
         $this->assertSame(2, $result->complexity()->methods()['methods']);
 
         $breathing = $result->breathing();
-        $this->assertNotNull($breathing);
+        $this->assertInstanceOf(BreathingMetrics::class, $breathing);
         $this->assertGreaterThanOrEqual(0, $breathing->cbs());
 
         $structure = $result->structure();
-        $this->assertNotNull($structure);
+        $this->assertInstanceOf(Metrics::class, $structure);
         $arr = $structure->toArray();
         $this->assertSame(1, $arr['namespaces']);
         $this->assertSame(1, $arr['interfaces']);

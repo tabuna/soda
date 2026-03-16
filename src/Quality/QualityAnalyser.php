@@ -8,6 +8,8 @@ use Bunnivo\Soda\Analyser;
 use Bunnivo\Soda\Breathing\BreathingAnalyser;
 use Bunnivo\Soda\ParserException;
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
+use Bunnivo\Soda\Quality\EvaluationContext\MethodMetricsData;
+use Bunnivo\Soda\Quality\EvaluationContext\MethodNestingReturns;
 
 use function file_get_contents;
 
@@ -36,6 +38,9 @@ final class QualityAnalyser
 
         $qualityMetrics = [];
         $complexityByMethod = [];
+        $nestingByMethod = [];
+        $returnsByMethod = [];
+        $booleanConditionsByMethod = [];
 
         foreach ($files as $file) {
             try {
@@ -45,6 +50,18 @@ final class QualityAnalyser
                 foreach ($fileResult['complexity']->asArray() as $item) {
                     $complexityByMethod[$item->name()] = $item->cyclomaticComplexity();
                 }
+
+                foreach ($fileResult['nesting'] as $method => $data) {
+                    $nestingByMethod[$method] = array_merge($data, ['file' => $file]);
+                }
+
+                foreach ($fileResult['returns'] as $method => $count) {
+                    $returnsByMethod[$method] = $count;
+                }
+
+                foreach ($fileResult['booleanConditions'] as $method => $conditions) {
+                    $booleanConditionsByMethod[$method] = $conditions;
+                }
             } catch (ParserException|Error) {
                 continue;
             }
@@ -53,8 +70,10 @@ final class QualityAnalyser
         /** @throws ConfigException */
         $config = ConfigResolver::resolveConfig($files, $configPath);
         $engine = QualityEngine::create($config);
+        $nestingReturns = new MethodNestingReturns($nestingByMethod, $returnsByMethod);
+        $input = new EvaluateInput($qualityMetrics, new MethodMetricsData($nestingReturns, $booleanConditionsByMethod, $complexityByMethod));
 
-        return $engine->evaluate($result, $qualityMetrics, $complexityByMethod);
+        return $engine->evaluate($result, $input);
     }
 
     /**
@@ -68,9 +87,8 @@ final class QualityAnalyser
     private function analyseFile(string $file): array
     {
         $source = file_get_contents($file);
-        if ($source === false) {
-            throw new ParserException("Cannot read {$file}", 0);
-        }
+        throw_if($source === false, ParserException::class, 'Cannot read '.$file, 0);
+
         $lines = substr_count($source, "\n");
         if ($lines === 0 && $source !== '') {
             $lines = 1;
@@ -80,26 +98,31 @@ final class QualityAnalyser
 
         try {
             $nodes = $parser->parse($source);
-        } catch (Error $e) {
+        } catch (Error $error) {
             throw new ParserException(
-                "Cannot parse {$file}: ".$e->getMessage(),
-                $e->getCode(),
-                $e,
+                sprintf('Cannot parse %s: ', $file).$error->getMessage(),
+                $error->getCode(),
+                $error,
             );
         }
 
-        if ($nodes === null) {
-            throw new ParserException("Cannot parse {$file}", 0);
-        }
+        throw_if($nodes === null, ParserException::class, 'Cannot parse '.$file, 0);
 
         $traverser = new NodeTraverser();
         $complexityVisitor = new ComplexityCalculatingVisitor(false);
         $metricsVisitor = new QualityMetricsVisitor(max(0, $lines));
 
+        $nestingVisitor = new ControlNestingVisitor();
+        $returnsVisitor = new ReturnStatementsVisitor();
+        $booleanConditionsVisitor = new BooleanConditionsVisitor();
+
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor(new ParentConnectingVisitor());
         $traverser->addVisitor($complexityVisitor);
         $traverser->addVisitor($metricsVisitor);
+        $traverser->addVisitor($nestingVisitor);
+        $traverser->addVisitor($returnsVisitor);
+        $traverser->addVisitor($booleanConditionsVisitor);
 
         $traverser->traverse($nodes);
 
@@ -109,8 +132,11 @@ final class QualityAnalyser
         $metrics['breathing'] = $breathing->toArray();
 
         return [
-            'metrics'    => $metrics,
-            'complexity' => $complexityVisitor->result(),
+            'metrics'           => $metrics,
+            'complexity'        => $complexityVisitor->result(),
+            'nesting'           => $nestingVisitor->result(),
+            'returns'           => $returnsVisitor->result(),
+            'booleanConditions' => $booleanConditionsVisitor->result(),
         ];
     }
 }

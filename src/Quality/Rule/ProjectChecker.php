@@ -18,7 +18,7 @@ final class ProjectChecker implements RuleChecker
     {
         $threshold = $context->config->getRule('max_classes_per_project');
         $total = $context->projectMetrics->classesOrTraits();
-        $firstFile = array_key_first($context->fileMetrics->qualityMetrics) ?? '.';
+        $firstFile = array_key_first($context->fileMetrics->qualityMetrics()) ?? '.';
 
         $violations = FluentRuleChecker::whenExceeded('max_classes_per_project')
             ->file($firstFile)

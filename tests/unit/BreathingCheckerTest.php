@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Quality\EvaluateInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
 use Bunnivo\Soda\Quality\Rule\BreathingChecker;
@@ -15,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 #[Small]
 final class BreathingCheckerTest extends TestCase
 {
-    private static function createResult(): Result
+    private function createResult(): Result
     {
         $loc = new LocMetrics([
             'directories'           => 1,
@@ -37,7 +38,7 @@ final class BreathingCheckerTest extends TestCase
             'methodHighest'   => 1,
         ]);
 
-        return new Result([], new CoreMetrics($loc, $complexity), null);
+        return new Result([], new CoreMetrics($loc, $complexity));
     }
 
     public function testProducesViolationWhenCbsBelowMin(): void
@@ -56,7 +57,8 @@ final class BreathingCheckerTest extends TestCase
             ],
         ];
 
-        $result = $engine->evaluate(self::createResult(), $metrics, []);
+        $input = EvaluateInput::fromArrays($metrics, []);
+        $result = $engine->evaluate($this->createResult(), $input);
 
         $this->assertCount(1, $result->violations);
         $this->assertSame('min_code_breathing_score', $result->violations->first()->rule);
@@ -78,7 +80,8 @@ final class BreathingCheckerTest extends TestCase
             ],
         ];
 
-        $result = $engine->evaluate(self::createResult(), $metrics, []);
+        $input = EvaluateInput::fromArrays($metrics, []);
+        $result = $engine->evaluate($this->createResult(), $input);
 
         $this->assertCount(1, $result->violations);
         $this->assertSame('min_code_breathing_score', $result->violations->first()->rule);
@@ -100,7 +103,8 @@ final class BreathingCheckerTest extends TestCase
             ],
         ];
 
-        $result = $engine->evaluate(self::createResult(), $metrics, []);
+        $input = EvaluateInput::fromArrays($metrics, []);
+        $result = $engine->evaluate($this->createResult(), $input);
 
         $this->assertCount(0, $result->violations);
     }
@@ -121,7 +125,8 @@ final class BreathingCheckerTest extends TestCase
             ],
         ];
 
-        $result = $engine->evaluate(self::createResult(), $metrics, []);
+        $input = EvaluateInput::fromArrays($metrics, []);
+        $result = $engine->evaluate($this->createResult(), $input);
 
         $this->assertCount(0, $result->violations);
     }

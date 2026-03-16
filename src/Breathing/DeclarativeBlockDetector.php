@@ -54,15 +54,19 @@ final class DeclarativeBlockDetector
             if ($this->isArrayLike($trimmed)) {
                 $counts['arrayLike']++;
             }
+
             if (str_contains($trimmed, '->')) {
                 $counts['fluentLike']++;
             }
+
             if ($this->isAccessorLike($trimmed)) {
                 $counts['accessorLike']++;
             }
+
             if ($this->isTemplateLike($trimmed)) {
                 $counts['templateLike']++;
             }
+
             if (str_contains($trimmed, ' instanceof ')) {
                 $counts['instanceofLike']++;
             }

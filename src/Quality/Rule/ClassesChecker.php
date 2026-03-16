@@ -15,7 +15,7 @@ final class ClassesChecker implements RuleChecker
     {
         $threshold = $context->config->getRule('max_classes_per_file');
 
-        return collect($context->fileMetrics->qualityMetrics)
+        return collect($context->fileMetrics->qualityMetrics())
             ->flatMap(function (array $data, string $file) use ($threshold) {
                 return FluentRuleChecker::whenExceeded('max_classes_per_file')
                     ->file($file)

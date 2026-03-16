@@ -28,6 +28,7 @@ final class ColCalculator
         if ($totalLines < 100 && $totalLines >= 50) {
             return 0.12;
         }
+
         if ($totalLines < 200 && $totalLines >= 100) {
             return 0.05;
         }

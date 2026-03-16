@@ -31,6 +31,7 @@ final class CbsCalculator
         if ($totalLines > 400) {
             return $divisor * 5.0;
         }
+
         if ($totalLines < 250 && $totalLines >= 50) {
             return $divisor * 2.9;
         }

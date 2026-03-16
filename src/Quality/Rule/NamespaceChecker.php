@@ -16,7 +16,7 @@ final class NamespaceChecker implements RuleChecker
         $maxDepth = $context->config->getRule('max_namespace_depth');
         $maxPerNamespace = $context->config->getRule('max_classes_per_namespace');
 
-        $depthViolations = collect($context->fileMetrics->qualityMetrics)
+        $depthViolations = collect($context->fileMetrics->qualityMetrics())
             ->flatMap(function (array $data, string $file) use ($maxDepth) {
                 return collect($data['classes'] ?? [])
                     ->flatMap(function (array $classData, string $className) use ($file, $maxDepth) {

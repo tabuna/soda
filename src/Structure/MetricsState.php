@@ -18,39 +18,34 @@ final class MetricsState
     public array $classStack = [];
 
     /** @var array<string, int|list<int>> */
-    private array $data;
-
-    public function __construct()
-    {
-        $this->data = [
-            'interfaces'                   => 0,
-            'traits'                       => 0,
-            'abstractClasses'              => 0,
-            'finalClasses'                 => 0,
-            'nonFinalClasses'              => 0,
-            'classLines'                   => [],
-            'methodLines'                  => [],
-            'methodsPerClass'              => [],
-            'functionLines'                => [],
-            'nonStaticMethods'             => 0,
-            'staticMethods'                => 0,
-            'publicMethods'                => 0,
-            'protectedMethods'             => 0,
-            'privateMethods'               => 0,
-            'namedFunctions'               => 0,
-            'anonymousFunctions'           => 0,
-            'globalConstants'              => 0,
-            'publicClassConstants'         => 0,
-            'nonPublicClassConstants'      => 0,
-            'globalVariableAccesses'       => 0,
-            'superGlobalVariableAccesses'  => 0,
-            'globalConstantAccesses'       => 0,
-            'nonStaticAttributeAccesses'   => 0,
-            'staticAttributeAccesses'      => 0,
-            'nonStaticMethodCalls'         => 0,
-            'staticMethodCalls'            => 0,
-        ];
-    }
+    private array $data = [
+        'interfaces'                   => 0,
+        'traits'                       => 0,
+        'abstractClasses'              => 0,
+        'finalClasses'                 => 0,
+        'nonFinalClasses'              => 0,
+        'classLines'                   => [],
+        'methodLines'                  => [],
+        'methodsPerClass'              => [],
+        'functionLines'                => [],
+        'nonStaticMethods'             => 0,
+        'staticMethods'                => 0,
+        'publicMethods'                => 0,
+        'protectedMethods'             => 0,
+        'privateMethods'               => 0,
+        'namedFunctions'               => 0,
+        'anonymousFunctions'           => 0,
+        'globalConstants'              => 0,
+        'publicClassConstants'         => 0,
+        'nonPublicClassConstants'      => 0,
+        'globalVariableAccesses'       => 0,
+        'superGlobalVariableAccesses'  => 0,
+        'globalConstantAccesses'       => 0,
+        'nonStaticAttributeAccesses'   => 0,
+        'staticAttributeAccesses'      => 0,
+        'nonStaticMethodCalls'         => 0,
+        'staticMethodCalls'            => 0,
+    ];
 
     public function inc(string $key): void
     {

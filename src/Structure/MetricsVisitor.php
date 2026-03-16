@@ -19,7 +19,7 @@ use PhpParser\NodeVisitorAbstract;
  */
 final class MetricsVisitor extends NodeVisitorAbstract
 {
-    private MetricsState $state;
+    private readonly MetricsState $state;
 
     public function __construct()
     {
@@ -35,10 +35,8 @@ final class MetricsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function leaveNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_) {
-            if ($this->state->classStack !== []) {
-                array_pop($this->state->classStack);
-            }
+        if (($node instanceof Class_ || $node instanceof Trait_) && $this->state->classStack !== []) {
+            array_pop($this->state->classStack);
         }
     }
 
@@ -54,10 +52,19 @@ final class MetricsVisitor extends NodeVisitorAbstract
 
     private function handleStructureNodes(Node $node): bool
     {
-        return StructureNodeHandlers::handleNamespace($this->state, $node)
-            || StructureNodeHandlers::handleTypeDeclarations($this->state, $node)
-            || StructureNodeHandlers::handleMembers($this->state, $node)
-            || StructureNodeHandlers::handleGlobals($this->state, $node);
+        if (StructureNodeHandlers::handleNamespace($this->state, $node)) {
+            return true;
+        }
+
+        if (StructureNodeHandlers::handleTypeDeclarations($this->state, $node)) {
+            return true;
+        }
+
+        if (StructureNodeHandlers::handleMembers($this->state, $node)) {
+            return true;
+        }
+
+        return StructureNodeHandlers::handleGlobals($this->state, $node);
     }
 
     private function handleExpressionNodes(Node $node): bool

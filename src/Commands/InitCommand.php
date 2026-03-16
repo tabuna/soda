@@ -17,7 +17,7 @@ final class InitCommand extends Command
 
     protected $description = 'Create soda.json with default quality rules';
 
-    private const INIT_CONFIG = [
+    private const array INIT_CONFIG = [
         'quality' => [
             'min_score' => 80,
         ],
@@ -48,6 +48,26 @@ final class InitCommand extends Command
 
     public function handle(): int
     {
+        $failure = $this->validateOrFail();
+        if ($failure !== null) {
+            return $failure;
+        }
+
+        $path = getcwd().'/soda.json';
+        $json = json_encode(self::INIT_CONFIG, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($json === false || file_put_contents($path, $json) === false) {
+            $this->error($json === false ? 'Failed to encode config' : 'Failed to write soda.json');
+
+            return self::FAILURE;
+        }
+
+        $this->info('Created soda.json');
+
+        return self::SUCCESS;
+    }
+
+    private function validateOrFail(): ?int
+    {
         $cwd = getcwd();
         /** @psalm-suppress TypeDoesNotContainType - getcwd() can return '' on edge cases */
         if ($cwd === false || $cwd === '') {
@@ -56,29 +76,12 @@ final class InitCommand extends Command
             return self::FAILURE;
         }
 
-        $path = $cwd.'/soda.json';
-
-        if (is_readable($path)) {
+        if (is_readable($cwd.'/soda.json')) {
             $this->error('soda.json already exists');
 
             return self::FAILURE;
         }
 
-        $json = json_encode(self::INIT_CONFIG, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        if ($json === false) {
-            $this->error('Failed to encode config');
-
-            return self::FAILURE;
-        }
-
-        if (file_put_contents($path, $json) === false) {
-            $this->error('Failed to write soda.json');
-
-            return self::FAILURE;
-        }
-
-        $this->info('Created soda.json');
-
-        return self::SUCCESS;
+        return null;
     }
 }

@@ -44,4 +44,9 @@ final readonly class RuleContext
     {
         return $this->method;
     }
+
+    public function line(): ?int
+    {
+        return $this->line;
+    }
 }

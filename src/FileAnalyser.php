@@ -37,9 +37,7 @@ final class FileAnalyser
     public function analyse(string $file): array
     {
         $source = file_get_contents($file);
-        if ($source === false) {
-            throw new ParserException("Cannot read {$file}", 0);
-        }
+        throw_if($source === false, ParserException::class, 'Cannot read '.$file, 0);
 
         $lines = substr_count($source, "\n");
         if ($lines === 0 && $source !== '') {
@@ -58,9 +56,7 @@ final class FileAnalyser
             );
         }
 
-        if ($nodes === null) {
-            throw new ParserException("Cannot parse {$file}", 0);
-        }
+        throw_if($nodes === null, ParserException::class, 'Cannot parse '.$file, 0);
 
         $traverser = new NodeTraverser;
         $complexityVisitor = new ComplexityCalculatingVisitor(false);

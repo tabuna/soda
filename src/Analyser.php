@@ -91,6 +91,7 @@ final class Analyser
             if ($debug) {
                 echo $file.PHP_EOL;
             }
+
             $dirs[] = dirname($file);
 
             try {
@@ -101,7 +102,7 @@ final class Analyser
                 $breathingList[] = $result['breathing'];
             } catch (ParserException $e) {
                 $message = $e->getMessage();
-                assert(is_string($message) && ! empty($message));
+                assert(is_string($message) && ($message !== '' && $message !== '0'));
                 $errors[] = $message;
             }
         }

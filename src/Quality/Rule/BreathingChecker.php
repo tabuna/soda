@@ -11,14 +11,14 @@ use Illuminate\Support\Collection;
 
 final class BreathingChecker implements RuleChecker
 {
-    private const MIN_RULES = [
+    private const array MIN_RULES = [
         'min_code_breathing_score'             => 'cbs',
         'min_visual_breathing_index'           => 'vbi',
         'min_identifier_readability_score'     => 'irs',
         'min_code_oxygen_level'                => 'col',
     ];
 
-    private const MAX_RULES = [
+    private const array MAX_RULES = [
         'max_weighted_cognitive_density'       => 'wcd',
         'max_logical_complexity_factor'        => 'lcf',
     ];
@@ -29,7 +29,7 @@ final class BreathingChecker implements RuleChecker
         /** @var list<Violation> $list */
         $list = [];
 
-        foreach ($context->fileMetrics->qualityMetrics as $file => $data) {
+        foreach ($context->fileMetrics->qualityMetrics() as $file => $data) {
             $breathing = $data['breathing'] ?? null;
             if ($breathing === null) {
                 continue;

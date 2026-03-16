@@ -7,14 +7,28 @@ namespace Bunnivo\Soda\Quality;
 final readonly class ViolationContext
 {
     public function __construct(
-        public ?string $method,
-        public ?string $class,
         public Limits $limits,
+        public ViolationLocation $location = new ViolationLocation(),
     ) {}
 
-    public static function create(Limits $limits, ?string $method, ?string $class): self
+    public static function create(Limits $limits, ViolationLocation $location = new ViolationLocation()): self
     {
-        return new self($method, $class, $limits);
+        return new self($limits, $location);
+    }
+
+    public function method(): ?string
+    {
+        return $this->location->method;
+    }
+
+    public function class(): ?string
+    {
+        return $this->location->class;
+    }
+
+    public function line(): ?int
+    {
+        return $this->location->line;
     }
 
     public function value(): int

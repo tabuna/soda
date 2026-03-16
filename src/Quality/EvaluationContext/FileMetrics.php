@@ -9,20 +9,36 @@ use Illuminate\Support\Collection;
 final readonly class FileMetrics
 {
     /**
-     * @psalm-param array<string, array{
-     *   file_loc: int,
-     *   classes_count: int,
-     *   classes: array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}>,
-     *   methods: array<string, array{loc: int, args: int}>,
-     *   namespaces: array<string, int>,
-     *   breathing?: array<string, mixed>
-     * }> $qualityMetrics
-     * @psalm-param array<string, positive-int> $complexityByMethod
      * @psalm-param Collection<string, array{count: int, file: string}> $namespacesAggregated
      */
     public function __construct(
-        public array $qualityMetrics,
-        public array $complexityByMethod,
+        public QualityCore $core,
         public Collection $namespacesAggregated,
+        public MethodMetricsData $methodMetrics = new MethodMetricsData(),
     ) {}
+
+    public function qualityMetrics(): array
+    {
+        return $this->core->qualityMetrics;
+    }
+
+    public function complexityByMethod(): array
+    {
+        return $this->core->complexityByMethod;
+    }
+
+    public function nestingByMethod(): array
+    {
+        return $this->methodMetrics->nestingByMethod();
+    }
+
+    public function returnsByMethod(): array
+    {
+        return $this->methodMetrics->returnsByMethod();
+    }
+
+    public function booleanConditionsByMethod(): array
+    {
+        return $this->methodMetrics->booleanConditionsByMethod;
+    }
 }

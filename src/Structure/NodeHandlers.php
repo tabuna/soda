@@ -25,7 +25,7 @@ use PhpParser\Node\Stmt\Interface_;
  */
 final class NodeHandlers
 {
-    private const SUPER_GLOBALS = [
+    private const array SUPER_GLOBALS = [
         '_ENV'     => true,
         '_POST'    => true,
         '_GET'     => true,
@@ -114,11 +114,13 @@ final class NodeHandlers
         } elseif (! is_string($name)) {
             return;
         }
+
         if ($name === 'GLOBALS') {
             $state->inc('globalVariableAccesses');
 
             return;
         }
+
         if (isset(self::SUPER_GLOBALS[$name])) {
             $state->inc('superGlobalVariableAccesses');
         }

@@ -85,11 +85,13 @@ final class MetricsExtractor
         if (! isset($node->namespacedName)) {
             return ['', 0];
         }
+
         $full = $node->namespacedName->toString();
         $parts = explode('\\', $full);
         if (count($parts) <= 1) {
             return ['', 0];
         }
+
         array_pop($parts);
 
         return [implode('\\', $parts), count($parts)];

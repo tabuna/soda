@@ -15,7 +15,10 @@ namespace Bunnivo\Soda\Quality;
 final class ViolationBuilder
 {
     private ?string $method = null;
+
     private ?string $class = null;
+
+    private ?int $line = null;
 
     private function __construct(
         private readonly string $rule,
@@ -42,9 +45,17 @@ final class ViolationBuilder
         return $this;
     }
 
+    public function atLine(?int $line): self
+    {
+        $this->line = $line;
+
+        return $this;
+    }
+
     public function build(): Violation
     {
-        $context = ViolationContext::create($this->limits, $this->method, $this->class);
+        $location = new ViolationLocation($this->method, $this->class, $this->line);
+        $context = ViolationContext::create($this->limits, $location);
 
         return new Violation($this->rule, $this->file, $context);
     }
