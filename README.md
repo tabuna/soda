@@ -1,13 +1,12 @@
 # Soda
 
-Keep your PHP code **clean, maintainable, and architecturally sound** with Soda.  
-Turn code metrics into enforceable quality rules—no god classes, no 500-line methods, no dependency sprawl.
+Keep your PHP code **clean, maintainable, and architecturally sound**.
 
-AI writes faster than ever. Mistakes happen.
-What if your code could **catch them first—before anyone else notices**? Soda quietly keeps your code consistent, safe,
-and review-ready.
+With Soda, your code doesn’t just exist—it **enforces quality**. Say goodbye to god classes, 500-line methods, and tangled dependencies. Turn code metrics into rules that actually matter.
 
-> **Don't trust the prompt. Trust PHP Quality Gates!**
+AI writes faster than ever, but mistakes happen. **What if your code could catch them first—before anyone else notices?** Soda quietly keeps your code consistent, safe, and review-ready.
+
+> **Don’t trust the prompt. Trust PHP Quality Gates.**
 
 ## Installation
 
