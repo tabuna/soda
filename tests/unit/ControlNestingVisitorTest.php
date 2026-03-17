@@ -10,6 +10,7 @@ use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
@@ -164,5 +165,57 @@ PHP;
         $result = $this->parseAndCollect($code);
         $this->assertArrayHasKey('App\process', $result);
         $this->assertSame(1, $result['App\process']['depth']);
+    }
+
+    /**
+     * @group enum-workaround
+     * REMOVE_WHEN sebastian/complexity adds Enum support (see EnumAwareComplexityVisitorTest)
+     */
+    #[Group('enum-workaround')]
+    public function testEnumWithMethodsTracksNesting(): void
+    {
+        $code = <<<'PHP'
+<?php
+namespace App;
+enum Status: string {
+    case Active = 'active';
+    case Inactive = 'inactive';
+
+    public function label(): string {
+        if ($this === self::Active) {
+            return 'Active';
+        }
+        return 'Inactive';
+    }
+}
+PHP;
+        $result = $this->parseAndCollect($code);
+        $this->assertArrayHasKey('App\Status::label', $result);
+        $this->assertSame(1, $result['App\Status::label']['depth']);
+    }
+
+    /**
+     * @group enum-workaround
+     * Регрессия: endMethod без startMethod при Function_ с null resolveMethodName.
+     * REMOVE_WHEN: не связан с Enum, но в той же группе для напоминания.
+     */
+    #[Group('enum-workaround')]
+    public function testNestedFunctionDoesNotCrash(): void
+    {
+        $code = <<<'PHP'
+<?php
+function outer() {
+    if (true) {
+        function inner() {
+            if (false) {
+                return 1;
+            }
+        }
+    }
+}
+PHP;
+        $result = $this->parseAndCollect($code);
+        $this->assertArrayHasKey('outer', $result);
+        $this->assertArrayHasKey('inner', $result);
     }
 }

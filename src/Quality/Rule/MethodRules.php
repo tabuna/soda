@@ -24,6 +24,7 @@ final readonly class MethodRules implements RuleChecker
             $context->fileMetrics->nestingByMethod(),
             $context->fileMetrics->returnsByMethod(),
         );
+
         $methodMetrics = new MethodMetricsData(
             $nestingReturns,
             $context->fileMetrics->booleanConditionsByMethod(),

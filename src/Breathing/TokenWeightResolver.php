@@ -114,10 +114,12 @@ final class TokenWeightResolver
         }
 
         return $this->weightForToken($token[0], $token[1]);
+
     }
 
     private function weightForToken(int $id, string $text): float
     {
+
         return array_key_exists($id, self::WEIGHTS)
             ? self::WEIGHTS[$id]
             : $this->resolveWeight($id, $text);
@@ -161,7 +163,11 @@ final class TokenWeightResolver
 
     private function weightForIdentifier(int $id, string $text): ?float
     {
-        if (($id === T_STRING && $text !== '') || $id === T_VARIABLE) {
+        if ($id === T_STRING && $text !== '') {
+            return self::IDENTIFIER;
+        }
+
+        if ($id === T_VARIABLE) {
             return self::IDENTIFIER;
         }
 

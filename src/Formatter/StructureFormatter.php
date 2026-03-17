@@ -20,6 +20,7 @@ final readonly class StructureFormatter
     public function format(Result $result): string
     {
         $structure = $result->structure();
+
         if (! $structure instanceof Metrics) {
             return '';
         }
@@ -29,16 +30,20 @@ final readonly class StructureFormatter
         $concrete = $arr['concreteClasses'];
         $methods = $arr['methods'];
         $functions = $arr['functions'];
+
         $constants = $arr['constants'];
         $classConstants = $arr['classConstants'];
 
         return collect([
             $this->formatHeader($structure, $classes, $concrete),
+
             $this->formatMethods($structure, $methods),
+
             $this->formatFunctions($structure, $functions),
+
             $this->formatConstants($structure, $constants, $classConstants),
         ])
-            ->implode('')
+            ->implode("\n")
             ."\n";
     }
 
@@ -49,6 +54,17 @@ final readonly class StructureFormatter
     ): string {
         $arr = $structure->toArray();
 
+        $top = $this->formatHeaderTop($arr);
+        $breakdown = $this->formatHeaderBreakdown($arr, $classes, $concrete);
+
+        return $top.$breakdown;
+    }
+
+    /**
+     * @param array<string, mixed> $arr
+     */
+    private function formatHeaderTop(array $arr): string
+    {
         return sprintf(
             <<<'EOT'
 Structure
@@ -56,15 +72,26 @@ Structure
   Interfaces                                          %20s
   Traits                                              %20s
   Classes                                             %20s
+EOT,
+            number_format($arr['namespaces']),
+            number_format($arr['interfaces']),
+            number_format($arr['traits']),
+            number_format($arr['classes']),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $arr
+     */
+    private function formatHeaderBreakdown(array $arr, int $classes, int $concrete): string
+    {
+        return "\n".sprintf(
+            <<<'EOT'
     Abstract Classes                                  %20s (%.2f%%)
     Concrete Classes                                  %20s (%.2f%%)
       Final Classes                                   %20s (%.2f%%)
       Non-Final Classes                               %20s (%.2f%%)
 EOT,
-            number_format($arr['namespaces']),
-            number_format($arr['interfaces']),
-            number_format($arr['traits']),
-            number_format($classes),
             number_format($arr['abstractClasses']),
             self::pct($arr['abstractClasses'], $classes),
             number_format($concrete),
@@ -104,6 +131,7 @@ EOT,
             self::pct($arr['protectedMethods'], $methods),
             number_format($arr['privateMethods']),
             self::pct($arr['privateMethods'], $methods),
+
         );
     }
 
@@ -124,6 +152,7 @@ EOT,
             self::pct($arr['namedFunctions'], $functions),
             number_format($arr['anonymousFunctions']),
             self::pct($arr['anonymousFunctions'], $functions),
+
         );
     }
 
@@ -151,6 +180,7 @@ EOT,
             self::pct($arr['publicClassConstants'], $classConstants),
             number_format($arr['nonPublicClassConstants']),
             self::pct($arr['nonPublicClassConstants'], $classConstants),
+
         );
     }
 }

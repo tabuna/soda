@@ -29,6 +29,7 @@ final class StructureNodeHandlers
         }
 
         $name = $node->name?->toString() ?? '';
+
         if ($name !== '') {
             $state->namespaces[$name] = true;
         }

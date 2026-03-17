@@ -40,6 +40,7 @@ final class QualityCommand extends Command
     {
         /** @var list<non-empty-string> $directories */
         $directories = (array) $this->argument('path');
+
         if ($directories === []) {
             $this->error('No directory specified');
 
@@ -47,6 +48,7 @@ final class QualityCommand extends Command
         }
 
         $files = $this->resolveFiles($directories);
+
         if ($files === []) {
             $this->error('No files found to scan');
 
@@ -88,6 +90,7 @@ final class QualityCommand extends Command
     private function resolveConfigPath(): ?string
     {
         $configOpt = $this->option('config');
+
         if (! is_string($configOpt) || $configOpt === '') {
             return null;
         }
@@ -98,6 +101,7 @@ final class QualityCommand extends Command
     private function writeReportJson(QualityResult $result): void
     {
         $reportJson = $this->option('report-json');
+
         if (! is_string($reportJson) || $reportJson === '') {
             return;
         }
@@ -108,6 +112,7 @@ final class QualityCommand extends Command
             'violations' => $result->violations->map(fn ($v) => $v->toArray())->all(),
         ];
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
         file_put_contents($reportJson, $json);
     }
 }

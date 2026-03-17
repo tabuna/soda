@@ -137,9 +137,15 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function leaveNode(Node $node): void
     {
-        if (($node instanceof Class_ || $node instanceof Trait_) && $this->classStack !== []) {
-            array_pop($this->classStack);
+        if (! ($node instanceof Class_) && ! ($node instanceof Trait_)) {
+            return;
         }
+
+        if ($this->classStack === []) {
+            return;
+        }
+
+        array_pop($this->classStack);
     }
 
     /**

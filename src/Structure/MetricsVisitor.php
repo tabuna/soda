@@ -35,7 +35,11 @@ final class MetricsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function leaveNode(Node $node): void
     {
-        if (($node instanceof Class_ || $node instanceof Trait_) && $this->state->classStack !== []) {
+        if ($node instanceof Class_ || $node instanceof Trait_) {
+            if ($this->state->classStack === []) {
+                return;
+            }
+
             array_pop($this->state->classStack);
         }
     }

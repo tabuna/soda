@@ -60,6 +60,7 @@ EOT,
     {
         $c = $result->complexity();
         $m = $c->methods();
+
         $classStats = $c->classes();
 
         $buf = sprintf(
@@ -83,6 +84,7 @@ EOT,
         )."\n";
 
         $breathing = $result->breathing();
+
         if ($breathing instanceof BreathingMetrics) {
             $buf .= sprintf(
                 <<<'EOT'

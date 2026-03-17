@@ -54,6 +54,7 @@ final class AnalyseCommand extends Command
         }
 
         $result = (new Analyser)->analyse($files, (bool) $this->option('debug'));
+
         $this->line((new TextResultFormatter)->format($result));
         $this->writeReportJson($result);
 
@@ -63,12 +64,14 @@ final class AnalyseCommand extends Command
     private function writeReportJson(Result $result): void
     {
         $reportJson = $this->option('report-json');
+
         if (! is_string($reportJson) || $reportJson === '') {
             return;
         }
 
         $data = (new JsonResultFormatter)->format($result);
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
         file_put_contents($reportJson, $json);
     }
 }

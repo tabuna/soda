@@ -10,6 +10,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Trait_;
@@ -32,7 +33,7 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function enterNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_) {
+        if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
             $this->pushClass($node);
 
             return;
@@ -58,7 +59,7 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function leaveNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_) {
+        if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
             $this->popClass();
 
             return;

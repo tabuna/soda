@@ -20,6 +20,7 @@ final readonly class DependenciesFormatter
     public function format(Result $result): string
     {
         $structure = $result->structure();
+
         if (! $structure instanceof Metrics) {
             return '';
         }

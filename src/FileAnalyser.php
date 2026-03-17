@@ -14,7 +14,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use SebastianBergmann\Complexity\ComplexityCalculatingVisitor;
+use Bunnivo\Soda\Complexity\EnumAwareComplexityVisitor;
 use SebastianBergmann\Complexity\ComplexityCollection;
 use SebastianBergmann\LinesOfCode\LineCountingVisitor;
 use SebastianBergmann\LinesOfCode\LinesOfCode;
@@ -37,6 +37,7 @@ final class FileAnalyser
     public function analyse(string $file): array
     {
         $source = file_get_contents($file);
+
         throw_if($source === false, ParserException::class, 'Cannot read '.$file, 0);
 
         $lines = substr_count($source, "\n");
@@ -59,7 +60,7 @@ final class FileAnalyser
         throw_if($nodes === null, ParserException::class, 'Cannot parse '.$file, 0);
 
         $traverser = new NodeTraverser;
-        $complexityVisitor = new ComplexityCalculatingVisitor(false);
+        $complexityVisitor = new EnumAwareComplexityVisitor(false);
         $lineCountingVisitor = new LineCountingVisitor(max(0, $lines));
         $structureVisitor = new Structure\MetricsVisitor();
 
@@ -67,6 +68,7 @@ final class FileAnalyser
         $traverser->addVisitor(new ParentConnectingVisitor);
         $traverser->addVisitor($complexityVisitor);
         $traverser->addVisitor($lineCountingVisitor);
+
         $traverser->addVisitor($structureVisitor);
         $traverser->traverse($nodes);
 

@@ -18,7 +18,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use SebastianBergmann\Complexity\ComplexityCalculatingVisitor;
+use Bunnivo\Soda\Complexity\EnumAwareComplexityVisitor;
 use SebastianBergmann\Complexity\ComplexityCollection;
 
 use function substr_count;
@@ -45,6 +45,7 @@ final class QualityAnalyser
         foreach ($files as $file) {
             try {
                 $fileResult = $this->analyseFile($file);
+
                 $qualityMetrics[$file] = $fileResult['metrics'];
 
                 foreach ($fileResult['complexity']->asArray() as $item) {
@@ -71,6 +72,7 @@ final class QualityAnalyser
         $config = ConfigResolver::resolveConfig($files, $configPath);
         $engine = QualityEngine::create($config);
         $nestingReturns = new MethodNestingReturns($nestingByMethod, $returnsByMethod);
+
         $input = new EvaluateInput($qualityMetrics, new MethodMetricsData($nestingReturns, $booleanConditionsByMethod, $complexityByMethod));
 
         return $engine->evaluate($result, $input);
@@ -87,6 +89,7 @@ final class QualityAnalyser
     private function analyseFile(string $file): array
     {
         $source = file_get_contents($file);
+
         throw_if($source === false, ParserException::class, 'Cannot read '.$file, 0);
 
         $lines = substr_count($source, "\n");
@@ -109,7 +112,7 @@ final class QualityAnalyser
         throw_if($nodes === null, ParserException::class, 'Cannot parse '.$file, 0);
 
         $traverser = new NodeTraverser();
-        $complexityVisitor = new ComplexityCalculatingVisitor(false);
+        $complexityVisitor = new EnumAwareComplexityVisitor(false);
         $metricsVisitor = new QualityMetricsVisitor(max(0, $lines));
 
         $nestingVisitor = new ControlNestingVisitor();
@@ -123,7 +126,6 @@ final class QualityAnalyser
         $traverser->addVisitor($nestingVisitor);
         $traverser->addVisitor($returnsVisitor);
         $traverser->addVisitor($booleanConditionsVisitor);
-
         $traverser->traverse($nodes);
 
         $metrics = $metricsVisitor->result();

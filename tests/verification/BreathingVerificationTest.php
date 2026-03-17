@@ -210,7 +210,8 @@ PHP;
     }
 
     /**
-     * VBI formula: (N_blank/N_lines) * (1 - σ_block/max_block)
+     * VBI formula: min(1, rawRatio/0.5) * blockFactor, clamped 0-1.
+     * Ideal = 1 blank per 2 code lines (ratio >= 0.5) + uniform blocks.
      */
     public function testVbiFormulaWithKnownValues(): void
     {
@@ -225,18 +226,80 @@ PHP;
 
         $metrics = BreathingAnalyser::analyse($code);
 
-        $lines = explode("\n", $code);
-        $nBlank = count(array_filter($lines, fn (string $l) => trim($l) === ''));
-        $nLines = count(array_filter($lines, fn (string $l) => trim($l) !== ''));
-        $ratio = $nBlank / max(1, $nLines);
-
         $this->assertGreaterThan(0, $metrics->vbi(), 'Code with blank lines should have VBI > 0');
-        $this->assertLessThanOrEqual($ratio, $metrics->vbi() + 0.01, 'VBI <= N_blank/N_lines (block factor <= 1)');
+        $this->assertLessThanOrEqual(1.0, $metrics->vbi(), 'VBI must be ≤ 1');
     }
 
     /**
-     * IRS formula: 1 - (avgIdentifierLength - 8) / 20
-     * Short identifiers (e.g. $a, $b) => high IRS
+     * Ideal code: 1 blank per 2 code lines, uniform short blocks → VBI = 1.0.
+     */
+    public function testIdealCodeAchievesVbi100(): void
+    {
+        $code = <<<'PHP'
+<?php
+
+$a = 1;
+
+$b = 2;
+
+return $a + $b;
+PHP;
+
+        $metrics = BreathingAnalyser::analyse($code);
+
+        $this->assertEqualsWithDelta(1.0, $metrics->vbi(), self::TOLERANCE, 'Ideal breathing (1 blank per 2 code lines, uniform blocks) must achieve VBI 1.0');
+    }
+
+    /**
+     * Minimal class (ConfigException-style) must achieve VBI 1.0.
+     */
+    public function testMinimalClassAchievesVbi100(): void
+    {
+        $code = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Bunnivo\Soda\Quality;
+
+use Bunnivo\Soda\Exception;
+use RuntimeException;
+
+final class ConfigException extends RuntimeException implements Exception {}
+PHP;
+
+        $metrics = BreathingAnalyser::analyse($code);
+
+        $this->assertEqualsWithDelta(1.0, $metrics->vbi(), self::TOLERANCE, 'Minimal class must achieve VBI 1.0');
+        $this->assertEqualsWithDelta(1.0, $metrics->col(), self::TOLERANCE, 'Minimal class must achieve COL 1.0');
+        $this->assertEqualsWithDelta(1.0, $metrics->irs(), self::TOLERANCE, 'Minimal class must achieve IRS 1.0');
+    }
+
+    /**
+     * TokenKeywordDetector-style (use const block + array) must achieve VBI 1.0.
+     */
+    public function testUseConstBlockAchievesVbi100(): void
+    {
+        $code = (string) file_get_contents(__DIR__.'/../../src/Breathing/TokenKeywordDetector.php');
+        $metrics = BreathingAnalyser::analyse($code);
+
+        $this->assertEqualsWithDelta(1.0, $metrics->vbi(), self::TOLERANCE, 'Use const + array blocks must achieve VBI 1.0');
+    }
+
+    /**
+     * Dense code (no blanks) must NOT achieve VBI 1.0.
+     */
+    public function testDenseCodeDoesNotAchieveVbi100(): void
+    {
+        $code = "<?php\n\$a=1;\n\$b=2;\n\$c=\$a+\$b;";
+        $metrics = BreathingAnalyser::analyse($code);
+
+        $this->assertEqualsWithDelta(0.0, $metrics->vbi(), self::TOLERANCE, 'Dense code without blanks must have VBI 0');
+    }
+
+    /**
+     * IRS formula: 1 - (avgIdentifierLength - 12) / 20, clamped 0-1.
+     * Ideal = avg ≤ 12 chars → IRS = 1.0.
      */
     public function testIrsFormula(): void
     {
@@ -247,6 +310,28 @@ PHP;
         $longMetrics = BreathingAnalyser::analyse($longIds);
 
         $this->assertGreaterThanOrEqual($longMetrics->irs(), $shortMetrics->irs(), 'Shorter identifiers => higher IRS');
+    }
+
+    /**
+     * Ideal identifiers (avg ≤ 12 chars) → IRS = 1.0.
+     */
+    public function testIdealIdentifiersAchievesIrs100(): void
+    {
+        $code = '<?php $a = 1; $b = 2; $value = $a + $b; return $value;';
+        $metrics = BreathingAnalyser::analyse($code);
+
+        $this->assertEqualsWithDelta(1.0, $metrics->irs(), self::TOLERANCE, 'Ideal identifiers (avg ≤ 12 chars) must achieve IRS 1.0');
+    }
+
+    /**
+     * Long identifiers → IRS < 1.0.
+     */
+    public function testLongIdentifiersDoNotAchieveIrs100(): void
+    {
+        $code = '<?php $declarativeBonusCalculator = $tokenWeightResolver + $identifierReadabilityScore;';
+        $metrics = BreathingAnalyser::analyse($code);
+
+        $this->assertLessThan(1.0, $metrics->irs(), 'Long identifiers must NOT achieve IRS 1.0');
     }
 
     /**

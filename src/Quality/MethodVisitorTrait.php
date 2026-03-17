@@ -10,6 +10,7 @@ use function array_pop;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
@@ -26,7 +27,7 @@ trait MethodVisitorTrait
 
     private bool $inClosure = false;
 
-    protected function pushClass(Class_|Trait_ $node): bool
+    protected function pushClass(Class_|Trait_|Enum_ $node): bool
     {
         if ($node->getAttribute('parent') instanceof New_) {
             return false;

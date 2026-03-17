@@ -42,6 +42,7 @@ final class NodeHandlers
         }
 
         $name = $node->namespacedName?->toString();
+
         if ($name === null) {
             return;
         }
@@ -55,6 +56,7 @@ final class NodeHandlers
         }
 
         $loc = $node->getEndLine() - $node->getStartLine() + 1;
+
         $state->push('classLines', $loc);
 
         $methodCount = self::countNonInterfaceMethods($node);
@@ -109,6 +111,7 @@ final class NodeHandlers
     public static function handleVariable(MetricsState $state, Variable $node): void
     {
         $name = $node->name;
+
         if ($name instanceof Node\Identifier) {
             $name = $name->toString();
         } elseif (! is_string($name)) {

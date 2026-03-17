@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Breathing;
 
 /**
- * Array literals and fluent chains are declarative — no penalty.
+ * Array literals, fluent chains, use/use const blocks are declarative — no penalty.
  *
  * @internal
  */
@@ -33,7 +33,7 @@ final class DeclarativeBlockDetector
     /**
      * @param list<string> $lines
      *
-     * @return array{arrayLike: int, fluentLike: int, accessorLike: int, templateLike: int, instanceofLike: int}
+     * @return array{arrayLike: int, fluentLike: int, accessorLike: int, templateLike: int, instanceofLike: int, useLike: int}
      */
     private function countPatterns(array $lines): array
     {
@@ -43,6 +43,7 @@ final class DeclarativeBlockDetector
             'accessorLike'   => 0,
             'templateLike'   => 0,
             'instanceofLike' => 0,
+            'useLike'        => 0,
         ];
 
         foreach ($lines as $line) {
@@ -51,28 +52,31 @@ final class DeclarativeBlockDetector
                 continue;
             }
 
-            if ($this->isArrayLike($trimmed)) {
-                $counts['arrayLike']++;
-            }
-
-            if (str_contains($trimmed, '->')) {
-                $counts['fluentLike']++;
-            }
-
-            if ($this->isAccessorLike($trimmed)) {
-                $counts['accessorLike']++;
-            }
-
-            if ($this->isTemplateLike($trimmed)) {
-                $counts['templateLike']++;
-            }
-
-            if (str_contains($trimmed, ' instanceof ')) {
-                $counts['instanceofLike']++;
-            }
+            $this->accumulatePatterns($trimmed, $counts);
         }
 
         return $counts;
+    }
+
+    /**
+     * @param array{arrayLike: int, fluentLike: int, accessorLike: int, templateLike: int, instanceofLike: int, useLike: int} $counts
+     */
+    private function accumulatePatterns(string $trimmed, array &$counts): void
+    {
+        $checks = [
+            'arrayLike'      => fn () => $this->isArrayLike($trimmed),
+            'fluentLike'     => fn () => str_contains($trimmed, '->'),
+            'accessorLike'   => fn () => $this->isAccessorLike($trimmed),
+            'templateLike'   => fn () => $this->isTemplateLike($trimmed),
+            'instanceofLike' => fn () => str_contains($trimmed, ' instanceof '),
+            'useLike'        => fn () => str_starts_with($trimmed, 'use ') || str_starts_with($trimmed, 'use const '),
+        ];
+
+        foreach ($checks as $key => $check) {
+            if ($check()) {
+                $counts[$key]++;
+            }
+        }
     }
 
     private function isArrayLike(string $line): bool
@@ -96,7 +100,7 @@ final class DeclarativeBlockDetector
     }
 
     /**
-     * @param array{arrayLike: int, fluentLike: int, accessorLike: int, templateLike: int, instanceofLike: int} $counts
+     * @param array{arrayLike: int, fluentLike: int, accessorLike: int, templateLike: int, instanceofLike: int, useLike: int} $counts
      */
     private function meetsThreshold(array $counts, int $n): bool
     {
@@ -104,11 +108,13 @@ final class DeclarativeBlockDetector
         $accessorThreshold = (int) ceil((float) $n * 0.2);
         $templateThreshold = (int) ceil((float) $n * 0.25);
         $instanceofThreshold = (int) ceil((float) $n * 0.25);
+        $useThreshold = (int) ceil((float) $n * 0.5);
 
         return $counts['arrayLike'] >= $threshold
             || $counts['fluentLike'] >= $threshold
             || $counts['accessorLike'] >= $accessorThreshold
             || $counts['templateLike'] >= $templateThreshold
-            || $counts['instanceofLike'] >= $instanceofThreshold;
+            || $counts['instanceofLike'] >= $instanceofThreshold
+            || ($counts['useLike'] ?? 0) >= $useThreshold;
     }
 }

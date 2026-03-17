@@ -28,11 +28,11 @@ final class QualityConfigTest extends TestCase
         $config = QualityConfig::default();
 
         $this->assertSame(80, $config->minScore);
-        $this->assertSame(20, $config->getRule('max_method_length'));
+        $this->assertSame(100, $config->getRule('max_method_length'));
         $this->assertSame(500, $config->getRule('max_class_length'));
-        $this->assertSame(3, $config->getRule('max_arguments'));
-        $this->assertSame(20, $config->getRule('max_methods_per_class'));
-        $this->assertSame(400, $config->getRule('max_file_loc'));
+        $this->assertSame(4, $config->getRule('max_arguments'));
+        $this->assertSame(40, $config->getRule('max_methods_per_class'));
+        $this->assertSame(600, $config->getRule('max_file_loc'));
         $this->assertSame(10, $config->getRule('max_cyclomatic_complexity'));
     }
 

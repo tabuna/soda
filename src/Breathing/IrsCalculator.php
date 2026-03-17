@@ -19,12 +19,15 @@ use const T_VARIABLE;
  */
 final class IrsCalculator
 {
+    private const float IDEAL_AVG_LENGTH = 14.0;
+
     /**
      * @param list<string|array{0: int, 1: string, 2: int}> $tokens
      */
     public static function calculate(array $tokens): float
     {
         $identifiers = [];
+
         foreach ($tokens as $token) {
             if (! is_array($token)) {
                 continue;
@@ -32,6 +35,7 @@ final class IrsCalculator
 
             $id = $token[0];
             $text = $token[1];
+
             if ($id === T_VARIABLE) {
                 $text = ltrim($text, '$');
             }
@@ -53,7 +57,7 @@ final class IrsCalculator
 
         $avg = array_sum($identifiers) / count($identifiers);
 
-        return max(0.0, min(1.0, 1.0 - ((float) $avg - 8.0) / 20.0));
+        return max(0.0, min(1.0, 1.0 - ((float) $avg - self::IDEAL_AVG_LENGTH) / 20.0));
     }
 
     /**
@@ -62,6 +66,7 @@ final class IrsCalculator
     private static function segmentLengths(string $qualified): array
     {
         $lengths = [];
+
         foreach (explode('\\', trim($qualified, '\\')) as $segment) {
             if (strlen($segment) >= 2) {
                 $lengths[] = strlen($segment);

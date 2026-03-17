@@ -20,7 +20,7 @@ final class ColCalculator
         $raw = (float) ($data->nBlank() + $data->shortBlocks() + $declarativeBonus) / (float) $nLines;
         $raw += self::sizeModifier($data->totalLines());
 
-        return min(0.65, $raw);
+        return min(1.0, max(0.0, $raw));
     }
 
     private static function sizeModifier(int $totalLines): float

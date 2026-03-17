@@ -17,7 +17,9 @@ final readonly class ClassRules implements RuleChecker
     #[\Override]
     public function check(EvaluationContext $context): Collection
     {
-        return collect($context->fileMetrics->qualityMetrics())
+        $metrics = $context->fileMetrics->qualityMetrics();
+
+        return collect($metrics)
             ->flatMap(fn (array $data, string $file) => $this->classChecker->check($file, $data['classes']))
             ->values();
     }

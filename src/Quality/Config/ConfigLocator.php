@@ -34,6 +34,7 @@ final class ConfigLocator
 
         foreach ($dirs as $dir) {
             $path = $this->searchUpward($dir);
+
             if ($path !== null) {
                 return $path;
             }
@@ -52,6 +53,7 @@ final class ConfigLocator
         for ($i = 0; $i < self::MAX_DEPTH; $i++) {
             foreach (self::CONFIG_NAMES as $name) {
                 $path = $current.'/'.$name;
+
                 if (is_readable($path)) {
                     return $path;
                 }
@@ -63,6 +65,7 @@ final class ConfigLocator
             }
 
             $current = $parent;
+
         }
 
         return null;

@@ -18,7 +18,9 @@ final class CommentOnlyDetector
     public static function detect(string $source): array
     {
         $linesWithCode = self::linesWithCode($source);
+
         $totalLines = substr_count($source, "\n") + 1;
+
         $commentOnly = [];
 
         for ($l = 1; $l <= $totalLines; $l++) {
@@ -36,6 +38,7 @@ final class CommentOnlyDetector
     private static function linesWithCode(string $source): array
     {
         $tokens = @token_get_all($source);
+
         $linesWithCode = [];
 
         foreach ($tokens as $token) {
@@ -46,6 +49,7 @@ final class CommentOnlyDetector
             if (self::isCodeToken($token[0])) {
                 $line = $token[2];
                 $lastLine = $line + substr_count($token[1], "\n");
+
                 for ($l = $line; $l <= $lastLine; $l++) {
                     $linesWithCode[$l] = true;
                 }

@@ -21,6 +21,7 @@ final readonly class SizeFormatter
     {
         $s = $result->loc()->stats();
         $pct = $result->loc()->percentages();
+
         $structure = $result->structure();
 
         $buffer = sprintf(
@@ -54,6 +55,7 @@ EOT,
         $arr = $structure->toArray();
         $llocClasses = $arr['llocClasses'];
         $llocFunctions = $arr['llocFunctions'];
+
         $llocGlobal = $arr['llocGlobal'];
 
         return sprintf(

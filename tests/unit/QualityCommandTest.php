@@ -26,6 +26,29 @@ use Symfony\Component\Console\Output\BufferedOutput;
 #[Small]
 final class QualityCommandTest extends TestCase
 {
+    /**
+     * @group enum-workaround
+     * REMOVE_WHEN sebastian/complexity adds Enum support (see EnumAwareComplexityVisitorTest)
+     */
+    #[Group('enum-workaround')]
+    public function testQualityRunsOnFixtureWithEnumWithoutCrashing(): void
+    {
+        $container = new Application();
+        $artisan = new ConsoleApplication($container, new Dispatcher($container), '8.0');
+        $artisan->setAutoExit(false);
+        $artisan->add(new QualityCommand());
+
+        $input = new ArrayInput([
+            'command' => 'quality',
+            'path'    => [__DIR__.'/../quality-fixture'],
+        ]);
+        $output = new BufferedOutput();
+
+        $exitCode = $artisan->run($input, new OutputStyle($input, $output));
+
+        $this->assertContains($exitCode, [0, 1], 'Не должно падать с AssertionError на Enum');
+    }
+
     public function testReportJsonIncludesMetricsAndViolations(): void
     {
         $reportPath = sys_get_temp_dir().'/soda-quality-test-'.uniqid().'.json';
