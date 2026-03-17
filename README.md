@@ -6,7 +6,7 @@ Soda helps you **enforce quality rules automatically**, so you don’t have to h
 
 Even with AI-generated code, errors slip through. **Soda catches them first**, keeping your code consistent, safe, and review-ready—before it ever reaches a pull request.
 
-> **Stop trusting guesses. Start trusting PHP Quality Gates.**
+> **Stop trusting prompts. Start trusting PHP Quality Gates.**
 
 ## Installation
 
