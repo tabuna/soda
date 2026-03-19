@@ -6,6 +6,7 @@ namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Breathing\BreathingAnalyser;
 use Bunnivo\Soda\Breathing\BreathingMetrics;
+use Bunnivo\Soda\Complexity\EnumAwareComplexityVisitor;
 
 use function file_get_contents;
 
@@ -14,7 +15,6 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use Bunnivo\Soda\Complexity\EnumAwareComplexityVisitor;
 use SebastianBergmann\Complexity\ComplexityCollection;
 use SebastianBergmann\LinesOfCode\LineCountingVisitor;
 use SebastianBergmann\LinesOfCode\LinesOfCode;

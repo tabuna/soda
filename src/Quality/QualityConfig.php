@@ -42,6 +42,7 @@ final readonly class QualityConfig
         'max_logical_complexity_factor'         => 35,
         'max_return_statements'                 => 4,
         'max_boolean_conditions'                => 3,
+        'avoid_redundant_naming'                => 80,
     ];
 
     /**

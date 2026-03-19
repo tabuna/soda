@@ -9,11 +9,12 @@ final readonly class ViolationContext
     public function __construct(
         public Limits $limits,
         public ViolationLocation $location = new ViolationLocation(),
+        public ?string $message = null,
     ) {}
 
-    public static function create(Limits $limits, ViolationLocation $location = new ViolationLocation()): self
+    public static function create(Limits $limits, ViolationLocation $location = new ViolationLocation(), ?string $message = null): self
     {
-        return new self($limits, $location);
+        return new self($limits, $location, $message);
     }
 
     public function method(): ?string

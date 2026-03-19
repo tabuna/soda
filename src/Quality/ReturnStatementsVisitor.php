@@ -33,7 +33,7 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
     #[\Override]
     public function enterNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
+        if ($this->isClassLike($node)) {
             $this->pushClass($node);
 
             return;
@@ -45,7 +45,7 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
             return;
         }
 
-        if ($node instanceof ClassMethod || $node instanceof Function_) {
+        if ($this->isMethodLike($node)) {
             $this->startMethod($node);
 
             return;
@@ -54,6 +54,16 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
         if ($node instanceof Return_ && $this->isInTrackedMethod()) {
             $this->increment();
         }
+    }
+
+    private function isClassLike(Node $node): bool
+    {
+        return $node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_;
+    }
+
+    private function isMethodLike(Node $node): bool
+    {
+        return $node instanceof ClassMethod || $node instanceof Function_;
     }
 
     #[\Override]

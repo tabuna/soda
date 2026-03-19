@@ -6,6 +6,7 @@ namespace Bunnivo\Soda\Complexity;
 
 use function assert;
 use function is_array;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Name;
@@ -40,16 +41,12 @@ final class EnumAwareComplexityVisitor extends NodeVisitorAbstract
 
     public function enterNode(Node $node): ?int
     {
-        if (!$node instanceof ClassMethod && !$node instanceof Function_) {
+        if (! $node instanceof ClassMethod && ! $node instanceof Function_) {
             return null;
         }
 
         if ($node instanceof ClassMethod) {
-            if ($node->getAttribute('parent') instanceof Interface_) {
-                return null;
-            }
-
-            if ($node->isAbstract()) {
+            if ($node->getAttribute('parent') instanceof Interface_ || $node->isAbstract()) {
                 return null;
             }
 
@@ -59,19 +56,10 @@ final class EnumAwareComplexityVisitor extends NodeVisitorAbstract
         }
 
         $statements = $node->getStmts();
-
         assert(is_array($statements));
+        $this->result[] = new Complexity($name, $this->cyclomaticComplexity($statements));
 
-        $this->result[] = new Complexity(
-            $name,
-            $this->cyclomaticComplexity($statements),
-        );
-
-        if ($this->shortCircuitTraversal) {
-            return NodeVisitor::DONT_TRAVERSE_CHILDREN;
-        }
-
-        return null;
+        return $this->shortCircuitTraversal ? NodeVisitor::DONT_TRAVERSE_CHILDREN : null;
     }
 
     public function result(): ComplexityCollection
@@ -108,7 +96,7 @@ final class EnumAwareComplexityVisitor extends NodeVisitorAbstract
         assert(isset($parent->namespacedName));
         assert($parent->namespacedName instanceof Name);
 
-        return $parent->namespacedName->toString() . '::' . $node->name->toString();
+        return $parent->namespacedName->toString().'::'.$node->name->toString();
     }
 
     /** @return non-empty-string */

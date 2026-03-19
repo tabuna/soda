@@ -46,6 +46,15 @@ EOT;
             $target = $v->file.':'.$v->line();
         }
 
+        if ($v->context->message !== null) {
+            return sprintf(
+                '%s %s'.PHP_EOL.'   %s'.PHP_EOL.PHP_EOL,
+                $icon,
+                $target,
+                $v->context->message,
+            );
+        }
+
         $label = $this->ruleMetadata->label($v->rule);
         $lim = $v->limits();
 

@@ -53,15 +53,20 @@ final readonly class RuleSections
                 'min_identifier_readability_score',
                 'min_code_oxygen_level',
             ],
+            'naming' => [
+                'avoid_redundant_naming',
+            ],
         ];
     }
 
     /**
      * @return list<string>
      */
+    public const string NAMING = 'naming';
+
     public static function sectionNames(): array
     {
-        return [self::STRUCTURAL, self::COMPLEXITY, self::BREATHING];
+        return [self::STRUCTURAL, self::COMPLEXITY, self::BREATHING, self::NAMING];
     }
 
     /**

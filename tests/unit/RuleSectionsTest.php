@@ -17,7 +17,7 @@ final class RuleSectionsTest extends TestCase
     {
         $names = RuleSections::sectionNames();
 
-        $this->assertSame(['structural', 'complexity', 'breathing'], $names);
+        $this->assertSame(['structural', 'complexity', 'breathing', 'naming'], $names);
     }
 
     public function testSectionsContainExpectedRules(): void
@@ -36,6 +36,9 @@ final class RuleSectionsTest extends TestCase
         $this->assertArrayHasKey('breathing', $sections);
         $this->assertContains('min_code_breathing_score', $sections['breathing']);
         $this->assertContains('min_code_oxygen_level', $sections['breathing']);
+
+        $this->assertArrayHasKey('naming', $sections);
+        $this->assertContains('avoid_redundant_naming', $sections['naming']);
     }
 
     public function testRuleToSectionMapsAllRules(): void
@@ -45,5 +48,6 @@ final class RuleSectionsTest extends TestCase
         $this->assertSame('structural', $map['max_method_length']);
         $this->assertSame('complexity', $map['max_cyclomatic_complexity']);
         $this->assertSame('breathing', $map['min_code_breathing_score']);
+        $this->assertSame('naming', $map['avoid_redundant_naming']);
     }
 }

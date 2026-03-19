@@ -24,6 +24,7 @@ final class RuleRegistry
             new ClassesChecker(),
             new ClassRules(new ClassChecker($config)),
             new MethodRules(new MethodChecker($config)),
+            new RedundantNamingChecker(),
             new NamespaceChecker(),
             new ProjectChecker(),
         ];

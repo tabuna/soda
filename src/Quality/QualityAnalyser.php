@@ -6,10 +6,12 @@ namespace Bunnivo\Soda\Quality;
 
 use Bunnivo\Soda\Analyser;
 use Bunnivo\Soda\Breathing\BreathingAnalyser;
+use Bunnivo\Soda\Complexity\EnumAwareComplexityVisitor;
 use Bunnivo\Soda\ParserException;
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
 use Bunnivo\Soda\Quality\EvaluationContext\MethodMetricsData;
 use Bunnivo\Soda\Quality\EvaluationContext\MethodNestingReturns;
+use Bunnivo\Soda\Quality\Naming\RedundantNamingVisitor;
 
 use function file_get_contents;
 
@@ -18,7 +20,6 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use Bunnivo\Soda\Complexity\EnumAwareComplexityVisitor;
 use SebastianBergmann\Complexity\ComplexityCollection;
 
 use function substr_count;
@@ -118,6 +119,7 @@ final class QualityAnalyser
         $nestingVisitor = new ControlNestingVisitor();
         $returnsVisitor = new ReturnStatementsVisitor();
         $booleanConditionsVisitor = new BooleanConditionsVisitor();
+        $namingVisitor = new RedundantNamingVisitor();
 
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor(new ParentConnectingVisitor());
@@ -126,12 +128,14 @@ final class QualityAnalyser
         $traverser->addVisitor($nestingVisitor);
         $traverser->addVisitor($returnsVisitor);
         $traverser->addVisitor($booleanConditionsVisitor);
+        $traverser->addVisitor($namingVisitor);
         $traverser->traverse($nodes);
 
         $metrics = $metricsVisitor->result();
         $metrics['file_loc'] = $lines;
         $breathing = BreathingAnalyser::analyse($source, $nodes);
         $metrics['breathing'] = $breathing->toArray();
+        $metrics['naming'] = $namingVisitor->result();
 
         return [
             'metrics'           => $metrics,

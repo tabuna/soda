@@ -38,6 +38,7 @@ final readonly class QualityEngine
         'max_logical_complexity_factor'         => 2,
         'max_return_statements'                 => 2,
         'max_boolean_conditions'                => 2,
+        'avoid_redundant_naming'                => 2,
     ];
 
     /**

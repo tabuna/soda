@@ -20,6 +20,8 @@ final class ViolationBuilder
 
     private ?int $line = null;
 
+    private ?string $message = null;
+
     private function __construct(
         private readonly string $rule,
         private readonly string $file,
@@ -52,10 +54,17 @@ final class ViolationBuilder
         return $this;
     }
 
+    public function withMessage(?string $message): self
+    {
+        $this->message = $message;
+
+        return $this;
+    }
+
     public function build(): Violation
     {
         $location = new ViolationLocation($this->method, $this->class, $this->line);
-        $context = ViolationContext::create($this->limits, $location);
+        $context = ViolationContext::create($this->limits, $location, $this->message);
 
         return new Violation($this->rule, $this->file, $context);
     }

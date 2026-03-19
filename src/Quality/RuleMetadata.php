@@ -6,6 +6,7 @@ namespace Bunnivo\Soda\Quality;
 
 use Bunnivo\Soda\Quality\Rule\BreathingRuleDefaults;
 use Bunnivo\Soda\Quality\Rule\MethodRuleDefaults;
+use Bunnivo\Soda\Quality\Rule\NamingRuleDefaults;
 use Bunnivo\Soda\Quality\Rule\StructureRuleDefaults;
 
 /**
@@ -33,11 +34,13 @@ final readonly class RuleMetadata
         $structure = new StructureRuleDefaults();
         $breathing = new BreathingRuleDefaults();
         $method = new MethodRuleDefaults();
+        $naming = new NamingRuleDefaults();
 
         return new self(array_merge(
             $structure->defaults(),
             $breathing->defaults(),
             $method->defaults(),
+            $naming->defaults(),
         ));
     }
 

@@ -38,6 +38,7 @@ final class InitCommand extends Command
             RuleSections::STRUCTURAL => [],
             RuleSections::COMPLEXITY => [],
             RuleSections::BREATHING  => [],
+            RuleSections::NAMING     => [],
         ];
 
         foreach (RuleSections::ruleToSection() as $ruleKey => $section) {
