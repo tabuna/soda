@@ -61,8 +61,7 @@ final class InitCommand extends Command
 
         $path = getcwd().'/soda.json';
         $config = [
-            'quality' => ['min_score' => 80],
-            'rules'   => $this->buildRulesConfig(),
+            'rules' => $this->buildRulesConfig(),
         ];
         $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($json === false || file_put_contents($path, $json) === false) {

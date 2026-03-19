@@ -13,6 +13,10 @@ final class LocChecker implements RuleChecker
     #[\Override]
     public function check(EvaluationContext $context): Collection
     {
+        if (! $context->config->isRuleEnabled('max_file_loc')) {
+            return collect();
+        }
+
         $threshold = $context->config->getRule('max_file_loc');
 
         return collect($context->fileMetrics->qualityMetrics())

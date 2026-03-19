@@ -5,49 +5,28 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality;
 
 use PhpParser\Node;
-use PhpParser\Node\Stmt\Catch_;
-use PhpParser\Node\Stmt\Do_;
-use PhpParser\Node\Stmt\Else_;
-use PhpParser\Node\Stmt\ElseIf_;
-use PhpParser\Node\Stmt\Finally_;
-use PhpParser\Node\Stmt\For_;
-use PhpParser\Node\Stmt\Foreach_;
-use PhpParser\Node\Stmt\If_;
-use PhpParser\Node\Stmt\Switch_;
-use PhpParser\Node\Stmt\TryCatch;
-use PhpParser\Node\Stmt\While_;
 
 /**
  * @internal
  */
 final class ControlStructureMatcher
 {
-    private const array CONTROL_NODES = [
-        If_::class,
-
-        ElseIf_::class,
-
-        Else_::class,
-
-        For_::class,
-
-        Foreach_::class,
-
-        While_::class,
-
-        Do_::class,
-
-        Switch_::class,
-
-        TryCatch::class,
-
-        Catch_::class,
-
-        Finally_::class,
+    private const array CONTROL_STRUCTURE_NODE_KINDS = [
+        'Stmt_If'       => true,
+        'Stmt_ElseIf'   => true,
+        'Stmt_Else'     => true,
+        'Stmt_For'      => true,
+        'Stmt_Foreach'  => true,
+        'Stmt_While'    => true,
+        'Stmt_Do'       => true,
+        'Stmt_Switch'   => true,
+        'Stmt_TryCatch' => true,
+        'Stmt_Catch'    => true,
+        'Stmt_Finally'  => true,
     ];
 
-    public static function isControlStructure(Node $node): bool
+    public static function isControlStructure(Node $syntaxNode): bool
     {
-        return in_array($node::class, self::CONTROL_NODES, true);
+        return isset(self::CONTROL_STRUCTURE_NODE_KINDS[$syntaxNode->getType()]);
     }
 }

@@ -9,8 +9,6 @@ use function array_pop;
 use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\Trait_;
 
 /**
  * Collects structure metrics, dependencies, and LLOC breakdown via AST.
@@ -33,13 +31,15 @@ final class MetricsVisitor extends NullableReturnVisitor
 
     protected function doLeaveNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_) {
-            if ($this->state->classStack === []) {
-                return;
-            }
-
-            array_pop($this->state->classStack);
+        if ($node->getType() !== 'Stmt_Class' && $node->getType() !== 'Stmt_Trait') {
+            return;
         }
+
+        if ($this->state->classStack === []) {
+            return;
+        }
+
+        array_pop($this->state->classStack);
     }
 
     private function dispatchEnter(Node $node): void

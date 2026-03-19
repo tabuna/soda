@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
+use Bunnivo\Soda\Analyzer;
 use Bunnivo\Soda\JsonResultFormatter;
-use Bunnivo\Soda\Quality\Config\ConfigResolver;
 use Bunnivo\Soda\Quality\ConfigException;
-use Bunnivo\Soda\Quality\QualityAnalyser;
+use Bunnivo\Soda\Quality\QualityAnalysisContract;
 use Bunnivo\Soda\Quality\QualityResult;
 use Bunnivo\Soda\Quality\ReportFormatter;
 use Bunnivo\Soda\Quality\RuleMetadata;
@@ -16,12 +16,19 @@ use function file_put_contents;
 
 use Illuminate\Console\Command;
 
+use function is_string;
 use function json_encode;
 
 use SebastianBergmann\FileIterator\Facade;
 
 final class QualityCommand extends Command
 {
+    public function __construct(
+        private readonly ?QualityAnalysisContract $qualityAnalysis = null,
+    ) {
+        parent::__construct();
+    }
+
     protected $signature = 'quality
         {path?* : Directory or directories to analyse}
         {--suffix= : Include files with names ending in suffix (default: .php)}
@@ -55,17 +62,19 @@ final class QualityCommand extends Command
             return self::FAILURE;
         }
 
-        $analyser = new QualityAnalyser();
         $configPath = $this->resolveConfigPath();
-        $result = $analyser->analyse($files, (bool) $this->option('debug'), $configPath);
 
-        $this->line((new ReportFormatter(RuleMetadata::default()))->format($result));
+        $result = Analyzer::paths($files)
+            ->debug((bool) $this->option('debug'))
+            ->config($configPath)
+            ->run($this->qualityAnalysis);
+
+        $root = getcwd();
+        $root = ($root !== false && $root !== '') ? $root : '/';
+        (new ReportFormatter(RuleMetadata::default()))->write($this->output, $result, $root);
         $this->writeReportJson($result);
 
-        /** @throws ConfigException */
-        $config = ConfigResolver::resolveConfig($files, $configPath);
-
-        return $result->passes($config->minScore) ? self::SUCCESS : self::FAILURE;
+        return $result->passes() ? self::SUCCESS : self::FAILURE;
     }
 
     /**
@@ -107,9 +116,9 @@ final class QualityCommand extends Command
         }
 
         $data = [
-            'score'      => $result->score,
-            'metrics'    => (new JsonResultFormatter)->format($result->metrics),
-            'violations' => $result->violations->map(fn ($v) => $v->toArray())->all(),
+            'schema_version' => 2,
+            'metrics'        => (new JsonResultFormatter)->format($result->metrics),
+            'violations'     => $result->violations->map(fn ($v) => $v->toArray())->all(),
         ];
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 

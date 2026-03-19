@@ -7,6 +7,7 @@ namespace Bunnivo\Soda\Quality\Rule;
 use Bunnivo\Soda\Quality\EvaluationContext;
 use Bunnivo\Soda\Quality\EvaluationContext\MethodMetricsData;
 use Bunnivo\Soda\Quality\EvaluationContext\MethodNestingReturns;
+use Bunnivo\Soda\Quality\EvaluationContext\MethodScalarMetrics;
 use Bunnivo\Soda\Quality\MethodChecker;
 use Bunnivo\Soda\Quality\MethodCheckInput;
 use Illuminate\Support\Collection;
@@ -27,8 +28,11 @@ final readonly class MethodRules implements RuleChecker
 
         $methodMetrics = new MethodMetricsData(
             $nestingReturns,
-            $context->fileMetrics->booleanConditionsByMethod(),
-            $context->fileMetrics->complexityByMethod(),
+            new MethodScalarMetrics(
+                $context->fileMetrics->booleanConditionsByMethod(),
+                $context->fileMetrics->complexityByMethod(),
+                $context->fileMetrics->tryCatchByMethod(),
+            ),
         );
 
         return collect($context->fileMetrics->qualityMetrics())

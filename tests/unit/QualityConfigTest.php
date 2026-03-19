@@ -27,7 +27,6 @@ final class QualityConfigTest extends TestCase
     {
         $config = QualityConfig::default();
 
-        $this->assertSame(100, $config->minScore);
         $this->assertSame(100, $config->getRule('max_method_length'));
         $this->assertSame(500, $config->getRule('max_class_length'));
         $this->assertSame(3, $config->getRule('max_arguments'));
@@ -41,7 +40,6 @@ final class QualityConfigTest extends TestCase
         $path = __DIR__.'/../_fixture/code-quality.json';
         $config = QualityConfig::fromFile($path);
 
-        $this->assertSame(75, $config->minScore);
         $this->assertSame(30, $config->getRule('max_method_length'));
         $this->assertSame(600, $config->getRule('max_class_length'));
     }
@@ -59,7 +57,7 @@ final class QualityConfigTest extends TestCase
         $path = __DIR__.'/../_fixture/code-quality.json';
         $config = ConfigResolver::resolveConfig([__FILE__], $path);
 
-        $this->assertSame(75, $config->minScore);
+        $this->assertSame(30, $config->getRule('max_method_length'));
     }
 
     public function testResolveFindsSodaJsonBeforeCodeQualityJson(): void
@@ -68,12 +66,12 @@ final class QualityConfigTest extends TestCase
         mkdir($dir, 0700, true);
         $sodaPath = $dir.'/soda.json';
         $codeQualityPath = $dir.'/code-quality.json';
-        file_put_contents($sodaPath, '{"quality":{"min_score":90},"rules":{"structural":{},"complexity":{},"breathing":{}}}');
-        file_put_contents($codeQualityPath, '{"quality":{"min_score":75},"rules":{"structural":{},"complexity":{},"breathing":{}}}');
+        file_put_contents($sodaPath, '{"rules":{"structural":{"max_method_length":90},"complexity":{},"breathing":{}}}');
+        file_put_contents($codeQualityPath, '{"rules":{"structural":{"max_method_length":75},"complexity":{},"breathing":{}}}');
 
         try {
             $config = ConfigResolver::resolveConfig([$dir.'/dummy.php']);
-            $this->assertSame(90, $config->minScore);
+            $this->assertSame(90, $config->getRule('max_method_length'));
         } finally {
             unlink($sodaPath);
             unlink($codeQualityPath);
@@ -88,7 +86,7 @@ final class QualityConfigTest extends TestCase
 
         try {
             $config = ConfigResolver::resolveConfig([$noConfigDir.'/dummy.php']);
-            $this->assertSame(100, $config->minScore);
+            $this->assertSame(100, $config->getRule('max_method_length'));
         } finally {
             rmdir($noConfigDir);
         }
@@ -99,7 +97,7 @@ final class QualityConfigTest extends TestCase
         $dir = sys_get_temp_dir().'/soda-disable-'.uniqid();
         mkdir($dir, 0700, true);
         $path = $dir.'/soda.json';
-        file_put_contents($path, '{"quality":{"min_score":80},"rules":{"structural":{},"complexity":{"max_control_nesting":0},"breathing":{"min_code_breathing_score":0}}}');
+        file_put_contents($path, '{"rules":{"structural":{},"complexity":{"max_control_nesting":0},"breathing":{"min_code_breathing_score":0}}}');
 
         try {
             $config = QualityConfig::fromFile($path);
@@ -111,12 +109,40 @@ final class QualityConfigTest extends TestCase
         }
     }
 
+    public function testNullRuleValueDisablesRule(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-null-rule-'.uniqid();
+        mkdir($dir, 0700, true);
+        $path = $dir.'/soda.json';
+        $payload = [
+            'rules' => [
+                'structural' => [
+                    'max_method_length' => null,
+                ],
+                'complexity' => [],
+                'breathing'  => [],
+                'naming'     => [],
+            ],
+        ];
+        file_put_contents($path, json_encode($payload, JSON_THROW_ON_ERROR));
+
+        try {
+            $config = QualityConfig::fromFile($path);
+            $this->assertContains('max_method_length', $config->disabledRuleIds);
+            $this->assertFalse($config->isRuleEnabled('max_method_length'));
+            $this->assertTrue($config->isRuleEnabled('max_class_length'));
+        } finally {
+            unlink($path);
+            rmdir($dir);
+        }
+    }
+
     public function testFromFileUsesDefaultsForMissingSections(): void
     {
         $dir = sys_get_temp_dir().'/soda-partial-'.uniqid();
         mkdir($dir, 0700, true);
         $path = $dir.'/soda.json';
-        file_put_contents($path, '{"quality":{"min_score":80},"rules":{"structural":{"max_method_length":50},"complexity":{},"breathing":{}}}');
+        file_put_contents($path, '{"rules":{"structural":{"max_method_length":50},"complexity":{},"breathing":{}}}');
 
         try {
             $config = QualityConfig::fromFile($path);

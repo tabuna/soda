@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use function assert;
+
 use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 use PhpParser\Node;
-use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Enum_;
@@ -31,21 +32,23 @@ final class ControlNestingVisitor extends NullableReturnVisitor
 
     protected function doEnterNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
-            $this->pushClass($node);
+        $syntaxKind = $node->getType();
+
+        if (in_array($syntaxKind, ['Stmt_Class', 'Stmt_Trait', 'Stmt_Enum'], true)) {
+            $this->enterClassLikeStatement($node);
 
             return;
         }
 
-        if ($node instanceof Closure) {
+        if ($syntaxKind === 'Expr_Closure') {
             $this->tracker->enterClosure();
             $this->enterClosure();
 
             return;
         }
 
-        if ($node instanceof ClassMethod || $node instanceof Function_) {
-            $this->startMethod($node);
+        if ($syntaxKind === 'Stmt_ClassMethod' || $syntaxKind === 'Stmt_Function') {
+            $this->enterCallableStatement($node);
 
             return;
         }
@@ -57,21 +60,23 @@ final class ControlNestingVisitor extends NullableReturnVisitor
 
     protected function doLeaveNode(Node $node): void
     {
-        if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
+        $syntaxKind = $node->getType();
+
+        if (in_array($syntaxKind, ['Stmt_Class', 'Stmt_Trait', 'Stmt_Enum'], true)) {
             $this->popClass();
 
             return;
         }
 
-        if ($node instanceof Closure) {
+        if ($syntaxKind === 'Expr_Closure') {
             $this->tracker->leaveClosure();
             $this->leaveClosure();
 
             return;
         }
 
-        if ($node instanceof ClassMethod || $node instanceof Function_) {
-            $this->endMethod($node);
+        if ($syntaxKind === 'Stmt_ClassMethod' || $syntaxKind === 'Stmt_Function') {
+            $this->leaveCallableStatement($node);
 
             return;
         }
@@ -87,6 +92,37 @@ final class ControlNestingVisitor extends NullableReturnVisitor
     public function result(): array
     {
         return $this->tracker->result();
+    }
+
+    private function enterClassLikeStatement(Node $node): void
+    {
+        assert(
+            $node instanceof Class_
+            || $node instanceof Trait_
+            || $node instanceof Enum_,
+        );
+
+        $this->pushClass($node);
+    }
+
+    private function enterCallableStatement(Node $node): void
+    {
+        assert(
+            $node instanceof ClassMethod
+            || $node instanceof Function_,
+        );
+
+        $this->startMethod($node);
+    }
+
+    private function leaveCallableStatement(Node $node): void
+    {
+        assert(
+            $node instanceof ClassMethod
+            || $node instanceof Function_,
+        );
+
+        $this->endMethod($node);
     }
 
     private function startMethod(ClassMethod|Function_ $node): void

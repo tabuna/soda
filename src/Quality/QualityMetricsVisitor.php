@@ -35,6 +35,7 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
      *     properties: int,
      *     public_methods: int,
      *     dependencies: int,
+     *     efferent_coupling: int,
      *     traits: int,
      *     interfaces: int,
      *     namespace: string,
@@ -152,7 +153,7 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
      * @psalm-return array{
      *   file_loc: int,
      *   classes_count: int,
-     *   classes: array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}>,
+     *   classes: array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, efferent_coupling: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}>,
      *   methods: array<string, array{loc: int, args: int}>,
      *   namespaces: array<string, int>
      * }

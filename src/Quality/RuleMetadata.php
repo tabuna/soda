@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
-use Bunnivo\Soda\Quality\Rule\BreathingRuleDefaults;
-use Bunnivo\Soda\Quality\Rule\MethodRuleDefaults;
-use Bunnivo\Soda\Quality\Rule\NamingRuleDefaults;
-use Bunnivo\Soda\Quality\Rule\StructureRuleDefaults;
+use Bunnivo\Soda\Quality\Rule\RuleCatalog;
 
 /**
  * Presentation metadata for quality rules (severity, display label).
@@ -31,17 +28,7 @@ final readonly class RuleMetadata
 
     public static function default(): self
     {
-        $structure = new StructureRuleDefaults();
-        $breathing = new BreathingRuleDefaults();
-        $method = new MethodRuleDefaults();
-        $naming = new NamingRuleDefaults();
-
-        return new self(array_merge(
-            $structure->defaults(),
-            $breathing->defaults(),
-            $method->defaults(),
-            $naming->defaults(),
-        ));
+        return new self(RuleCatalog::metadataMap());
     }
 
     /**

@@ -4,69 +4,119 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
-use const PHP_EOL;
+use function basename;
+
+use Illuminate\Console\OutputStyle;
+use Illuminate\Support\Collection;
 
 use function sprintf;
+use function str_repeat;
+use function str_replace;
+use function str_starts_with;
+use function strlen;
+use function substr;
+
+use Symfony\Component\Console\Formatter\OutputFormatter;
 
 final readonly class ReportFormatter
 {
+    private const int SEPARATOR_WIDTH = 60;
+
     public function __construct(
         private RuleMetadata $ruleMetadata,
     ) {}
 
-    public function format(QualityResult $result): string
+    public function write(OutputStyle $output, QualityResult $result, string $projectRoot): void
     {
-        $buf = <<<'EOT'
-Code Quality Report
-──────────────────
+        $output->writeln([
+            '<fg=bright-blue;options=bold>Soda Quality</>',
+            '<fg=gray>'.str_repeat('-', self::SEPARATOR_WIDTH).'</>',
+        ]);
+        $output->newLine();
 
-EOT;
+        $n = $result->violations->count();
+        if ($n > 0) {
+            $output->writeln(sprintf(
+                '<fg=default>%s</>',
+                OutputFormatter::escape($n === 1 ? '1 issue' : $n.' issues'),
+            ));
+            $output->newLine();
 
-        $buf .= sprintf('Score: %d / 100'.PHP_EOL.PHP_EOL, $result->score);
-
-        if ($result->violations->isNotEmpty()) {
-            $buf .= 'Violations'.PHP_EOL.'──────────'.PHP_EOL.PHP_EOL;
-            $buf .= $result->violations
-                ->map(fn (Violation $v) => $this->formatViolation($v))
-                ->implode('');
-            $buf .= PHP_EOL;
+            $this->writeViolationsGrouped($output, $result->violations, $projectRoot);
+            $output->writeln('<fg=gray>'.str_repeat('-', self::SEPARATOR_WIDTH).'</>');
+            $output->newLine();
         }
 
-        $buf .= 'Summary'.PHP_EOL.'───────'.PHP_EOL.PHP_EOL;
-        $buf .= sprintf('Violations: %d'.PHP_EOL, $result->violations->count());
-
-        return $buf.sprintf('Score: %d'.PHP_EOL, $result->score);
+        $passed = $result->passes();
+        if ($passed) {
+            $output->writeln('<fg=green;options=bold>[OK]</> No issues');
+        } else {
+            $output->writeln(sprintf(
+                '<fg=red;options=bold>[FAIL]</> %s',
+                $n === 1 ? '1 issue' : $n.' issues',
+            ));
+        }
     }
 
-    private function formatViolation(Violation $v): string
+    /**
+     * @param Collection<int, Violation> $violations
+     */
+    private function writeViolationsGrouped(OutputStyle $output, Collection $violations, string $projectRoot): void
     {
-        $icon = $this->ruleMetadata->severity($v->rule) === RuleMetadata::SEVERITY_ERROR ? '❌' : '⚠️';
-        $target = $v->method() ?? $v->class() ?? $v->file;
-        if ($v->line() !== null) {
-            $target = $v->file.':'.$v->line();
+        /** @var Collection<string, Collection<int, Violation>> $byFile */
+        $byFile = $violations->groupBy(fn (Violation $v) => $v->file)->sortKeys();
+
+        foreach ($byFile as $file => $list) {
+            $rel = $this->shortenPath($file, $projectRoot);
+            $output->writeln('<fg=cyan;options=bold>'.OutputFormatter::escape($rel).'</>');
+
+            foreach ($list as $v) {
+                $this->writeViolationDetail($output, $v);
+            }
+
+            $output->newLine();
+        }
+    }
+
+    private function writeViolationDetail(OutputStyle $output, Violation $v): void
+    {
+        $isError = $this->ruleMetadata->severity($v->rule) === RuleMetadata::SEVERITY_ERROR;
+        $mark = $isError ? '<fg=red;options=bold>×</>' : '<fg=yellow;options=bold>!</>';
+
+        $lineCol = $v->line() !== null ? (string) $v->line() : '—';
+        $scope = $v->method() ?? $v->class();
+        $locLine = '<options=bold>Line '.$lineCol.'</>';
+        if ($scope !== null) {
+            $locLine .= ' <fg=gray>('.OutputFormatter::escape($scope).')</>';
         }
 
-        if ($v->context->message !== null) {
-            return sprintf(
-                '%s %s'.PHP_EOL.'   %s'.PHP_EOL.PHP_EOL,
-                $icon,
-                $target,
-                $v->context->message,
-            );
-        }
+        $detail = $v->context->message !== null
+            ? OutputFormatter::escape($v->context->message)
+            : $this->formatThresholdDetail($v);
+        $output->writeln(sprintf('  %s %s', $mark, $locLine));
+        $output->writeln('    '.$detail);
+    }
 
-        $label = $this->ruleMetadata->label($v->rule);
+    private function formatThresholdDetail(Violation $v): string
+    {
+        $label = OutputFormatter::escape($this->ruleMetadata->label($v->rule));
         $lim = $v->limits();
+        $valueStr = OutputFormatter::escape($this->formatLimitValue($v->rule, $lim['value'], $lim['threshold']));
 
-        $valueStr = $this->formatLimitValue($v->rule, $lim['value'], $lim['threshold']);
+        return sprintf('<fg=default>%s</> %s', $label, $valueStr);
+    }
 
-        return sprintf(
-            '%s %s'.PHP_EOL.'   %s %s'.PHP_EOL.PHP_EOL,
-            $icon,
-            $target,
-            $label,
-            $valueStr,
-        );
+    private function shortenPath(string $path, string $root): string
+    {
+        $root = rtrim(str_replace('\\', '/', $root), '/');
+        $path = str_replace('\\', '/', $path);
+        if ($root !== '' && (str_starts_with($path, $root.'/') || $path === $root)) {
+            $cut = substr($path, strlen($root) + 1);
+
+            return $cut !== '' && $cut !== false ? $cut : basename($path);
+        }
+
+        return $path;
     }
 
     private const array MIN_BREATHING_RULES = [

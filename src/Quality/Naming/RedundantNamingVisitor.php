@@ -9,15 +9,11 @@ use function array_pop;
 
 use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 use PhpParser\Node;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Name;
-use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\Node\UnionType;
 
 /**
  * Collects class and method names with param/return types for AvoidRedundantNaming rule.
@@ -95,11 +91,11 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
 
         $firstParamType = null;
         if ($node->params !== [] && $node->params[0]->type !== null) {
-            $firstParamType = self::typeToString($node->params[0]->type);
+            $firstParamType = RedundantNamingPhpTypeLabel::fromTypeNode($node->params[0]->type);
         }
 
         $returnType = $node->getReturnType() !== null
-            ? self::typeToString($node->getReturnType())
+            ? RedundantNamingPhpTypeLabel::fromTypeNode($node->getReturnType())
             : null;
 
         $this->result['methods'][] = [
@@ -122,11 +118,11 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
 
         $firstParamType = null;
         if ($node->params !== [] && $node->params[0]->type !== null) {
-            $firstParamType = self::typeToString($node->params[0]->type);
+            $firstParamType = RedundantNamingPhpTypeLabel::fromTypeNode($node->params[0]->type);
         }
 
         $returnType = $node->getReturnType() !== null
-            ? self::typeToString($node->getReturnType())
+            ? RedundantNamingPhpTypeLabel::fromTypeNode($node->getReturnType())
             : null;
 
         $this->result['methods'][] = [
@@ -138,17 +134,6 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
             'line'           => $node->getStartLine(),
             'isPublic'       => true,
         ];
-    }
-
-    private static function typeToString(Node $type): string
-    {
-        return match (true) {
-            $type instanceof Name                                => $type->toString(),
-            $type instanceof Identifier                          => $type->name,
-            $type instanceof NullableType                        => self::typeToString($type->type),
-            $type instanceof UnionType && isset($type->types[0]) => self::typeToString($type->types[0]),
-            default                                              => '',
-        };
     }
 
     /**

@@ -50,20 +50,21 @@ final class QualityEngineTest extends TestCase
     }
 
     /**
-     * @return \Iterator<string, array{rule: string, config: array<string, int>, metrics: array<mixed>, complexity: array<string, int>, nesting?: array<string, array{depth: int, line: int, file: string}>, returns?: array<string, int>, booleanConditions?: array<string, list<array{line: int, count: int}>>, expectedRule: string}>
+     * @return \Iterator<string, array{rule: string, config: array<string, int>, metrics: array<mixed>, complexity: array<string, int>, nesting?: array<string, array{depth: int, line: int, file: string}>, returns?: array<string, int>, booleanConditions?: array<string, list<array{line: int, count: int}>>, tryCatch?: array<string, int>, expectedRule: string}>
      */
     public static function ruleViolationProvider(): \Iterator
     {
         $baseClass = [
-            'loc'             => 10,
-            'methods'         => 1,
-            'properties'      => 1,
-            'public_methods'  => 1,
-            'dependencies'    => 1,
-            'traits'          => 0,
-            'interfaces'      => 0,
-            'namespace'       => 'App',
-            'namespace_depth' => 1,
+            'loc'                 => 10,
+            'methods'             => 1,
+            'properties'          => 1,
+            'public_methods'      => 1,
+            'dependencies'        => 1,
+            'efferent_coupling'   => 0,
+            'traits'              => 0,
+            'interfaces'          => 0,
+            'namespace'           => 'App',
+            'namespace_depth'     => 1,
         ];
         yield 'max_method_length' => [
             'rule'    => 'max_method_length',
@@ -208,6 +209,22 @@ final class QualityEngineTest extends TestCase
             'complexity'   => [],
             'nesting'      => [],
             'expectedRule' => 'max_dependencies',
+        ];
+        yield 'max_efferent_coupling' => [
+            'rule'    => 'max_efferent_coupling',
+            'config'  => ['max_efferent_coupling' => 10],
+            'metrics' => [
+                '/file.php' => [
+                    'file_loc'      => 50,
+                    'classes_count' => 1,
+                    'classes'       => ['App\Foo' => array_merge($baseClass, ['efferent_coupling' => 11])],
+                    'methods'       => [],
+                    'namespaces'    => ['App' => 1],
+                ],
+            ],
+            'complexity'   => [],
+            'nesting'      => [],
+            'expectedRule' => 'max_efferent_coupling',
         ];
         yield 'max_classes_per_file' => [
             'rule'    => 'max_classes_per_file',
@@ -368,6 +385,23 @@ final class QualityEngineTest extends TestCase
             'booleanConditions' => ['App\Foo::bar' => [['line' => 10, 'count' => 5]]],
             'expectedRule'      => 'max_boolean_conditions',
         ];
+        yield 'max_try_catch_blocks' => [
+            'rule'         => 'max_try_catch_blocks',
+            'config'       => ['max_try_catch_blocks' => 2],
+            'metrics'      => [
+                '/file.php' => [
+                    'file_loc'      => 50,
+                    'classes_count' => 1,
+                    'classes'       => ['App\Foo' => $baseClass],
+                    'methods'       => ['App\Foo::run' => ['loc' => 1, 'args' => 0]],
+                    'namespaces'    => ['App' => 1],
+                ],
+            ],
+            'complexity'   => ['App\Foo::run' => 1],
+            'nesting'      => [],
+            'expectedRule' => 'max_try_catch_blocks',
+            'tryCatch'     => ['App\Foo::run' => 3],
+        ];
     }
 
     #[DataProvider('ruleViolationProvider')]
@@ -380,8 +414,9 @@ final class QualityEngineTest extends TestCase
         string $expectedRule,
         array $returns = [],
         array $booleanConditions = [],
+        array $tryCatch = [],
     ): void {
-        $configObj = new QualityConfig(80, $config);
+        $configObj = new QualityConfig($config);
         $engine = QualityEngine::create($configObj);
 
         $classesOrTraits = $rule === 'max_classes_per_project' ? 10 : 1;
@@ -390,6 +425,7 @@ final class QualityEngineTest extends TestCase
             'nesting'    => $nesting,
             'returns'    => $returns,
             'conditions' => $booleanConditions,
+            'tryCatch'   => $tryCatch,
         ]);
         $result = $engine->evaluate($this->createResult($classesOrTraits), $input);
 
@@ -399,7 +435,7 @@ final class QualityEngineTest extends TestCase
 
     public function testDisabledRuleProducesNoViolation(): void
     {
-        $config = new QualityConfig(80, []); // no rules
+        $config = new QualityConfig([]); // no rules
         $engine = QualityEngine::create($config);
 
         $metrics = [
@@ -408,15 +444,16 @@ final class QualityEngineTest extends TestCase
                 'classes_count' => 100,
                 'classes'       => [
                     'App\Foo' => [
-                        'loc'             => 1000,
-                        'methods'         => 50,
-                        'properties'      => 50,
-                        'public_methods'  => 50,
-                        'dependencies'    => 50,
-                        'traits'          => 10,
-                        'interfaces'      => 10,
-                        'namespace'       => 'App',
-                        'namespace_depth' => 10,
+                        'loc'                 => 1000,
+                        'methods'             => 50,
+                        'properties'          => 50,
+                        'public_methods'      => 50,
+                        'dependencies'        => 50,
+                        'efferent_coupling'   => 50,
+                        'traits'              => 10,
+                        'interfaces'          => 10,
+                        'namespace'           => 'App',
+                        'namespace_depth'     => 10,
                     ],
                 ],
                 'methods'    => ['App\Foo::bar' => ['loc' => 100, 'args' => 20]],

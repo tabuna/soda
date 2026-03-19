@@ -13,6 +13,12 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Commands;
 
 use Bunnivo\Soda\Application;
+use Bunnivo\Soda\ComplexityMetrics;
+use Bunnivo\Soda\CoreMetrics;
+use Bunnivo\Soda\LocMetrics;
+use Bunnivo\Soda\Quality\QualityAnalysisContract;
+use Bunnivo\Soda\Quality\QualityResult;
+use Bunnivo\Soda\Result;
 use Illuminate\Console\Application as ConsoleApplication;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Events\Dispatcher;
@@ -72,10 +78,109 @@ final class QualityCommandTest extends TestCase
 
         $data = json_decode($json, true);
         $this->assertIsArray($data);
-        $this->assertArrayHasKey('score', $data);
+        $this->assertArrayHasKey('schema_version', $data);
+        $this->assertSame(2, $data['schema_version']);
+        $this->assertArrayNotHasKey('score', $data);
         $this->assertArrayHasKey('metrics', $data);
         $this->assertArrayHasKey('violations', $data);
         $this->assertArrayHasKey('directories', $data['metrics']);
         $this->assertArrayHasKey('loc', $data['metrics']);
+    }
+
+    public function testUsesInjectedQualityAnalyser(): void
+    {
+        $result = new QualityResult($this->minimalProjectResult(), collect([]));
+
+        $stub = new class($result) implements QualityAnalysisContract
+        {
+            public function __construct(private readonly QualityResult $out) {}
+
+            #[\Override]
+            public function analyse(array $files, bool $debug, ?string $configPath = null): QualityResult
+            {
+                return $this->out;
+            }
+        };
+
+        $container = new Application();
+        $artisan = new ConsoleApplication($container, new Dispatcher($container), '8.0');
+        $artisan->setAutoExit(false);
+        $artisan->add(new QualityCommand($stub));
+
+        $input = new ArrayInput([
+            'command' => 'quality',
+            'path'    => [__DIR__.'/../quality-fixture'],
+        ]);
+        $output = new BufferedOutput();
+
+        $exitCode = $artisan->run($input, new OutputStyle($input, $output));
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString('[OK]', $output->fetch());
+    }
+
+    public function testQualityRunsOnMinimalTempProject(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-quality-e2e-'.uniqid();
+        mkdir($dir, 0700, true);
+        $php = $dir.'/T.php';
+        file_put_contents($php, "<?php\n\nfinal class T {}\n");
+        $soda = $dir.'/soda.json';
+        file_put_contents($soda, json_encode([
+            'rules' => [
+                'structural' => [],
+                'complexity' => [],
+                'breathing'  => [],
+                'naming'     => [],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        try {
+            $container = new Application();
+            $artisan = new ConsoleApplication($container, new Dispatcher($container), '8.0');
+            $artisan->setAutoExit(false);
+            $artisan->add(new QualityCommand());
+
+            $input = new ArrayInput([
+                'command'  => 'quality',
+                'path'     => [$dir],
+                '--config' => $soda,
+            ]);
+            $output = new BufferedOutput();
+
+            $exitCode = $artisan->run($input, new OutputStyle($input, $output));
+
+            $this->assertSame(0, $exitCode);
+            $this->assertStringContainsString('Soda Quality', $output->fetch());
+        } finally {
+            unlink($php);
+            unlink($soda);
+            rmdir($dir);
+        }
+    }
+
+    private function minimalProjectResult(): Result
+    {
+        $loc = new LocMetrics([
+            'directories'           => 1,
+            'files'                 => 1,
+            'linesOfCode'           => 10,
+            'commentLinesOfCode'    => 0,
+            'nonCommentLinesOfCode' => 10,
+            'logicalLinesOfCode'    => 5,
+        ]);
+        $complexity = new ComplexityMetrics([
+            'functions'       => 0,
+            'funcLowest'      => 1,
+            'funcAverage'     => 1.0,
+            'funcHighest'     => 1,
+            'classesOrTraits' => 1,
+            'methods'         => 1,
+            'methodLowest'    => 1,
+            'methodAverage'   => 1.0,
+            'methodHighest'   => 1,
+        ]);
+
+        return new Result([], new CoreMetrics($loc, $complexity));
     }
 }

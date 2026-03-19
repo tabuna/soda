@@ -15,22 +15,23 @@ use PhpParser\Node\Stmt\Trait_;
 final class MetricsExtractor
 {
     /**
-     * @return array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}
+     * @return array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, efferent_coupling: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}
      */
     public static function extract(Class_|Trait_ $node): array
     {
         [$namespace, $depth] = self::extractNamespace($node);
 
         return [
-            'loc'             => $node->getEndLine() - $node->getStartLine() + 1,
-            'methods'         => 0,
-            'properties'      => self::countProperties($node),
-            'public_methods'  => self::countPublicMethods($node),
-            'dependencies'    => self::countDependencies($node),
-            'traits'          => self::countTraits($node),
-            'interfaces'      => $node instanceof Class_ ? count($node->implements) : 0,
-            'namespace'       => $namespace,
-            'namespace_depth' => $depth,
+            'loc'                 => $node->getEndLine() - $node->getStartLine() + 1,
+            'methods'             => 0,
+            'properties'          => self::countProperties($node),
+            'public_methods'      => self::countPublicMethods($node),
+            'dependencies'        => self::countDependencies($node),
+            'efferent_coupling'   => 0,
+            'traits'              => self::countTraits($node),
+            'interfaces'          => $node instanceof Class_ ? count($node->implements) : 0,
+            'namespace'           => $namespace,
+            'namespace_depth'     => $depth,
         ];
     }
 

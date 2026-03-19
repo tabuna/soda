@@ -11,9 +11,10 @@ final readonly class MethodRuleDefaults implements RuleDefaultsProvider
 {
     public function defaults(): array
     {
-        return RuleSpecBuilder::build([
-            RuleSpec::warning('max_return_statements', 'Return statements:'),
-            RuleSpec::warning('max_boolean_conditions', 'Boolean conditions:'),
+        return RuleCatalog::metadataForRules([
+            'max_return_statements',
+            'max_boolean_conditions',
+            'max_try_catch_blocks',
         ]);
     }
 }

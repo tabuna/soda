@@ -6,12 +6,13 @@ namespace Bunnivo\Soda\Quality;
 
 use Bunnivo\Soda\Quality\EvaluationContext\MethodMetricsData;
 use Bunnivo\Soda\Quality\EvaluationContext\MethodNestingReturns;
+use Bunnivo\Soda\Quality\EvaluationContext\MethodScalarMetrics;
 
 /**
  * @psalm-param array<string, array{
  *   file_loc: int,
  *   classes_count: int,
- *   classes: array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}>,
+ *   classes: array<string, array{loc: int, methods: int, properties: int, public_methods: int, dependencies: int, efferent_coupling: int, traits: int, interfaces: int, namespace: string, namespace_depth: int}>,
  *   methods: array<string, array{loc: int, args: int}>,
  *   namespaces: array<string, int>,
  *   breathing?: array<string, mixed>
@@ -29,13 +30,15 @@ final readonly class EvaluateInput
      * @psalm-param array<string, array{depth: int, line: int, file: string}> $nestingByMethod
      * @psalm-param array<string, int> $returnsByMethod
      * @psalm-param array<string, list<array{line: int, count: int}>> $booleanConditionsByMethod
+     * @psalm-param array<string, int> $tryCatchByMethod
      */
     /**
      * @psalm-param array{
      *   complexity?: array<string, positive-int>,
      *   nesting?: array<string, array{depth: int, line: int, file: string}>,
      *   returns?: array<string, int>,
-     *   conditions?: array<string, list<array{line: int, count: int}>>
+     *   conditions?: array<string, list<array{line: int, count: int}>>,
+     *   tryCatch?: array<string, int>
      * } $methodData
      */
     public static function fromArrays(array $qualityMetrics, array $methodData = []): self
@@ -44,7 +47,14 @@ final readonly class EvaluateInput
             $methodData['nesting'] ?? [],
             $methodData['returns'] ?? [],
         );
-        $mm = new MethodMetricsData($nr, $methodData['conditions'] ?? [], $methodData['complexity'] ?? []);
+        $mm = new MethodMetricsData(
+            $nr,
+            new MethodScalarMetrics(
+                $methodData['conditions'] ?? [],
+                $methodData['complexity'] ?? [],
+                $methodData['tryCatch'] ?? [],
+            ),
+        );
 
         return new self($qualityMetrics, $mm);
     }

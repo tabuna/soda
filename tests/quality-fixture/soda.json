@@ -1,7 +1,4 @@
 {
-  "quality": {
-    "min_score": 80
-  },
   "rules": {
     "max_method_length": 120,
     "max_class_length": 500,

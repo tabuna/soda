@@ -1,7 +1,4 @@
 {
-  "quality": {
-    "min_score": 75
-  },
   "rules": {
     "structural": {
       "max_method_length": 30,

@@ -24,14 +24,28 @@ final readonly class RedundantNamingChecker implements RuleChecker
      */
     public function check(EvaluationContext $context): Collection
     {
+        if (! $context->config->isRuleEnabled(self::RULE)) {
+            return collect([]);
+        }
+
         $threshold = (int) $context->config->getRule(self::RULE);
         if ($threshold <= 0) {
             return collect([]);
         }
 
-        $similarityThreshold = $threshold >= 1 && $threshold <= 100 ? (float) $threshold : 80.0;
+        $similarityThreshold = $this->normalisedSimilarityThreshold($threshold);
         $analyser = $this->analyser ?? new RedundantNamingAnalyser($similarityThreshold);
 
+        return $this->violationsFromQualityMetrics($context, $analyser);
+    }
+
+    private function normalisedSimilarityThreshold(int $threshold): float
+    {
+        return $threshold >= 1 && $threshold <= 100 ? (float) $threshold : 80.0;
+    }
+
+    private function violationsFromQualityMetrics(EvaluationContext $context, RedundantNamingAnalyser $analyser): Collection
+    {
         $violations = collect([]);
 
         foreach ($context->fileMetrics->qualityMetrics() as $file => $metrics) {
@@ -66,20 +80,25 @@ final readonly class RedundantNamingChecker implements RuleChecker
             ->withMessage(sprintf('Redundant naming: %s (%d%%)', $compact, $similarity));
 
         if ($v['type'] === 'method' && isset($v['className'])) {
-            $builder = $builder->atClass($v['className']);
-            $methodPart = $v['current'];
-            if (str_contains($methodPart, '(')) {
-                $methodPart = substr($methodPart, 0, (int) strpos($methodPart, '('));
-            }
-
-            $builder = $builder->atMethod($methodPart);
+            return $this->withMethodContext($builder, $v['className'], $v['current'])->build();
         }
 
         if ($v['type'] === 'class') {
-            $builder = $builder->atClass($v['current']);
+            return $builder->atClass($v['current'])->build();
         }
 
         return $builder->build();
+    }
+
+    private function withMethodContext(ViolationBuilder $builder, string $className, string $current): ViolationBuilder
+    {
+        $builder = $builder->atClass($className);
+        $methodPart = $current;
+        if (str_contains($methodPart, '(')) {
+            $methodPart = substr($methodPart, 0, (int) strpos($methodPart, '('));
+        }
+
+        return $builder->atMethod($methodPart);
     }
 
     private function compactMessage(string $current, string $suggested): string

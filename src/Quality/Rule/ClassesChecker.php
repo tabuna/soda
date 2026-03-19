@@ -13,6 +13,10 @@ final class ClassesChecker implements RuleChecker
     #[\Override]
     public function check(EvaluationContext $context): Collection
     {
+        if (! $context->config->isRuleEnabled('max_classes_per_file')) {
+            return collect();
+        }
+
         $threshold = $context->config->getRule('max_classes_per_file');
 
         return collect($context->fileMetrics->qualityMetrics())

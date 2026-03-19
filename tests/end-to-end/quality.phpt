@@ -8,12 +8,7 @@ $_SERVER['argv'] = ['soda', 'quality', __DIR__ . '/../quality-fixture'];
 
 require __DIR__ . '/../../soda';
 --EXPECTF--
-%ACode Quality Report
-──────────────────
-Score: 100 / 100
+%ASoda Quality
+------------------------------------------------------------
 
-Summary
-───────
-
-Violations: 0
-Score: 100
+[OK] No issues

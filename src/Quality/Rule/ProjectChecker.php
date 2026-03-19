@@ -16,6 +16,10 @@ final class ProjectChecker implements RuleChecker
     #[\Override]
     public function check(EvaluationContext $context): Collection
     {
+        if (! $context->config->isRuleEnabled('max_classes_per_project')) {
+            return collect();
+        }
+
         $threshold = $context->config->getRule('max_classes_per_project');
         $total = $context->projectMetrics->classesOrTraits();
         $firstFile = array_key_first($context->fileMetrics->qualityMetrics()) ?? '.';

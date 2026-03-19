@@ -19,15 +19,15 @@ use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Analyser::class)]
+#[CoversClass(ProjectMetrics::class)]
 #[UsesClass(Result::class)]
 #[UsesClass(Metrics::class)]
 #[Small]
-final class AnalyserTest extends TestCase
+final class ProjectMetricsTest extends TestCase
 {
     public function testAnalysesFiles(): void
     {
-        $result = (new Analyser)->analyse(
+        $result = (new ProjectMetrics)->analyse(
             [
                 __DIR__.'/../_fixture/example_function.php',
                 __DIR__.'/../_fixture/ExampleClass.php',

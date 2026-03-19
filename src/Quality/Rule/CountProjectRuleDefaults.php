@@ -11,8 +11,8 @@ final readonly class CountProjectRuleDefaults implements RuleDefaultsProvider
 {
     public function defaults(): array
     {
-        return RuleSpecBuilder::build([
-            RuleSpec::error('max_classes_per_project', 'Classes per project:'),
+        return RuleCatalog::metadataForRules([
+            'max_classes_per_project',
         ]);
     }
 }

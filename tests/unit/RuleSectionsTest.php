@@ -28,10 +28,12 @@ final class RuleSectionsTest extends TestCase
         $this->assertContains('max_method_length', $sections['structural']);
         $this->assertContains('max_class_length', $sections['structural']);
         $this->assertContains('max_classes_per_project', $sections['structural']);
+        $this->assertContains('max_efferent_coupling', $sections['structural']);
 
         $this->assertArrayHasKey('complexity', $sections);
         $this->assertContains('max_cyclomatic_complexity', $sections['complexity']);
         $this->assertContains('max_control_nesting', $sections['complexity']);
+        $this->assertContains('max_try_catch_blocks', $sections['complexity']);
 
         $this->assertArrayHasKey('breathing', $sections);
         $this->assertContains('min_code_breathing_score', $sections['breathing']);
@@ -46,7 +48,9 @@ final class RuleSectionsTest extends TestCase
         $map = RuleSections::ruleToSection();
 
         $this->assertSame('structural', $map['max_method_length']);
+        $this->assertSame('structural', $map['max_efferent_coupling']);
         $this->assertSame('complexity', $map['max_cyclomatic_complexity']);
+        $this->assertSame('complexity', $map['max_try_catch_blocks']);
         $this->assertSame('breathing', $map['min_code_breathing_score']);
         $this->assertSame('naming', $map['avoid_redundant_naming']);
     }

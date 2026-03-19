@@ -55,9 +55,6 @@ Or create `soda.json` manually:
 
 ```json
 {
-  "quality": {
-    "min_score": 100
-  },
   "rules": {
     "structural": {
       "max_method_length": 100,
@@ -68,6 +65,7 @@ Or create `soda.json` manually:
       "max_properties_per_class": 6,
       "max_public_methods": 40,
       "max_dependencies": 8,
+      "max_efferent_coupling": 10,
       "max_classes_per_file": 1,
       "max_namespace_depth": 4,
       "max_classes_per_namespace": 16,
@@ -81,7 +79,8 @@ Or create `soda.json` manually:
       "max_weighted_cognitive_density": 40,
       "max_logical_complexity_factor": 50,
       "max_return_statements": 4,
-      "max_boolean_conditions": 3
+      "max_boolean_conditions": 3,
+      "max_try_catch_blocks": 2
     },
     "breathing": {
       "min_code_breathing_score": 25,
@@ -102,28 +101,23 @@ php soda quality src
 Example output:
 
 ```
-Code Quality Report
-──────────────────
+Soda Quality
+------------------------------------------------------------
 
-Score: 82 / 100
+2 issues
 
-Violations
-──────────
+src/Services/UserService.php
+  ! Line —
+    Properties per class: 18 (max 15)
 
-❌ App\Services\UserService
-   Properties per class: 18 (max 15)
+src/Controllers/UserController.php
+  ! Line —
+    Methods per class: 22 (max 20)
 
-⚠️ App\Controllers\UserController
-   Methods per class: 22 (max 20)
+------------------------------------------------------------
 
-Summary
-───────
-
-Violations: 2
-Score: 82
+[FAIL] 2 issues
 ```
-
-**Exit code:** 0 when score ≥ min_score, 1 otherwise.
 
 ### Options
 
@@ -136,12 +130,7 @@ Score: 82
 
 ### Disabling rules
 
-Set limit to `0` to disable: `"max_control_nesting": 0`, `"min_code_breathing_score": 0`.
-
-### quality.min_score
-
-Minimum overall score (1–100). Exit code 1 when score &lt; min_score.
-See [How Score is calculated](docs/QUALITY_SCORE.md).
+Set `null` to disable: `"max_control_nesting": null`
 
 ### Documentation
 
@@ -149,7 +138,6 @@ See [How Score is calculated](docs/QUALITY_SCORE.md).
 |--------------------------------------------------------------------|-----------------------------------------------------------------------------|
 | [Structural Metrics](docs/STRUCTURAL_METRICS.md)                   | Size, dependencies, structure — good/bad examples, possible values          |
 | [Complexity & Readability](docs/COMPLEXITY_READABILITY_METRICS.md) | Cyclomatic complexity, nesting, breathing metrics — examples, config ranges |
-| [Quality Score](docs/QUALITY_SCORE.md)                             | How score is calculated, penalties, min_score gate                          |
 | [Breathing Metrics](docs/BREATHING_METRICS.md)                     | Breathing metrics overview                                                  |
 
 ## CI Integration

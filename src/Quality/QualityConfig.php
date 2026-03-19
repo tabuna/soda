@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use Bunnivo\Soda\Quality\Config\RuleFlattenScratch;
+use Bunnivo\Soda\Quality\Rule\RuleCatalog;
+
 use function file_get_contents;
-
-use Illuminate\Support\Arr;
-
 use function is_array;
 use function json_decode;
 
@@ -15,50 +15,29 @@ use JsonException;
 
 final readonly class QualityConfig
 {
-    private const int DEFAULT_MIN_SCORE = 100;
-
-    private const array DEFAULT_RULES = [
-        'max_method_length'                     => 100,
-        'max_class_length'                      => 500,
-        'max_arguments'                         => 3,
-        'max_methods_per_class'                 => 40,
-        'max_file_loc'                          => 700,
-        'max_properties_per_class'              => 5,
-        'max_public_methods'                    => 20,
-        'max_dependencies'                      => 8,
-        'max_classes_per_file'                  => 1,
-        'max_namespace_depth'                   => 4,
-        'max_classes_per_namespace'             => 16,
-        'max_traits_per_class'                  => 10,
-        'max_interfaces_per_class'              => 5,
-        'max_classes_per_project'               => 300,
-        'max_cyclomatic_complexity'             => 8,
-        'max_control_nesting'                   => 3,
-        'max_weighted_cognitive_density'        => 60,
-        'max_logical_complexity_factor'         => 50,
-        'max_return_statements'                 => 4,
-        'max_boolean_conditions'                => 4,
-        'min_visual_breathing_index'            => 70,
-        'min_code_oxygen_level'                 => 100,
-        'min_identifier_readability_score'      => 100,
-        'min_code_breathing_score'              => 100,
-        'avoid_redundant_naming'                => 80,
-    ];
+    /**
+     * @psalm-var array<string, int|float>
+     */
+    public array $rules;
 
     /**
-     * @psalm-param positive-int $minScore
-     * @psalm-param array<string, int|float> $rules
+     * @param array<string, int|float>|null $rules           `null` = full defaults from {@see RuleCatalog}; `[]` = empty thresholds.
+     * @param list<string>                  $disabledRuleIds
      */
     public function __construct(
+        ?array $rules = null,
         /**
-         * @psalm-var positive-int
+         * Rule ids explicitly turned off in config (e.g. `"max_method_length": null`).
          */
-        public int $minScore = self::DEFAULT_MIN_SCORE,
-        /**
-         * @psalm-var array<string, int|float>
-         */
-        public array $rules = self::DEFAULT_RULES
-    ) {}
+        public array $disabledRuleIds = [],
+    ) {
+        $this->rules = $rules ?? RuleCatalog::defaultThresholds();
+    }
+
+    public function isRuleEnabled(string $ruleId): bool
+    {
+        return ! in_array($ruleId, $this->disabledRuleIds, true);
+    }
 
     /**
      * @psalm-param non-empty-string $path
@@ -70,10 +49,9 @@ final readonly class QualityConfig
         self::assertReadable($path);
         $content = self::readContent($path);
         $data = self::decodeJson($content, $path);
-        $minScore = self::parseMinScore($data);
-        $mergedRules = self::mergeRules($data);
+        [$mergedRules, $disabled] = self::mergeRules($data);
 
-        return new self($minScore, $mergedRules);
+        return new self($mergedRules, $disabled);
     }
 
     /**
@@ -111,7 +89,11 @@ final readonly class QualityConfig
         try {
             $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $jsonException) {
-            throw new ConfigException(sprintf('Invalid JSON in config file %s: ', $path).$jsonException->getMessage(), $jsonException->getCode(), $jsonException);
+            throw new ConfigException(
+                sprintf('Invalid JSON in config "%s": %s', $path, $jsonException->getMessage()),
+                $jsonException->getCode(),
+                $jsonException,
+            );
         }
 
         throw_unless(is_array($data), ConfigException::class, 'Config must be a JSON object');
@@ -123,47 +105,35 @@ final readonly class QualityConfig
     /**
      * @param array<string, mixed> $data
      *
-     * @throws ConfigException
-     *
-     * @psalm-return positive-int
-     */
-    private static function parseMinScore(array $data): int
-    {
-        $raw = Arr::get($data, 'quality.min_score', self::DEFAULT_MIN_SCORE);
-        $minScore = is_int($raw) ? $raw : self::DEFAULT_MIN_SCORE;
-
-        throw_if($minScore < 1 || $minScore > 100, ConfigException::class, 'min_score must be between 1 and 100');
-
-        return $minScore;
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     *
-     * @psalm-return array<string, int|float>
+     * @return array{0: array<string, int|float>, 1: list<string>}
      */
     private static function mergeRules(array $data): array
     {
         /** @var array<array-key, mixed> $raw */
         $raw = $data['rules'] ?? [];
 
-        $flattened = self::flattenRules($raw);
+        [$flattened, $disabled] = self::flattenRules($raw);
         $filtered = collect($flattened)->filter(function (mixed $v, mixed $k): bool {
             return is_numeric($v) && (float) $v >= 0;
         })->map(fn (mixed $v): int|float => is_int($v) ? $v : $v)->all();
 
+        /** @var array<string, int|float> $filtered */
+        $baseline = RuleCatalog::defaultThresholds();
+
         /** @var array<string, int|float> */
-        return array_merge(self::DEFAULT_RULES, $filtered);
+        $merged = array_merge($baseline, $filtered);
+
+        return [$merged, $disabled];
     }
 
     /**
      * @param array<array-key, mixed> $rules Nested {structural: {...}, complexity: {...}, breathing: {...}}
      *
-     * @return array<string, int|float>
+     * @return array{0: array<string, int|float>, 1: list<string>}
      */
     private static function flattenRules(array $rules): array
     {
-        $result = [];
+        $scratch = new RuleFlattenScratch;
 
         foreach (RuleSections::sectionNames() as $section) {
             $sectionRules = $rules[$section] ?? [];
@@ -173,18 +143,33 @@ final readonly class QualityConfig
             }
 
             foreach ($sectionRules as $key => $value) {
-                if (is_string($key) && is_numeric($value)) {
-                    $result[$key] = is_int($value) ? $value : (float) $value;
-                }
+                self::applySectionRuleEntry($key, $value, $scratch);
             }
         }
 
-        return $result;
+        return [$scratch->thresholds, array_values(array_unique($scratch->disabled))];
+    }
+
+    private static function applySectionRuleEntry(mixed $key, mixed $value, RuleFlattenScratch $scratch): void
+    {
+        if (! is_string($key) || ! array_key_exists($key, RuleCatalog::definitions())) {
+            return;
+        }
+
+        if ($value === null) {
+            $scratch->disabled[] = $key;
+
+            return;
+        }
+
+        if (is_numeric($value)) {
+            $scratch->thresholds[$key] = is_int($value) ? $value : (float) $value;
+        }
     }
 
     public static function default(): self
     {
-        return new self();
+        return new self;
     }
 
     /**

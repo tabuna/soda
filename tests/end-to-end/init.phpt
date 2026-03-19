@@ -12,6 +12,8 @@ chdir($tmp);
 
 $_SERVER['argv'] = ['soda', 'init'];
 
+define('SODA_ENTRY_NO_EXIT', true);
+
 require __DIR__ . '/../../soda';
 
 chdir($cwd);

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality\Config;
 
 use function dirname;
+
+use Illuminate\Support\Collection;
+
 use function is_readable;
 
 /**
@@ -27,13 +30,8 @@ final class ConfigLocator
             return $explicitPath;
         }
 
-        $dirs = collect($files)
-            ->map(fn (string $f) => dirname($f))
-            ->unique()
-            ->values();
-
-        foreach ($dirs as $dir) {
-            $path = $this->searchUpward($dir);
+        foreach ($this->uniqueParentDirs($files) as $dir) {
+            $path = $this->firstConfigInAncestors($dir);
 
             if ($path !== null) {
                 return $path;
@@ -44,13 +42,52 @@ final class ConfigLocator
     }
 
     /**
+     * Optional PHP config in the **target project**: `config/soda.php` next to located `soda.json`, or found upward from scanned files (never vendor-only).
+     *
+     * @psalm-param list<non-empty-string> $files
+     *
      * @return non-empty-string|null
      */
-    private function searchUpward(string $dir): ?string
+    public function locatePhpConfig(array $files, ?string $jsonConfigPath = null): ?string
     {
-        $current = $dir;
+        if ($jsonConfigPath !== null && $jsonConfigPath !== '') {
+            $beside = dirname($jsonConfigPath).'/config/soda.php';
 
-        for ($i = 0; $i < self::MAX_DEPTH; $i++) {
+            if (is_readable($beside)) {
+                return $beside;
+            }
+        }
+
+        foreach ($this->uniqueParentDirs($files) as $dir) {
+            $found = $this->firstReadableInAncestors($dir, 'config/soda.php');
+
+            if ($found !== null) {
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @psalm-param list<non-empty-string> $files
+     *
+     * @return Collection<int, string>
+     */
+    private function uniqueParentDirs(array $files)
+    {
+        return collect($files)
+            ->map(fn (string $f) => dirname($f))
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * @return non-empty-string|null
+     */
+    private function firstConfigInAncestors(string $dir): ?string
+    {
+        return $this->walkAncestors($dir, function (string $current): ?string {
             foreach (self::CONFIG_NAMES as $name) {
                 $path = $current.'/'.$name;
 
@@ -59,13 +96,45 @@ final class ConfigLocator
                 }
             }
 
+            return null;
+        });
+    }
+
+    /**
+     * @return non-empty-string|null
+     */
+    private function firstReadableInAncestors(string $dir, string $relativePath): ?string
+    {
+        return $this->walkAncestors($dir, function (string $current) use ($relativePath): ?string {
+            $path = $current.'/'.$relativePath;
+
+            return is_readable($path) ? $path : null;
+        });
+    }
+
+    /**
+     * @param callable(string): ?non-empty-string $tryCurrent
+     *
+     * @return non-empty-string|null
+     */
+    private function walkAncestors(string $dir, callable $tryCurrent): ?string
+    {
+        $current = $dir;
+
+        for ($i = 0; $i < self::MAX_DEPTH; $i++) {
+            $hit = $tryCurrent($current);
+
+            if ($hit !== null) {
+                return $hit;
+            }
+
             $parent = dirname($current);
+
             if ($parent === $current) {
                 break;
             }
 
             $current = $parent;
-
         }
 
         return null;

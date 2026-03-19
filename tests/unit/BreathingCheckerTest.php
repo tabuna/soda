@@ -43,7 +43,7 @@ final class BreathingCheckerTest extends TestCase
 
     public function testProducesViolationWhenCbsBelowMin(): void
     {
-        $config = new QualityConfig(80, ['min_code_breathing_score' => 40]);
+        $config = new QualityConfig(['min_code_breathing_score' => 40]);
         $engine = new QualityEngine($config, [new BreathingChecker()]);
 
         $metrics = [
@@ -66,7 +66,7 @@ final class BreathingCheckerTest extends TestCase
 
     public function testNoViolationWhenCbsAboveMin(): void
     {
-        $config = new QualityConfig(80, ['min_code_breathing_score' => 40]);
+        $config = new QualityConfig(['min_code_breathing_score' => 40]);
         $engine = new QualityEngine($config, [new BreathingChecker()]);
 
         $metrics = [
@@ -88,7 +88,7 @@ final class BreathingCheckerTest extends TestCase
 
     public function testNoViolationWhenMinCbsDisabled(): void
     {
-        $config = new QualityConfig(80, ['min_code_breathing_score' => 0]);
+        $config = new QualityConfig(['min_code_breathing_score' => 0]);
         $engine = new QualityEngine($config, [new BreathingChecker()]);
 
         $metrics = [

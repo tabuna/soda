@@ -7,6 +7,8 @@ require __DIR__ . '/../../vendor/autoload.php';
 $reportPath = sys_get_temp_dir() . '/soda-quality-' . uniqid() . '.json';
 $_SERVER['argv'] = ['soda', 'quality', '--report-json', $reportPath, __DIR__ . '/../quality-fixture'];
 
+define('SODA_ENTRY_NO_EXIT', true);
+
 require __DIR__ . '/../../soda';
 
 $json = file_get_contents($reportPath);
@@ -17,8 +19,12 @@ if (! is_array($data)) {
     echo "Invalid JSON\n";
     exit(1);
 }
-if (! isset($data['score'], $data['metrics'], $data['violations'])) {
+if (! isset($data['schema_version'], $data['metrics'], $data['violations'])) {
     echo "Missing required keys\n";
+    exit(1);
+}
+if ($data['schema_version'] !== 2) {
+    echo "Bad schema_version\n";
     exit(1);
 }
 echo "OK\n";

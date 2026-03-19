@@ -1,7 +1,4 @@
 {
-  "quality": {
-    "min_score": 100
-  },
   "rules": {
     "structural": {
       "max_method_length": 100,
@@ -12,6 +9,7 @@
       "max_properties_per_class": 5,
       "max_public_methods": 20,
       "max_dependencies": 8,
+      "max_efferent_coupling": 10,
       "max_classes_per_file": 1,
       "max_namespace_depth": 4,
       "max_classes_per_namespace": 16,
@@ -25,7 +23,8 @@
       "max_weighted_cognitive_density": 60,
       "max_logical_complexity_factor": 50,
       "max_return_statements": 4,
-      "max_boolean_conditions": 4
+      "max_boolean_conditions": 4,
+      "max_try_catch_blocks": 2
     },
     "breathing": {
       "min_visual_breathing_index": 70,

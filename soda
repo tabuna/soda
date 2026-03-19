@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 use Bunnivo\Soda\Commands\AnalyseCommand;
 use Bunnivo\Soda\Commands\InitCommand;
+use Bunnivo\Soda\Commands\ListRulesCommand;
 use Bunnivo\Soda\Commands\QualityCommand;
 use Bunnivo\Soda\Application;
 use Illuminate\Events\Dispatcher;
@@ -41,9 +42,16 @@ $artisan->setCatchExceptions(true);
 
 // Bind a command
 $artisan->resolveCommands([
-    AnalyseCommand::class, 
-    InitCommand::class, 
-    QualityCommand::class
+    AnalyseCommand::class,
+    InitCommand::class,
+    ListRulesCommand::class,
+    QualityCommand::class,
 ]);
 
-return $artisan->run();
+$status = $artisan->run();
+
+if (! defined('SODA_ENTRY_NO_EXIT')) {
+    exit($status);
+}
+
+return $status;

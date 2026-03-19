@@ -11,11 +11,11 @@ final readonly class CountClassPartBRuleDefaults implements RuleDefaultsProvider
 {
     public function defaults(): array
     {
-        return RuleSpecBuilder::build([
-            RuleSpec::warning('max_namespace_depth', 'Namespace depth:'),
-            RuleSpec::warning('max_classes_per_namespace', 'Classes per namespace:'),
-            RuleSpec::warning('max_traits_per_class', 'Traits per class:'),
-            RuleSpec::warning('max_interfaces_per_class', 'Interfaces per class:'),
+        return RuleCatalog::metadataForRules([
+            'max_namespace_depth',
+            'max_classes_per_namespace',
+            'max_traits_per_class',
+            'max_interfaces_per_class',
         ]);
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
-use Bunnivo\Soda\Analyser;
 use Bunnivo\Soda\JsonResultFormatter;
+use Bunnivo\Soda\ProjectMetrics;
 use Bunnivo\Soda\Result;
 use Bunnivo\Soda\TextResultFormatter;
 
@@ -53,7 +53,7 @@ final class AnalyseCommand extends Command
             return self::FAILURE;
         }
 
-        $result = (new Analyser)->analyse($files, (bool) $this->option('debug'));
+        $result = (new ProjectMetrics)->analyse($files, (bool) $this->option('debug'));
 
         $this->line((new TextResultFormatter)->format($result));
         $this->writeReportJson($result);

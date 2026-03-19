@@ -39,6 +39,14 @@ final readonly class FileMetrics
 
     public function booleanConditionsByMethod(): array
     {
-        return $this->methodMetrics->booleanConditionsByMethod;
+        return $this->methodMetrics->booleanConditionsByMethod();
+    }
+
+    /**
+     * @psalm-return array<string, int>
+     */
+    public function tryCatchByMethod(): array
+    {
+        return $this->methodMetrics->tryCatchByMethod();
     }
 }

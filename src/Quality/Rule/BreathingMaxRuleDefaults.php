@@ -11,9 +11,9 @@ final readonly class BreathingMaxRuleDefaults implements RuleDefaultsProvider
 {
     public function defaults(): array
     {
-        return RuleSpecBuilder::build([
-            RuleSpec::max('max_weighted_cognitive_density', 'Weighted Cognitive Density:'),
-            RuleSpec::max('max_logical_complexity_factor', 'Logical Complexity Factor:'),
+        return RuleCatalog::metadataForRules([
+            'max_weighted_cognitive_density',
+            'max_logical_complexity_factor',
         ]);
     }
 }

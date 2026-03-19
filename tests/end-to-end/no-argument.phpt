@@ -8,13 +8,18 @@ $_SERVER['argv'] = ['soda'];
 
 require __DIR__ . '/../../soda';
 --EXPECTF--
-%ASoda %s
+Soda %s
 
 Usage:
   command [options] [arguments]
-%A
+
+Options:
+%aAvailable commands:
   analyse     Analyse PHP project size and collect metrics
-%A
+  completion  Dump the shell completion script
+  help        Display help for a command
   init        Create soda.json with default quality rules
-%A
+  list        List commands
   quality     Analyse code quality and check against configured thresholds
+ list
+  list:rules  List built-in quality rule ids (from RuleCatalog)

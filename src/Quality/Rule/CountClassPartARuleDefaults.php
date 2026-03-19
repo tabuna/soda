@@ -11,11 +11,12 @@ final readonly class CountClassPartARuleDefaults implements RuleDefaultsProvider
 {
     public function defaults(): array
     {
-        return RuleSpecBuilder::build([
-            RuleSpec::warning('max_properties_per_class', 'Properties per class:'),
-            RuleSpec::warning('max_public_methods', 'Public methods:'),
-            RuleSpec::warning('max_dependencies', 'Dependencies:'),
-            RuleSpec::warning('max_classes_per_file', 'Classes per file:'),
+        return RuleCatalog::metadataForRules([
+            'max_properties_per_class',
+            'max_public_methods',
+            'max_dependencies',
+            'max_efferent_coupling',
+            'max_classes_per_file',
         ]);
     }
 }

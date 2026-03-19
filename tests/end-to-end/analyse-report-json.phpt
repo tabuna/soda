@@ -7,6 +7,8 @@ require __DIR__ . '/../../vendor/autoload.php';
 $reportPath = sys_get_temp_dir() . '/soda-analyse-' . uniqid() . '.json';
 $_SERVER['argv'] = ['soda', 'analyse', '--report-json', $reportPath, __DIR__ . '/../_fixture'];
 
+define('SODA_ENTRY_NO_EXIT', true);
+
 require __DIR__ . '/../../soda';
 
 $json = file_get_contents($reportPath);
