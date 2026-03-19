@@ -17,6 +17,7 @@ use Illuminate\Console\Application as ConsoleApplication;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Events\Dispatcher;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -26,10 +27,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 #[Small]
 final class QualityCommandTest extends TestCase
 {
-    /**
-     * @group enum-workaround
-     * REMOVE_WHEN sebastian/complexity adds Enum support (see EnumAwareComplexityVisitorTest)
-     */
+    /** REMOVE_WHEN sebastian/complexity adds Enum support (see EnumAwareComplexityVisitorTest) */
     #[Group('enum-workaround')]
     public function testQualityRunsOnFixtureWithEnumWithoutCrashing(): void
     {

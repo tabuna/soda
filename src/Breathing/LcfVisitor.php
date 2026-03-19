@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Breathing;
 
+use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Do_;
 use PhpParser\Node\Stmt\For_;
@@ -11,12 +12,11 @@ use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\While_;
-use PhpParser\NodeVisitorAbstract;
 
 /**
  * @internal
  */
-final class LcfVisitor extends NodeVisitorAbstract
+final class LcfVisitor extends NullableReturnVisitor
 {
     private int $nCond = 0;
 
@@ -26,8 +26,7 @@ final class LcfVisitor extends NodeVisitorAbstract
 
     private int $depthMax = 0;
 
-    #[\Override]
-    public function enterNode(Node $node): void
+    protected function doEnterNode(Node $node): void
     {
         if ($node instanceof If_ || $node instanceof Switch_) {
             $this->nCond++;
@@ -43,8 +42,7 @@ final class LcfVisitor extends NodeVisitorAbstract
         }
     }
 
-    #[\Override]
-    public function leaveNode(Node $node): void
+    protected function doLeaveNode(Node $node): void
     {
         if ($this->hasBody($node)) {
             $this->depth--;

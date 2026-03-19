@@ -9,11 +9,10 @@ use PhpParser\Node\Expr;
 
 /**
  * @internal
- *
- * @psalm-var array<string, list<array{line: int, count: int}>>
  */
 final class ConditionRecorder
 {
+    /** @var array<string, list<array{line: int, count: int}>> */
     private array $conditionsByMethod = [];
 
     private ?string $currentMethod = null;

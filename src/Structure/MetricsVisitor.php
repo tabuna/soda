@@ -6,18 +6,18 @@ namespace Bunnivo\Soda\Structure;
 
 use function array_pop;
 
+use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\NodeVisitorAbstract;
 
 /**
  * Collects structure metrics, dependencies, and LLOC breakdown via AST.
  *
  * @internal
  */
-final class MetricsVisitor extends NodeVisitorAbstract
+final class MetricsVisitor extends NullableReturnVisitor
 {
     private readonly MetricsState $state;
 
@@ -26,14 +26,12 @@ final class MetricsVisitor extends NodeVisitorAbstract
         $this->state = new MetricsState();
     }
 
-    #[\Override]
-    public function enterNode(Node $node): void
+    protected function doEnterNode(Node $node): void
     {
         $this->dispatchEnter($node);
     }
 
-    #[\Override]
-    public function leaveNode(Node $node): void
+    protected function doLeaveNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_) {
             if ($this->state->classStack === []) {

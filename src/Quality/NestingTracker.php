@@ -9,11 +9,10 @@ use function array_pop;
 
 /**
  * @internal
- *
- * @psalm-var array<string, array{depth: int, line: int}>
  */
 final class NestingTracker
 {
+    /** @var array<string, array{depth: int, line: int}> */
     private array $nestingByMethod = [];
 
     /**

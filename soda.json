@@ -8,7 +8,7 @@
       "max_class_length": 500,
       "max_arguments": 3,
       "max_methods_per_class": 40,
-      "max_file_loc": 600,
+      "max_file_loc": 700,
       "max_properties_per_class": 5,
       "max_public_methods": 20,
       "max_dependencies": 8,

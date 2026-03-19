@@ -15,33 +15,33 @@ use JsonException;
 
 final readonly class QualityConfig
 {
-    private const int DEFAULT_MIN_SCORE = 80;
+    private const int DEFAULT_MIN_SCORE = 100;
 
     private const array DEFAULT_RULES = [
         'max_method_length'                     => 100,
         'max_class_length'                      => 500,
-        'max_arguments'                         => 4,
-        'max_control_nesting'                   => 3,
+        'max_arguments'                         => 3,
         'max_methods_per_class'                 => 40,
-        'max_file_loc'                          => 600,
-        'max_cyclomatic_complexity'             => 10,
-        'max_properties_per_class'              => 10,
+        'max_file_loc'                          => 700,
+        'max_properties_per_class'              => 5,
         'max_public_methods'                    => 20,
         'max_dependencies'                      => 8,
         'max_classes_per_file'                  => 1,
         'max_namespace_depth'                   => 4,
         'max_classes_per_namespace'             => 16,
-        'max_traits_per_class'                  => 5,
+        'max_traits_per_class'                  => 10,
         'max_interfaces_per_class'              => 5,
-        'max_classes_per_project'               => 2000,
-        'min_code_breathing_score'              => 0,
-        'min_visual_breathing_index'            => 12,
-        'min_identifier_readability_score'      => 75,
-        'min_code_oxygen_level'                 => 25,
-        'max_weighted_cognitive_density'        => 30,
-        'max_logical_complexity_factor'         => 35,
+        'max_classes_per_project'               => 300,
+        'max_cyclomatic_complexity'             => 8,
+        'max_control_nesting'                   => 3,
+        'max_weighted_cognitive_density'        => 60,
+        'max_logical_complexity_factor'         => 50,
         'max_return_statements'                 => 4,
-        'max_boolean_conditions'                => 3,
+        'max_boolean_conditions'                => 4,
+        'min_visual_breathing_index'            => 70,
+        'min_code_oxygen_level'                 => 100,
+        'min_identifier_readability_score'      => 100,
+        'min_code_breathing_score'              => 100,
         'avoid_redundant_naming'                => 80,
     ];
 

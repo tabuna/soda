@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality;
 
 use function array_pop;
+
+use Bunnivo\Soda\Visitor\NullableReturnVisitor;
+
 use function count;
 
 use PhpParser\Node;
@@ -14,14 +17,13 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\NodeVisitorAbstract;
 
 /**
  * Collects per-method, per-class, per-file metrics for quality analysis.
  *
  * @internal
  */
-final class QualityMetricsVisitor extends NodeVisitorAbstract
+final class QualityMetricsVisitor extends NullableReturnVisitor
 {
     /**
      * @psalm-var array{
@@ -65,8 +67,7 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
         private readonly int $fileLines
     ) {}
 
-    #[\Override]
-    public function enterNode(Node $node): void
+    protected function doEnterNode(Node $node): void
     {
         match (true) {
             $node instanceof Class_, $node instanceof Trait_ => $this->handleClassOrTrait($node),
@@ -74,6 +75,19 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
             $node instanceof Function_   => $this->handleFunction($node),
             default                      => null,
         };
+    }
+
+    protected function doLeaveNode(Node $node): void
+    {
+        if (! ($node instanceof Class_) && ! ($node instanceof Trait_)) {
+            return;
+        }
+
+        if ($this->classStack === []) {
+            return;
+        }
+
+        array_pop($this->classStack);
     }
 
     private function handleClassOrTrait(Class_|Trait_ $node): void
@@ -132,20 +146,6 @@ final class QualityMetricsVisitor extends NodeVisitorAbstract
 
         $loc = $node->getEndLine() - $node->getStartLine() + 1;
         $this->result['methods'][$name] = ['loc' => $loc, 'args' => count($node->params)];
-    }
-
-    #[\Override]
-    public function leaveNode(Node $node): void
-    {
-        if (! ($node instanceof Class_) && ! ($node instanceof Trait_)) {
-            return;
-        }
-
-        if ($this->classStack === []) {
-            return;
-        }
-
-        array_pop($this->classStack);
     }
 
     /**

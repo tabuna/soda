@@ -6,6 +6,7 @@ namespace Bunnivo\Soda\Quality;
 
 use function array_key_last;
 
+use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt\Class_;
@@ -14,14 +15,13 @@ use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\NodeVisitorAbstract;
 
 /**
  * Counts return statements per method/function.
  *
  * @internal
  */
-final class ReturnStatementsVisitor extends NodeVisitorAbstract
+final class ReturnStatementsVisitor extends NullableReturnVisitor
 {
     use MethodVisitorTrait;
 
@@ -30,8 +30,7 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
      */
     private array $returnsByMethod = [];
 
-    #[\Override]
-    public function enterNode(Node $node): void
+    protected function doEnterNode(Node $node): void
     {
         if ($this->isClassLike($node)) {
             $this->pushClass($node);
@@ -56,18 +55,7 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
         }
     }
 
-    private function isClassLike(Node $node): bool
-    {
-        return $node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_;
-    }
-
-    private function isMethodLike(Node $node): bool
-    {
-        return $node instanceof ClassMethod || $node instanceof Function_;
-    }
-
-    #[\Override]
-    public function leaveNode(Node $node): void
+    protected function doLeaveNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
             $this->popClass();
@@ -78,6 +66,16 @@ final class ReturnStatementsVisitor extends NodeVisitorAbstract
         if ($node instanceof Closure) {
             $this->leaveClosure();
         }
+    }
+
+    private function isClassLike(Node $node): bool
+    {
+        return $node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_;
+    }
+
+    private function isMethodLike(Node $node): bool
+    {
+        return $node instanceof ClassMethod || $node instanceof Function_;
     }
 
     /**

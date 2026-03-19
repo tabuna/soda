@@ -85,7 +85,7 @@ final class QualityAnalyser
      * @throws ParserException
      * @throws Error
      *
-     * @psalm-return array{metrics: array, complexity: ComplexityCollection}
+     * @psalm-return array{metrics: array, complexity: ComplexityCollection, nesting: array<string, array{depth: int, line: int}>, returns: array<string, int>, booleanConditions: array<string, list<array{line: int, count: int}>>}
      */
     private function analyseFile(string $file): array
     {

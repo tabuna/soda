@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt\Class_;
@@ -11,14 +12,13 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\NodeVisitorAbstract;
 
 /**
  * Collects boolean expression operand counts per method.
  *
  * @internal
  */
-final class BooleanConditionsVisitor extends NodeVisitorAbstract
+final class BooleanConditionsVisitor extends NullableReturnVisitor
 {
     use MethodVisitorTrait;
 
@@ -29,8 +29,7 @@ final class BooleanConditionsVisitor extends NodeVisitorAbstract
         $this->recorder = new ConditionRecorder();
     }
 
-    #[\Override]
-    public function enterNode(Node $node): void
+    protected function doEnterNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
             $this->pushClass($node);
@@ -55,8 +54,7 @@ final class BooleanConditionsVisitor extends NodeVisitorAbstract
         }
     }
 
-    #[\Override]
-    public function leaveNode(Node $node): void
+    protected function doLeaveNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
             $this->popClass();
