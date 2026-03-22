@@ -45,7 +45,7 @@ final readonly class RuleCheckerState
         return $this->scope;
     }
 
-    public function exceededMode(): bool
+    public function isExceededMode(): bool
     {
         return $this->exceededMode;
     }

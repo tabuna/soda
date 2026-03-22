@@ -33,6 +33,10 @@ final class QualityConfigTest extends TestCase
         $this->assertSame(40, $config->getRule('max_methods_per_class'));
         $this->assertSame(700, $config->getRule('max_file_loc'));
         $this->assertSame(8, $config->getRule('max_cyclomatic_complexity'));
+        $this->assertSame(15, $config->getRule('max_classes_per_namespace'));
+        $this->assertSame(50, $config->getRule('max_layer_dominance_percentage'));
+        $this->assertSame(0, $config->getRule('max_todo_fixme_comments'));
+        $this->assertSame(0, $config->getRule('boolean_methods_without_prefix'));
     }
 
     public function testFromFile(): void
@@ -148,6 +152,107 @@ final class QualityConfigTest extends TestCase
             $config = QualityConfig::fromFile($path);
             $this->assertSame(50, $config->getRule('max_method_length'));
             $this->assertSame(500, $config->getRule('max_class_length'));
+        } finally {
+            unlink($path);
+            rmdir($dir);
+        }
+    }
+
+    public function testFromFileLoadsGenericRuleExceptions(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-bool-prefix-'.uniqid();
+        mkdir($dir, 0700, true);
+        $path = $dir.'/soda.json';
+        file_put_contents($path, json_encode([
+            'rules' => [
+                'structural' => [],
+                'complexity' => [],
+                'breathing'  => [],
+                'naming'     => [
+                    'boolean_methods_without_prefix' => [
+                        'threshold'  => 0,
+                        'exceptions' => [
+                            'methods' => ['runningUnitTests', 'App\Application::runningUnitTests'],
+                            'classes' => ['App\Application'],
+                            'files'   => ['/tmp/demo.php'],
+                        ],
+                    ],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        try {
+            $config = QualityConfig::fromFile($path);
+            $this->assertSame(
+                [
+                    'files'   => ['/tmp/demo.php'],
+                    'classes' => ['App\Application'],
+                    'methods' => ['runningUnitTests', 'App\Application::runningUnitTests'],
+                ],
+                $config->ruleExceptions('boolean_methods_without_prefix'),
+            );
+        } finally {
+            unlink($path);
+            rmdir($dir);
+        }
+    }
+
+    public function testFromFileLoadsRuleOptions(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-layer-mixing-'.uniqid();
+        mkdir($dir, 0700, true);
+        $path = $dir.'/soda.json';
+        file_put_contents($path, json_encode([
+            'rules' => [
+                'structural' => [
+                    'max_layer_dominance_percentage' => [
+                        'threshold' => 60,
+                        'min_files' => 6,
+                    ],
+                ],
+                'complexity' => [],
+                'breathing'  => [],
+                'naming'     => [],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        try {
+            $config = QualityConfig::fromFile($path);
+            $this->assertSame(60, $config->getRule('max_layer_dominance_percentage'));
+            $this->assertSame(['min_files' => 6], $config->ruleOptions('max_layer_dominance_percentage'));
+        } finally {
+            unlink($path);
+            rmdir($dir);
+        }
+    }
+
+    public function testFromFileSupportsLegacyBooleanMethodExceptionsKey(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-bool-prefix-legacy-'.uniqid();
+        mkdir($dir, 0700, true);
+        $path = $dir.'/soda.json';
+        file_put_contents($path, json_encode([
+            'rules' => [
+                'structural' => [],
+                'complexity' => [],
+                'breathing'  => [],
+                'naming'     => [
+                    'boolean_methods_without_prefix'     => 0,
+                    'boolean_method_prefix_exceptions'   => ['runningUnitTests'],
+                ],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        try {
+            $config = QualityConfig::fromFile($path);
+            $this->assertSame(
+                [
+                    'files'   => [],
+                    'classes' => [],
+                    'methods' => ['runningUnitTests'],
+                ],
+                $config->ruleExceptions('boolean_methods_without_prefix'),
+            );
         } finally {
             unlink($path);
             rmdir($dir);

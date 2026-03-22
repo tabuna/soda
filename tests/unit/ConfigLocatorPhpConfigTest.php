@@ -49,7 +49,7 @@ final class ConfigLocatorPhpConfigTest extends TestCase
 
         try {
             $locator = new ConfigLocator;
-            $phpPath = $locator->locatePhpConfig([$file], null);
+            $phpPath = $locator->locatePhpConfig([$file]);
 
             $this->assertSame($root.'/config/soda.php', $phpPath);
         } finally {

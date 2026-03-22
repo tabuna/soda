@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Quality\ControlNestingVisitor;
+use Bunnivo\Soda\Quality\Visitor\ControlNestingVisitor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;

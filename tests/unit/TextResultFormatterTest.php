@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Formatter\TextResultFormatter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\Attributes\UsesClass;

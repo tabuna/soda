@@ -15,42 +15,14 @@ use PhpParser\Node\Expr\StaticPropertyFetch;
  */
 final class ExpressionHandlers
 {
-    public static function handle(MetricsState $state, Node $node): bool
+    public static function handle(MetricsState $state, Node $node): void
     {
-        return match (true) {
-            $node instanceof StaticCall          => self::incStaticCall($state),
-            $node instanceof MethodCall          => self::incMethodCall($state),
-            $node instanceof StaticPropertyFetch => self::incStaticProperty($state),
-            $node instanceof PropertyFetch       => self::incPropertyFetch($state),
-            default                              => false,
+        match (true) {
+            $node instanceof StaticCall          => $state->inc('staticMethodCalls'),
+            $node instanceof MethodCall          => $state->inc('nonStaticMethodCalls'),
+            $node instanceof StaticPropertyFetch => $state->inc('staticAttributeAccesses'),
+            $node instanceof PropertyFetch       => $state->inc('nonStaticAttributeAccesses'),
+            default                              => null,
         };
-    }
-
-    private static function incStaticCall(MetricsState $state): bool
-    {
-        $state->inc('staticMethodCalls');
-
-        return true;
-    }
-
-    private static function incMethodCall(MetricsState $state): bool
-    {
-        $state->inc('nonStaticMethodCalls');
-
-        return true;
-    }
-
-    private static function incStaticProperty(MetricsState $state): bool
-    {
-        $state->inc('staticAttributeAccesses');
-
-        return true;
-    }
-
-    private static function incPropertyFetch(MetricsState $state): bool
-    {
-        $state->inc('nonStaticAttributeAccesses');
-
-        return true;
     }
 }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
+use Bunnivo\Soda\Quality\Config\RuleSections;
 use Bunnivo\Soda\Quality\QualityConfig;
-use Bunnivo\Soda\Quality\RuleSections;
+use Bunnivo\Soda\Quality\Rule\LayerMixingChecker;
 
 use function file_put_contents;
 use function getcwd;
@@ -45,7 +46,12 @@ final class InitCommand extends Command
             $value = $overrides[$ruleKey] ?? $defaults[$ruleKey] ?? null;
 
             if ($value !== null) {
-                $rules[$section][$ruleKey] = $value;
+                $rules[$section][$ruleKey] = $ruleKey === LayerMixingChecker::RULE
+                    ? [
+                        'threshold' => $value,
+                        'min_files' => LayerMixingChecker::DEFAULT_MIN_FILES,
+                    ]
+                    : $value;
             }
         }
 

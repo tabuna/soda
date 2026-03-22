@@ -4,16 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- */
-final class RuleDefinitionPack
-{
-    public static function tie(
-        RuleIdentity $identity,
-        RulePresentation $presentation,
-        RuleScoring $scoring,
-    ): RuleDefinition {
-        return new RuleDefinition(new RuleDefinitionFields($identity, $presentation, $scoring));
-    }
-}
+use Bunnivo\Soda\Quality\RuleCatalog\RuleDefinitionPack;
+
+class_exists(RuleDefinitionPack::class);
+class_alias(RuleDefinitionPack::class, __NAMESPACE__.'\\RuleDefinitionPack');

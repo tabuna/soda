@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-final readonly class RuleIdentity
-{
-    public function __construct(
-        public string $id,
-        public string $section,
-    ) {}
-}
+use Bunnivo\Soda\Quality\RuleCatalog\RuleIdentity;
+
+class_exists(RuleIdentity::class);
+class_alias(RuleIdentity::class, __NAMESPACE__.'\\RuleIdentity');

@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Formatter\JsonResultFormatter;
 use Bunnivo\Soda\Structure\Metrics;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;

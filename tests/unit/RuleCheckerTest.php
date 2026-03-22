@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Quality\Report\Violation;
 use Bunnivo\Soda\Quality\RuleChecker;
-use Bunnivo\Soda\Quality\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Small;

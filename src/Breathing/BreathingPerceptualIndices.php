@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Breathing;
 
+use Bunnivo\Soda\Breathing\Calc\ColCalculator;
+use Bunnivo\Soda\Breathing\Calc\IrsCalculator;
+use Bunnivo\Soda\Breathing\Calc\VbiCalculator;
+
 /**
  * @internal
  *

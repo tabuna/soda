@@ -16,7 +16,7 @@ use Bunnivo\Soda\Application;
 use Bunnivo\Soda\ComplexityMetrics;
 use Bunnivo\Soda\CoreMetrics;
 use Bunnivo\Soda\LocMetrics;
-use Bunnivo\Soda\Quality\QualityAnalysisContract;
+use Bunnivo\Soda\Quality\Engine\QualityAnalysisContract;
 use Bunnivo\Soda\Quality\QualityResult;
 use Bunnivo\Soda\Result;
 use Illuminate\Console\Application as ConsoleApplication;
@@ -91,9 +91,9 @@ final class QualityCommandTest extends TestCase
     {
         $result = new QualityResult($this->minimalProjectResult(), collect([]));
 
-        $stub = new class($result) implements QualityAnalysisContract
+        $stub = new readonly class($result) implements QualityAnalysisContract
         {
-            public function __construct(private readonly QualityResult $out) {}
+            public function __construct(private QualityResult $out) {}
 
             #[\Override]
             public function analyse(array $files, bool $debug, ?string $configPath = null): QualityResult
@@ -155,6 +155,120 @@ final class QualityCommandTest extends TestCase
         } finally {
             unlink($php);
             unlink($soda);
+            rmdir($dir);
+        }
+    }
+
+    public function testQualityAliasDoesNotCrashOnRegularAssignments(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-quality-alias-'.uniqid();
+        mkdir($dir, 0700, true);
+        $php = $dir.'/Example.php';
+        file_put_contents($php, <<<'PHP'
+<?php
+
+final class Example
+{
+    public function render(object $user, string $line): void
+    {
+        $line = trim($line);
+
+        if ($user->isActive()) {
+            $user->notify();
+        }
+    }
+}
+PHP);
+        $soda = $dir.'/soda.json';
+        file_put_contents($soda, json_encode([
+            'rules' => [
+                'structural' => [],
+                'complexity' => [],
+                'breathing'  => [],
+                'naming'     => [],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        try {
+            $container = new Application();
+            $artisan = new ConsoleApplication($container, new Dispatcher($container), '8.0');
+            $artisan->setAutoExit(false);
+            $artisan->add(new QualityCommand());
+
+            $input = new ArrayInput([
+                'command'  => 'q',
+                'path'     => [$dir],
+                '--config' => $soda,
+            ]);
+            $output = new BufferedOutput();
+
+            $exitCode = $artisan->run($input, new OutputStyle($input, $output));
+
+            $this->assertContains($exitCode, [0, 1]);
+            $this->assertStringContainsString('Soda Quality', $output->fetch());
+        } finally {
+            unlink($php);
+            unlink($soda);
+            rmdir($dir);
+        }
+    }
+
+    public function testQualityReportsLayerMixingForDominantDirectory(): void
+    {
+        $dir = sys_get_temp_dir().'/soda-quality-layer-mixing-'.uniqid();
+        mkdir($dir.'/app/Services', 0700, true);
+        $soda = $dir.'/soda.json';
+        file_put_contents($soda, json_encode([
+            'rules' => [
+                'structural' => [
+                    'max_layer_dominance_percentage' => [
+                        'threshold' => 50,
+                        'min_files' => 4,
+                    ],
+                ],
+                'complexity' => [],
+                'breathing'  => [],
+                'naming'     => [],
+            ],
+        ], JSON_THROW_ON_ERROR));
+
+        foreach (range(1, 5) as $index) {
+            file_put_contents($dir.'/app/Services/User'.$index.'.php', "<?php\n\nnamespace App\\Services;\n\nclass User$index extends UserService {}\n");
+        }
+
+        foreach (range(1, 2) as $index) {
+            file_put_contents($dir.'/app/Services/Controller'.$index.'.php', "<?php\n\nnamespace App\\Services;\n\nclass Controller$index extends Controller {}\n");
+        }
+
+        file_put_contents($dir.'/app/Services/Plain.php', "<?php\n\nnamespace App\\Services;\n\nclass Plain {}\n");
+
+        try {
+            $container = new Application();
+            $artisan = new ConsoleApplication($container, new Dispatcher($container), '8.0');
+            $artisan->setAutoExit(false);
+            $artisan->add(new QualityCommand());
+
+            $input = new ArrayInput([
+                'command'  => 'q',
+                'path'     => [$dir.'/app'],
+                '--config' => $soda,
+            ]);
+            $output = new BufferedOutput();
+
+            $exitCode = $artisan->run($input, new OutputStyle($input, $output));
+            $text = $output->fetch();
+
+            $this->assertSame(1, $exitCode);
+            $this->assertStringContainsString('Layer mixing:', $text);
+            $this->assertStringContainsString('UserService dominates 62.5%', $text);
+        } finally {
+            foreach (glob($dir.'/app/Services/*.php') ?: [] as $file) {
+                unlink($file);
+            }
+
+            unlink($soda);
+            rmdir($dir.'/app/Services');
+            rmdir($dir.'/app');
             rmdir($dir);
         }
     }

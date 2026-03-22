@@ -8,7 +8,7 @@ final readonly class Limits
 {
     /**
      * @psalm-param positive-int $value
-     * @psalm-param positive-int $threshold
+     * @psalm-param non-negative-int $threshold
      */
     public function __construct(
         public int $value,

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use Bunnivo\Soda\Quality\Report\Violation;
+use Bunnivo\Soda\Quality\Report\ViolationBuilder;
+
 /**
  * Fluent rule checker in Laravel style.
  *
@@ -95,7 +98,7 @@ final readonly class RuleChecker
         $limit = $threshold->limit() ?? 0;
         $thresholdInt = (int) round($limit);
 
-        $violates = $this->state->exceededMode()
+        $violates = $this->state->isExceededMode()
             ? ($limit > 0 && $value > $limit)
             : ($limit > 0 && $value < $limit);
 

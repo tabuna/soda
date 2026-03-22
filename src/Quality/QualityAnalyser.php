@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
-use Bunnivo\Soda\ParserException;
+use Bunnivo\Soda\Exception\ParserException;
 use Bunnivo\Soda\ProjectMetrics;
+use Bunnivo\Soda\Quality\Engine\PhpFileQualityExtractor;
+use Bunnivo\Soda\Quality\Engine\QualityAnalyserConfigurationSession;
+use Bunnivo\Soda\Quality\Engine\QualityAnalyserPerFileMetricsAccumulator;
+use Bunnivo\Soda\Quality\Engine\QualityAnalysisContract;
+use PhpParser\Error;
 
 final readonly class QualityAnalyser implements QualityAnalysisContract
 {
@@ -29,7 +34,7 @@ final readonly class QualityAnalyser implements QualityAnalysisContract
         foreach ($files as $file) {
             try {
                 $accumulator->mergeFile($file, $this->fileExtractor->extract($file));
-            } catch (ParserException|\PhpParser\Error) {
+            } catch (ParserException|Error) {
                 continue;
             }
         }

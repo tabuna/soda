@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Breathing;
 
+use Bunnivo\Soda\Breathing\Calc\BreathingCbsResolver;
+use Bunnivo\Soda\Breathing\Calc\BreathingLcfFromAstResolver;
+use Bunnivo\Soda\Breathing\Calc\BreathingWcdResolver;
 use PhpParser\Node;
 
 final class BreathingAnalyser

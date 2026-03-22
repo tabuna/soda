@@ -4,16 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- */
-final readonly class StructureRuleDefaults implements RuleDefaultsProvider
-{
-    public function defaults(): array
-    {
-        return array_merge(
-            (new LengthRuleDefaults())->defaults(),
-            (new CountRuleDefaults())->defaults(),
-        );
-    }
-}
+use Bunnivo\Soda\Quality\RuleDefaults\StructureRuleDefaults;
+
+class_exists(StructureRuleDefaults::class);
+class_alias(StructureRuleDefaults::class, __NAMESPACE__.'\\StructureRuleDefaults');

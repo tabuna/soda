@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use Bunnivo\Soda\Quality\Engine\EvaluateInput;
+use Bunnivo\Soda\Quality\Engine\QualityEngineEvaluatePipeline;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
-use Bunnivo\Soda\Quality\Rule\RuleRegistry;
+use Bunnivo\Soda\Quality\RuleRegistry\RuleRegistry;
 use Bunnivo\Soda\Result;
 
 final readonly class QualityEngine

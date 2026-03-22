@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
-use Bunnivo\Soda\Quality\Config\RuleFlattenScratch;
-use Bunnivo\Soda\Quality\Rule\RuleCatalog;
+use Bunnivo\Soda\Quality\Config\QualityConfigRuleParser;
+use Bunnivo\Soda\Quality\Config\QualityConfigRuleState;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleCatalog;
 
 use function file_get_contents;
 use function is_array;
@@ -30,13 +31,14 @@ final readonly class QualityConfig
          * Rule ids explicitly turned off in config (e.g. `"max_method_length": null`).
          */
         public array $disabledRuleIds = [],
+        public QualityConfigRuleState $ruleState = new QualityConfigRuleState(),
     ) {
         $this->rules = $rules ?? RuleCatalog::defaultThresholds();
     }
 
     public function isRuleEnabled(string $ruleId): bool
     {
-        return ! in_array($ruleId, $this->disabledRuleIds, true);
+        return array_key_exists($ruleId, $this->rules) && ! in_array($ruleId, $this->disabledRuleIds, true);
     }
 
     /**
@@ -49,9 +51,9 @@ final readonly class QualityConfig
         self::assertReadable($path);
         $content = self::readContent($path);
         $data = self::decodeJson($content, $path);
-        [$mergedRules, $disabled] = self::mergeRules($data);
+        [$mergedRules, $disabled, $ruleExceptions, $ruleOptions] = self::mergeRules($data);
 
-        return new self($mergedRules, $disabled);
+        return new self($mergedRules, $disabled, new QualityConfigRuleState($ruleExceptions, $ruleOptions));
     }
 
     /**
@@ -105,66 +107,16 @@ final readonly class QualityConfig
     /**
      * @param array<string, mixed> $data
      *
-     * @return array{0: array<string, int|float>, 1: list<string>}
+     * @return array{
+     *   0: array<string, int|float>,
+     *   1: list<string>,
+     *   2: array<string, array{files: list<string>, classes: list<string>, methods: list<string>}>,
+     *   3: array<string, array<string, mixed>>
+     * }
      */
     private static function mergeRules(array $data): array
     {
-        /** @var array<array-key, mixed> $raw */
-        $raw = $data['rules'] ?? [];
-
-        [$flattened, $disabled] = self::flattenRules($raw);
-        $filtered = collect($flattened)->filter(function (mixed $v, mixed $k): bool {
-            return is_numeric($v) && (float) $v >= 0;
-        })->map(fn (mixed $v): int|float => is_int($v) ? $v : $v)->all();
-
-        /** @var array<string, int|float> $filtered */
-        $baseline = RuleCatalog::defaultThresholds();
-
-        /** @var array<string, int|float> */
-        $merged = array_merge($baseline, $filtered);
-
-        return [$merged, $disabled];
-    }
-
-    /**
-     * @param array<array-key, mixed> $rules Nested {structural: {...}, complexity: {...}, breathing: {...}}
-     *
-     * @return array{0: array<string, int|float>, 1: list<string>}
-     */
-    private static function flattenRules(array $rules): array
-    {
-        $scratch = new RuleFlattenScratch;
-
-        foreach (RuleSections::sectionNames() as $section) {
-            $sectionRules = $rules[$section] ?? [];
-
-            if (! is_array($sectionRules)) {
-                continue;
-            }
-
-            foreach ($sectionRules as $key => $value) {
-                self::applySectionRuleEntry($key, $value, $scratch);
-            }
-        }
-
-        return [$scratch->thresholds, array_values(array_unique($scratch->disabled))];
-    }
-
-    private static function applySectionRuleEntry(mixed $key, mixed $value, RuleFlattenScratch $scratch): void
-    {
-        if (! is_string($key) || ! array_key_exists($key, RuleCatalog::definitions())) {
-            return;
-        }
-
-        if ($value === null) {
-            $scratch->disabled[] = $key;
-
-            return;
-        }
-
-        if (is_numeric($value)) {
-            $scratch->thresholds[$key] = is_int($value) ? $value : (float) $value;
-        }
+        return QualityConfigRuleParser::mergeRules($data);
     }
 
     public static function default(): self
@@ -178,5 +130,29 @@ final readonly class QualityConfig
     public function getRule(string $key): int|float
     {
         return $this->rules[$key] ?? 0;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function booleanMethodPrefixExceptions(): array
+    {
+        return $this->ruleExceptions('boolean_methods_without_prefix')['methods'];
+    }
+
+    /**
+     * @return array{files: list<string>, classes: list<string>, methods: list<string>}
+     */
+    public function ruleExceptions(string $ruleId): array
+    {
+        return $this->ruleState->exceptions[$ruleId] ?? QualityConfigRuleParser::emptyRuleExceptions();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function ruleOptions(string $ruleId): array
+    {
+        return $this->ruleState->options[$ruleId] ?? [];
     }
 }

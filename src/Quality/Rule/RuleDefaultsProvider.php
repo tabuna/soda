@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- *
- * @return array<string, array{severity: 'error'|'warning', label: string, comparison?: 'min'|'max'}>
- */
-interface RuleDefaultsProvider
-{
-    public function defaults(): array;
-}
+use Bunnivo\Soda\Quality\RuleCatalog\RuleDefaultsProvider;
+
+class_exists(RuleDefaultsProvider::class);
+class_alias(RuleDefaultsProvider::class, __NAMESPACE__.'\\RuleDefaultsProvider');

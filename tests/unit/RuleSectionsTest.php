@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Quality\RuleSections;
+use Bunnivo\Soda\Quality\Config\RuleSections;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bunnivo\Soda;
+namespace Bunnivo\Soda\Exception;
 
 use Throwable;
 

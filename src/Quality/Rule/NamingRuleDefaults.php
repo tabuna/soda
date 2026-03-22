@@ -4,15 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- */
-final readonly class NamingRuleDefaults implements RuleDefaultsProvider
-{
-    public function defaults(): array
-    {
-        return RuleCatalog::metadataForRules([
-            'avoid_redundant_naming',
-        ]);
-    }
-}
+use Bunnivo\Soda\Quality\RuleDefaults\NamingRuleDefaults;
+
+class_exists(NamingRuleDefaults::class);
+class_alias(NamingRuleDefaults::class, __NAMESPACE__.'\\NamingRuleDefaults');

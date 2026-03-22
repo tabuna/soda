@@ -94,7 +94,7 @@ final readonly class MethodRedundancyChecker
         $nameAfterPrefix = implode('', array_slice($words, 1));
         $entity = $className !== null ? $this->entityFromClass($this->shortClassName($className)) : null;
 
-        return $this->meetsAddLikeFromClassContext($firstWord, $entity, $nameAfterPrefix)
+        return $this->isAddLikeFromClassContext($firstWord, $entity, $nameAfterPrefix)
             ? [
                 'type'       => 'method',
                 'current'    => $methodData['methodName'].'()',
@@ -107,7 +107,7 @@ final readonly class MethodRedundancyChecker
             : null;
     }
 
-    private function meetsAddLikeFromClassContext(string $firstWord, ?string $entity, string $nameAfterPrefix): bool
+    private function isAddLikeFromClassContext(string $firstWord, ?string $entity, string $nameAfterPrefix): bool
     {
         return $this->isAddLike($firstWord)
             && $entity !== null
@@ -169,12 +169,17 @@ final readonly class MethodRedundancyChecker
 
     private function getAllSimilarity(string $nameAfterPrefix, ?string $returnShortName): ?float
     {
-        $hasReturnType = ! $this->isGenericReturn($returnShortName);
-        $similarity = $hasReturnType ? $this->similarity($nameAfterPrefix, $returnShortName) : 100.0;
+        if ($nameAfterPrefix === '' || strlen($nameAfterPrefix) < $this->minWordLength) {
+            return null;
+        }
 
-        return ($nameAfterPrefix === '' || strlen($nameAfterPrefix) < $this->minWordLength)
-            ? null
-            : (($hasReturnType && $similarity < $this->similarityThreshold) ? null : $similarity);
+        if ($this->isGenericReturn($returnShortName)) {
+            return 100.0;
+        }
+
+        $similarity = $this->similarity($nameAfterPrefix, $returnShortName);
+
+        return $similarity < $this->similarityThreshold ? null : $similarity;
     }
 
     private function isGenericReturn(?string $type): bool
@@ -198,7 +203,7 @@ final readonly class MethodRedundancyChecker
         $counter = count($words);
         for ($i = $startIndex; $i < $counter; $i++) {
             $w = $words[$i];
-            if (strlen($w) >= $this->minWordLength && ($this->wordsSimilar($w, $typeFirst) || $this->wordsSimilar($w, $typeShortName))) {
+            if (strlen($w) >= $this->minWordLength && ($this->isWordSimilar($w, $typeFirst) || $this->isWordSimilar($w, $typeShortName))) {
                 return ['word' => $w, 'similarity' => $this->similarity($w, $typeFirst)];
             }
         }
@@ -206,7 +211,7 @@ final readonly class MethodRedundancyChecker
         return null;
     }
 
-    private function wordsSimilar(string $a, string $b): bool
+    private function isWordSimilar(string $a, string $b): bool
     {
         return $a === $b
             || (strlen($a) >= $this->minWordLength && strlen($b) >= $this->minWordLength && $this->similarity($a, $b) >= $this->similarityThreshold);

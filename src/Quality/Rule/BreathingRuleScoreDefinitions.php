@@ -4,21 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- *
- * @return list<RuleDefinition>
- */
-final class BreathingRuleScoreDefinitions
-{
-    public static function entries(string $sectionKey): array
-    {
-        $b = $sectionKey;
+use Bunnivo\Soda\Quality\RuleBreathing\BreathingRuleScoreDefinitions;
 
-        return [
-            RuleDefinitionPack::tie(new RuleIdentity('min_code_breathing_score', $b), new RulePresentation('Code Breathing Score:', 'warning', 'min'), new RuleScoring(100)),
-
-            RuleDefinitionPack::tie(new RuleIdentity('min_visual_breathing_index', $b), new RulePresentation('Visual Breathing Index:', 'warning', 'min'), new RuleScoring(70)),
-        ];
-    }
-}
+class_exists(BreathingRuleScoreDefinitions::class);
+class_alias(BreathingRuleScoreDefinitions::class, __NAMESPACE__.'\\BreathingRuleScoreDefinitions');

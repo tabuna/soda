@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use Bunnivo\Soda\Quality\Report\Violation;
 use Illuminate\Support\Collection;
 
 final readonly class ClassChecker

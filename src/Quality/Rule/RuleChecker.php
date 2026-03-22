@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality\Rule;
 
 use Bunnivo\Soda\Quality\EvaluationContext;
-use Bunnivo\Soda\Quality\Violation;
+use Bunnivo\Soda\Quality\Report\Violation;
 use Illuminate\Support\Collection;
 
 interface RuleChecker

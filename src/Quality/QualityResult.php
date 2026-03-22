@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use Bunnivo\Soda\Quality\Report\Violation;
 use Bunnivo\Soda\Result;
 use Illuminate\Support\Collection;
 
@@ -26,7 +27,7 @@ final readonly class QualityResult
         $this->violations = $col;
     }
 
-    public function passes(): bool
+    public function isPassing(): bool
     {
         return $this->violations->isEmpty();
     }

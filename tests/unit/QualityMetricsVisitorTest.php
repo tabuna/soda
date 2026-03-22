@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Quality\QualityMetricsVisitor;
+use Bunnivo\Soda\Quality\Visitor\QualityMetricsVisitor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
@@ -157,5 +157,26 @@ PHP;
         $this->assertArrayHasKey('App\Foo::bar', $result['methods']);
         $this->assertSame(3, $result['methods']['App\Foo::bar']['args']);
         $this->assertGreaterThanOrEqual(5, $result['methods']['App\Foo::bar']['loc']);
+    }
+
+    public function testCollectsPrimaryClassTypes(): void
+    {
+        $code = <<<'PHP'
+<?php
+namespace App\Services;
+
+interface Runs {}
+interface Other {}
+class BaseService {}
+
+class UsesParent extends BaseService {}
+class UsesInterface implements Runs, Other {}
+class PlainClass {}
+PHP;
+        $result = $this->parseAndCollect($code);
+
+        $this->assertSame('BaseService', $result['classTypes']['App\Services\UsesParent']);
+        $this->assertSame('Runs', $result['classTypes']['App\Services\UsesInterface']);
+        $this->assertSame('Plain', $result['classTypes']['App\Services\PlainClass']);
     }
 }

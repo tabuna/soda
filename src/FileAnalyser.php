@@ -7,6 +7,7 @@ namespace Bunnivo\Soda;
 use Bunnivo\Soda\Breathing\BreathingAnalyser;
 use Bunnivo\Soda\Breathing\BreathingMetrics;
 use Bunnivo\Soda\Complexity\EnumAwareComplexityVisitor;
+use Bunnivo\Soda\Exception\ParserException;
 
 use function file_get_contents;
 

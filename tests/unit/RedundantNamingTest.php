@@ -37,6 +37,22 @@ final class RedundantNamingTest extends TestCase
         return $analyser->analyse($visitor->result());
     }
 
+    private function parseNaming(string $code): array
+    {
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $nodes = $parser->parse($code);
+        $this->assertNotNull($nodes);
+
+        $visitor = new RedundantNamingVisitor();
+        $traverser = new NodeTraverser();
+        $traverser->addVisitor(new NameResolver());
+        $traverser->addVisitor(new ParentConnectingVisitor());
+        $traverser->addVisitor($visitor);
+        $traverser->traverse($nodes);
+
+        return $visitor->result();
+    }
+
     /**
      * PostItemCollection → PostCollection
      */
@@ -73,8 +89,8 @@ PHP;
         $methodViolations = array_filter($violations, fn (array $v) => $v['type'] === 'method');
         $this->assertNotEmpty($methodViolations);
         $v = reset($methodViolations);
-        $this->assertStringContainsString('addUserProfileData', $v['current']);
-        $this->assertStringContainsString('add(', $v['suggested']);
+        $this->assertStringContainsString('addUserProfileData', (string) $v['current']);
+        $this->assertStringContainsString('add(', (string) $v['suggested']);
     }
 
     /**
@@ -96,7 +112,7 @@ PHP;
         $methodViolations = array_filter($violations, fn (array $v) => $v['type'] === 'method');
         $this->assertNotEmpty($methodViolations);
         $v = reset($methodViolations);
-        $this->assertStringContainsString('getAllOrders', $v['current']);
+        $this->assertStringContainsString('getAllOrders', (string) $v['current']);
         $this->assertStringStartsWith('all', $v['suggested']);
     }
 
@@ -139,5 +155,41 @@ PHP;
 
         $methodViolations = array_filter($violations, fn (array $v) => $v['type'] === 'method');
         $this->assertEmpty($methodViolations);
+    }
+
+    public function testNamingVisitorCollectsInheritanceGraphAndOverrideAttribute(): void
+    {
+        $code = <<<'PHP'
+<?php
+namespace App;
+interface StatusContract {
+    public function runningUnitTests(): bool;
+}
+abstract class BaseStatus {
+    public function runningUnitTests(): bool { return true; }
+}
+final class AppStatus extends BaseStatus implements StatusContract {
+    #[\Override]
+    public function runningUnitTests(): bool { return false; }
+}
+PHP;
+
+        $naming = $this->parseNaming($code);
+
+        $this->assertArrayHasKey('types', $naming);
+        $types = [];
+        foreach ($naming['types'] as $type) {
+            $types[$type['name']] = $type;
+        }
+
+        $this->assertSame(['runningUnitTests'], $types['App\StatusContract']['methods']);
+        $this->assertSame(['App\BaseStatus', 'App\StatusContract'], $types['App\AppStatus']['inherits']);
+
+        $methods = [];
+        foreach ($naming['methods'] as $method) {
+            $methods[$method['name']] = $method;
+        }
+
+        $this->assertTrue($methods['App\AppStatus::runningUnitTests']['hasOverrideAttribute']);
     }
 }

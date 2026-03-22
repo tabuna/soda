@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Quality\PhpFileQualityExtractor;
+use Bunnivo\Soda\Quality\Engine\PhpFileQualityExtractor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
@@ -26,5 +26,10 @@ final class PhpFileQualityExtractorTest extends TestCase
         $this->assertArrayHasKey('tryCatch', $out);
         $this->assertArrayHasKey('file_loc', $out['metrics']);
         $this->assertArrayHasKey('breathing', $out['metrics']);
+        $this->assertArrayHasKey('naming', $out['metrics']);
+        $this->assertArrayHasKey('todoFixme', $out['metrics']);
+        $this->assertArrayHasKey('commentedCode', $out['metrics']);
+        $this->assertArrayHasKey('emptyCatches', $out['metrics']);
+        $this->assertArrayHasKey('askThenTell', $out['metrics']);
     }
 }

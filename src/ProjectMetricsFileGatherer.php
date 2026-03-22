@@ -7,6 +7,7 @@ namespace Bunnivo\Soda;
 use function assert;
 
 use Bunnivo\Soda\Breathing\BreathingMetrics;
+use Bunnivo\Soda\Exception\ParserException;
 
 use function dirname;
 use function is_string;

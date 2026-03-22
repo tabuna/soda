@@ -44,34 +44,15 @@ final class MetricsVisitor extends NullableReturnVisitor
 
     private function dispatchEnter(Node $node): void
     {
-        $handled = $this->handleStructureNodes($node)
-            || $this->handleExpressionNodes($node);
+        StructureNodeHandlers::handleNamespace($this->state, $node);
+        StructureNodeHandlers::handleTypeDeclarations($this->state, $node);
+        StructureNodeHandlers::handleMembers($this->state, $node);
+        StructureNodeHandlers::handleGlobals($this->state, $node);
+        ExpressionHandlers::handle($this->state, $node);
 
-        if (! $handled && $node instanceof Variable) {
+        if ($node instanceof Variable) {
             NodeHandlers::handleVariable($this->state, $node);
         }
-    }
-
-    private function handleStructureNodes(Node $node): bool
-    {
-        if (StructureNodeHandlers::handleNamespace($this->state, $node)) {
-            return true;
-        }
-
-        if (StructureNodeHandlers::handleTypeDeclarations($this->state, $node)) {
-            return true;
-        }
-
-        if (StructureNodeHandlers::handleMembers($this->state, $node)) {
-            return true;
-        }
-
-        return StructureNodeHandlers::handleGlobals($this->state, $node);
-    }
-
-    private function handleExpressionNodes(Node $node): bool
-    {
-        return ExpressionHandlers::handle($this->state, $node);
     }
 
     /**

@@ -7,8 +7,8 @@ namespace Bunnivo\Soda\Quality\Rule;
 use Bunnivo\Soda\Quality\EvaluationContext;
 use Bunnivo\Soda\Quality\Limits;
 use Bunnivo\Soda\Quality\Naming\RedundantNamingAnalyser;
-use Bunnivo\Soda\Quality\Violation;
-use Bunnivo\Soda\Quality\ViolationBuilder;
+use Bunnivo\Soda\Quality\Report\Violation;
+use Bunnivo\Soda\Quality\Report\ViolationBuilder;
 use Illuminate\Support\Collection;
 
 final readonly class RedundantNamingChecker implements RuleChecker

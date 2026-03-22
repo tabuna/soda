@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Commands;
 
 use Bunnivo\Soda\Analyzer;
-use Bunnivo\Soda\JsonResultFormatter;
+use Bunnivo\Soda\Formatter\JsonResultFormatter;
 use Bunnivo\Soda\Quality\ConfigException;
-use Bunnivo\Soda\Quality\QualityAnalysisContract;
+use Bunnivo\Soda\Quality\Engine\QualityAnalysisContract;
 use Bunnivo\Soda\Quality\QualityResult;
-use Bunnivo\Soda\Quality\ReportFormatter;
-use Bunnivo\Soda\Quality\RuleMetadata;
+use Bunnivo\Soda\Quality\Report\ReportFormatter;
+use Bunnivo\Soda\Quality\Report\RuleMetadata;
 
 use function file_put_contents;
 
@@ -74,7 +74,7 @@ final class QualityCommand extends Command
         (new ReportFormatter(RuleMetadata::default()))->write($this->output, $result, $root);
         $this->writeReportJson($result);
 
-        return $result->passes() ? self::SUCCESS : self::FAILURE;
+        return $result->isPassing() ? self::SUCCESS : self::FAILURE;
     }
 
     /**

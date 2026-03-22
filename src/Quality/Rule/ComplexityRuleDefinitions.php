@@ -4,21 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- *
- * @return list<RuleDefinition>
- */
-final class ComplexityRuleDefinitions
-{
-    public static function all(string $section): array
-    {
-        return [
-            ...ComplexityRuleCycleDefinitions::entries($section),
+use Bunnivo\Soda\Quality\RuleBreathing\ComplexityRuleDefinitions;
 
-            ...ComplexityRuleDensityDefinitions::entries($section),
-
-            ...ComplexityRuleFlowDefinitions::entries($section),
-        ];
-    }
-}
+class_exists(ComplexityRuleDefinitions::class);
+class_alias(ComplexityRuleDefinitions::class, __NAMESPACE__.'\\ComplexityRuleDefinitions');

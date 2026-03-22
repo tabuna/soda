@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
-use Bunnivo\Soda\Quality\Rule\RuleCatalog;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleCatalog;
 use Illuminate\Console\Command;
 
 final class ListRulesCommand extends Command

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
-use Bunnivo\Soda\JsonResultFormatter;
+use Bunnivo\Soda\Formatter\JsonResultFormatter;
+use Bunnivo\Soda\Formatter\TextResultFormatter;
 use Bunnivo\Soda\ProjectMetrics;
 use Bunnivo\Soda\Result;
-use Bunnivo\Soda\TextResultFormatter;
 
 use function file_put_contents;
 

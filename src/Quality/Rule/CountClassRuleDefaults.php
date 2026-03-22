@@ -4,16 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- */
-final readonly class CountClassRuleDefaults implements RuleDefaultsProvider
-{
-    public function defaults(): array
-    {
-        return array_merge(
-            (new CountClassPartARuleDefaults())->defaults(),
-            (new CountClassPartBRuleDefaults())->defaults(),
-        );
-    }
-}
+use Bunnivo\Soda\Quality\RuleDefaults\CountClassRuleDefaults;
+
+class_exists(CountClassRuleDefaults::class);
+class_alias(CountClassRuleDefaults::class, __NAMESPACE__.'\\CountClassRuleDefaults');

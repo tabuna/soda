@@ -4,21 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-use Bunnivo\Soda\Quality\QualityConfig;
+use Bunnivo\Soda\Quality\RuleRegistry\RuleRegistry;
 
-/**
- * Registry of all quality rule checkers.
- */
-final class RuleRegistry
-{
-    /**
-     * @return list<RuleChecker>
-     */
-    public static function default(QualityConfig $config): array
-    {
-        return [
-            ...RuleRegistryBaselineCheckers::all(),
-            ...RuleRegistryConfiguredCheckers::all($config),
-        ];
-    }
-}
+class_exists(RuleRegistry::class);
+class_alias(RuleRegistry::class, __NAMESPACE__.'\\RuleRegistry');

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Commands;
 
 use Bunnivo\Soda\Application;
-use Bunnivo\Soda\Quality\RuleMetadata;
+use Bunnivo\Soda\Quality\Report\RuleMetadata;
 use Illuminate\Console\Application as ConsoleApplication;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Events\Dispatcher;
@@ -54,6 +54,14 @@ final class InitCommandTest extends TestCase
             $this->assertArrayHasKey('complexity', $data['rules']);
             $this->assertArrayHasKey('breathing', $data['rules']);
             $this->assertArrayHasKey('naming', $data['rules']);
+            $this->assertSame(15, $data['rules']['structural']['max_classes_per_namespace']);
+            $this->assertSame(
+                [
+                    'threshold' => 50,
+                    'min_files' => 4,
+                ],
+                $data['rules']['structural']['max_layer_dominance_percentage'],
+            );
 
             $createdRules = [];
             foreach (['structural', 'complexity', 'breathing', 'naming'] as $section) {
@@ -61,21 +69,23 @@ final class InitCommandTest extends TestCase
                     $createdRules[$key] = $value;
                 }
             }
+
             $createdRules = array_keys($createdRules);
             $expectedKeys = RuleMetadata::default()->ruleKeys();
 
             foreach ($expectedKeys as $key) {
-                $this->assertContains($key, $createdRules, "Init config missing rule: {$key}");
+                $this->assertContains($key, $createdRules, 'Init config missing rule: '.$key);
             }
 
             foreach ($createdRules as $key) {
-                $this->assertContains($key, $expectedKeys, "Init config has unknown rule: {$key}");
+                $this->assertContains($key, $expectedKeys, 'Init config has unknown rule: '.$key);
             }
         } finally {
             chdir($cwd);
             if (is_file($path)) {
                 unlink($path);
             }
+
             rmdir($dir);
         }
     }

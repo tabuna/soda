@@ -4,17 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- */
-final readonly class MethodRuleDefaults implements RuleDefaultsProvider
-{
-    public function defaults(): array
-    {
-        return RuleCatalog::metadataForRules([
-            'max_return_statements',
-            'max_boolean_conditions',
-            'max_try_catch_blocks',
-        ]);
-    }
-}
+use Bunnivo\Soda\Quality\RuleDefaults\MethodRuleDefaults;
+
+class_exists(MethodRuleDefaults::class);
+class_alias(MethodRuleDefaults::class, __NAMESPACE__.'\\MethodRuleDefaults');

@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bunnivo\Soda\Quality\RuleStructure;
+
+use Bunnivo\Soda\Quality\RuleCatalog\RuleDefinition;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleDefinitionPack;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleIdentity;
+use Bunnivo\Soda\Quality\RuleCatalog\RulePresentation;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleScoring;
+
+/**
+ * @internal
+ *
+ * @return list<RuleDefinition>
+ */
+final class StructuralRuleScopeShapeDefinitions
+{
+    public static function entries(string $sectionKey): array
+    {
+        $s = $sectionKey;
+
+        return [
+            RuleDefinitionPack::tie(new RuleIdentity('max_traits_per_class', $s), new RulePresentation('Traits per class:', 'warning'), new RuleScoring(10)),
+
+            RuleDefinitionPack::tie(new RuleIdentity('max_interfaces_per_class', $s), new RulePresentation('Interfaces per class:', 'warning'), new RuleScoring(5)),
+
+            RuleDefinitionPack::tie(new RuleIdentity('max_classes_per_project', $s), new RulePresentation('Classes per project:', 'error'), new RuleScoring(300)),
+        ];
+    }
+}

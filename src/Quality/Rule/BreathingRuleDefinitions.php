@@ -4,19 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-/**
- * @internal
- *
- * @return list<RuleDefinition>
- */
-final class BreathingRuleDefinitions
-{
-    public static function all(string $section): array
-    {
-        return [
-            ...BreathingRuleScoreDefinitions::entries($section),
+use Bunnivo\Soda\Quality\RuleBreathing\BreathingRuleDefinitions;
 
-            ...BreathingRuleReadabilityDefinitions::entries($section),
-        ];
-    }
-}
+class_exists(BreathingRuleDefinitions::class);
+class_alias(BreathingRuleDefinitions::class, __NAMESPACE__.'\\BreathingRuleDefinitions');

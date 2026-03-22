@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Rule;
 
-final readonly class RuleDefinitionFields
-{
-    public function __construct(
-        public RuleIdentity $identity,
-        public RulePresentation $presentation,
-        public RuleScoring $scoring,
-    ) {}
-}
+use Bunnivo\Soda\Quality\RuleCatalog\RuleDefinitionFields;
+
+class_exists(RuleDefinitionFields::class);
+class_alias(RuleDefinitionFields::class, __NAMESPACE__.'\\RuleDefinitionFields');

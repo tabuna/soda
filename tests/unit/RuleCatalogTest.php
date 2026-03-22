@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Quality\Config\RuleSections;
 use Bunnivo\Soda\Quality\QualityConfig;
-use Bunnivo\Soda\Quality\Rule\RuleCatalog;
-use Bunnivo\Soda\Quality\RuleMetadata;
-use Bunnivo\Soda\Quality\RuleSections;
+use Bunnivo\Soda\Quality\Report\RuleMetadata;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleCatalog;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;

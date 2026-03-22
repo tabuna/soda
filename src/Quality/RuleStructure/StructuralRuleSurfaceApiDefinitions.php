@@ -1,0 +1,30 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bunnivo\Soda\Quality\RuleStructure;
+
+use Bunnivo\Soda\Quality\RuleCatalog\RuleDefinition;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleDefinitionPack;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleIdentity;
+use Bunnivo\Soda\Quality\RuleCatalog\RulePresentation;
+use Bunnivo\Soda\Quality\RuleCatalog\RuleScoring;
+
+/**
+ * @internal
+ *
+ * @return list<RuleDefinition>
+ */
+final class StructuralRuleSurfaceApiDefinitions
+{
+    public static function entries(string $sectionKey): array
+    {
+        $s = $sectionKey;
+
+        return [
+            RuleDefinitionPack::tie(new RuleIdentity('max_public_methods', $s), new RulePresentation('Public methods:', 'warning'), new RuleScoring(20)),
+
+            RuleDefinitionPack::tie(new RuleIdentity('max_dependencies', $s), new RulePresentation('Dependencies:', 'warning'), new RuleScoring(8)),
+        ];
+    }
+}

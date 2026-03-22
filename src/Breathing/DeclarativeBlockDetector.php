@@ -27,7 +27,7 @@ final class DeclarativeBlockDetector
             return false;
         }
 
-        return $this->meetsThreshold($counts, $n);
+        return $this->isThresholdSatisfied($counts, $n);
     }
 
     /**
@@ -102,7 +102,7 @@ final class DeclarativeBlockDetector
     /**
      * @param array{arrayLike: int, fluentLike: int, accessorLike: int, templateLike: int, instanceofLike: int, useLike: int} $counts
      */
-    private function meetsThreshold(array $counts, int $n): bool
+    private function isThresholdSatisfied(array $counts, int $n): bool
     {
         $threshold = (int) ceil((float) $n * 0.3);
         $accessorThreshold = (int) ceil((float) $n * 0.2);

@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Quality\EvaluateInput;
+use Bunnivo\Soda\Quality\Engine\EvaluateInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -363,10 +363,10 @@ final class QualityEngineTest extends TestCase
                     'namespaces'    => ['App' => 1],
                 ],
             ],
-            'complexity'   => ['App\Foo::bar' => 1],
-            'nesting'      => [],
-            'returns'      => ['App\Foo::bar' => 5],
-            'expectedRule' => 'max_return_statements',
+            'complexity'        => ['App\Foo::bar' => 1],
+            'nesting'           => [],
+            'expectedRule'      => 'max_return_statements',
+            'returns'           => ['App\Foo::bar' => 5],
         ];
         yield 'max_boolean_conditions' => [
             'rule'    => 'max_boolean_conditions',
@@ -382,8 +382,8 @@ final class QualityEngineTest extends TestCase
             ],
             'complexity'        => ['App\Foo::bar' => 1],
             'nesting'           => [],
-            'booleanConditions' => ['App\Foo::bar' => [['line' => 10, 'count' => 5]]],
             'expectedRule'      => 'max_boolean_conditions',
+            'booleanConditions' => ['App\Foo::bar' => [['line' => 10, 'count' => 5]]],
         ];
         yield 'max_try_catch_blocks' => [
             'rule'         => 'max_try_catch_blocks',
@@ -401,6 +401,109 @@ final class QualityEngineTest extends TestCase
             'nesting'      => [],
             'expectedRule' => 'max_try_catch_blocks',
             'tryCatch'     => ['App\Foo::run' => 3],
+        ];
+        yield 'max_todo_fixme_comments' => [
+            'rule'    => 'max_todo_fixme_comments',
+            'config'  => ['max_todo_fixme_comments' => 0],
+            'metrics' => [
+                '/file.php' => [
+                    'file_loc'      => 50,
+                    'classes_count' => 1,
+                    'classes'       => ['App\Foo' => $baseClass],
+                    'methods'       => [],
+                    'namespaces'    => ['App' => 1],
+                    'todoFixme'     => [['line' => 12, 'kind' => 'TODO', 'text' => 'TODO remove fallback']],
+                ],
+            ],
+            'complexity'   => [],
+            'nesting'      => [],
+            'expectedRule' => 'max_todo_fixme_comments',
+        ];
+        yield 'max_commented_out_code_lines' => [
+            'rule'    => 'max_commented_out_code_lines',
+            'config'  => ['max_commented_out_code_lines' => 0],
+            'metrics' => [
+                '/file.php' => [
+                    'file_loc'       => 50,
+                    'classes_count'  => 1,
+                    'classes'        => ['App\Foo' => $baseClass],
+                    'methods'        => [],
+                    'namespaces'     => ['App' => 1],
+                    'commentedCode'  => [['line' => 14, 'text' => '$user = $repo->find($id);']],
+                ],
+            ],
+            'complexity'   => [],
+            'nesting'      => [],
+            'expectedRule' => 'max_commented_out_code_lines',
+        ];
+        yield 'max_empty_catch_blocks' => [
+            'rule'    => 'max_empty_catch_blocks',
+            'config'  => ['max_empty_catch_blocks' => 0],
+            'metrics' => [
+                '/file.php' => [
+                    'file_loc'      => 50,
+                    'classes_count' => 1,
+                    'classes'       => ['App\Foo' => $baseClass],
+                    'methods'       => [],
+                    'namespaces'    => ['App' => 1],
+                    'emptyCatches'  => [['line' => 18, 'class' => 'App\Foo', 'method' => 'App\Foo::run']],
+                ],
+            ],
+            'complexity'   => [],
+            'nesting'      => [],
+            'expectedRule' => 'max_empty_catch_blocks',
+        ];
+        yield 'max_ask_then_tell_patterns' => [
+            'rule'    => 'max_ask_then_tell_patterns',
+            'config'  => ['max_ask_then_tell_patterns' => 0],
+            'metrics' => [
+                '/file.php' => [
+                    'file_loc'      => 50,
+                    'classes_count' => 1,
+                    'classes'       => ['App\Foo' => $baseClass],
+                    'methods'       => [],
+                    'namespaces'    => ['App' => 1],
+                    'askThenTell'   => [[
+                        'line'     => 20,
+                        'class'    => 'App\Foo',
+                        'method'   => 'App\Foo::run',
+                        'receiver' => '$service',
+                        'question' => 'isReady',
+                        'command'  => 'dispatch',
+                    ]],
+                ],
+            ],
+            'complexity'   => [],
+            'nesting'      => [],
+            'expectedRule' => 'max_ask_then_tell_patterns',
+        ];
+        yield 'boolean_methods_without_prefix' => [
+            'rule'    => 'boolean_methods_without_prefix',
+            'config'  => ['boolean_methods_without_prefix' => 0],
+            'metrics' => [
+                '/file.php' => [
+                    'file_loc'      => 50,
+                    'classes_count' => 1,
+                    'classes'       => ['App\Foo' => $baseClass],
+                    'methods'       => [],
+                    'namespaces'    => ['App' => 1],
+                    'naming'        => [
+                        'classes' => [],
+                        'methods' => [[
+                            'name'           => 'App\Foo::active',
+                            'methodName'     => 'active',
+                            'class'          => 'App\Foo',
+                            'firstParamType' => null,
+                            'returnType'     => 'bool',
+                            'line'           => 9,
+                            'isPublic'       => true,
+                        ]],
+                    ],
+                ],
+            ],
+            'complexity'   => [],
+            'nesting'      => [],
+            'expectedRule' => 'boolean_methods_without_prefix',
         ];
     }
 
@@ -465,5 +568,54 @@ final class QualityEngineTest extends TestCase
         $result = $engine->evaluate($this->createResult(5000), $input);
 
         $this->assertCount(0, $result->violations);
+    }
+
+    public function testMaxClassesPerNamespaceCountsAcrossMultipleFiles(): void
+    {
+        $config = new QualityConfig(['max_classes_per_namespace' => 3]);
+        $engine = QualityEngine::create($config);
+
+        $baseClass = [
+            'loc'               => 10,
+            'methods'           => 1,
+            'properties'        => 0,
+            'public_methods'    => 1,
+            'dependencies'      => 0,
+            'efferent_coupling' => 0,
+            'traits'            => 0,
+            'interfaces'        => 0,
+            'namespace'         => 'App\Services',
+            'namespace_depth'   => 2,
+        ];
+
+        $input = EvaluateInput::fromArrays([
+            '/one.php' => [
+                'file_loc'      => 10,
+                'classes_count' => 2,
+                'classes'       => [
+                    'App\Services\Alpha' => $baseClass,
+                    'App\Services\Beta'  => $baseClass,
+                ],
+                'methods'    => [],
+                'namespaces' => ['App\Services' => 2],
+            ],
+            '/two.php' => [
+                'file_loc'      => 10,
+                'classes_count' => 2,
+                'classes'       => [
+                    'App\Services\Gamma' => $baseClass,
+                    'App\Services\Delta' => $baseClass,
+                ],
+                'methods'    => [],
+                'namespaces' => ['App\Services' => 2],
+            ],
+        ]);
+
+        $result = $engine->evaluate($this->createResult(4), $input);
+        $violations = $result->violations->where('rule', 'max_classes_per_namespace')->values();
+
+        $this->assertCount(1, $violations);
+        $this->assertSame('App\Services', $violations[0]->class());
+        $this->assertSame(['value' => 4, 'threshold' => 3], $violations[0]->limits());
     }
 }
