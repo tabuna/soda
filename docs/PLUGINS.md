@@ -1,14 +1,30 @@
 # Soda Plugin System
 
-Soda поддерживает **систему плагинов**, позволяющую подключать пользовательские правила качества без изменения ядра.
+Soda построен вокруг **системы плагинов**: ядро — это только движок анализа, все правила (включая встроенные) подключаются отдельно.
 
 ---
 
-## Быстрый старт — одно правило за 2 шага
+## Архитектура
+
+```
+Ядро (анализ AST, метрики, CLI)
+    ↓
+StandardPlugin          ← все встроенные правила
+    ├── StructuralPlugin    (LOC, классы, запахи кода)
+    ├── ComplexityPlugin    (сложность, вложенность)
+    ├── BreathingPlugin     (метрики дыхания кода)
+    └── NamingPlugin        (именование)
+    ↓
+Пользовательские плагины и правила  ← ваши
+```
+
+Каждый блок — это `SodaPlugin`. Вы можете заменить любой блок, добавить свои или отключить все встроенные.
+
+---
+
+## Быстрый старт — своё правило за 2 шага
 
 ### Шаг 1. Создайте правило
-
-Расширьте `SodaRule` и реализуйте два метода:
 
 ```php
 <?php
@@ -29,341 +45,201 @@ final class MaxFileLoc extends SodaRule
 ### Шаг 2. Подключите в `soda.php`
 
 ```php
+$config->rule(MaxFileLoc::class);
+```
+
+---
+
+## Сценарии использования
+
+### Добавить правила к стандартным (по умолчанию)
+
+```php
 protected function configure(SodaConfig $config): void
 {
-    $config->rule(MaxFileLoc::class);
+    $config->structural()->maxMethodLength(100);  // настройка встроенных
+    $config->rule(MaxFileLoc::class);             // добавить своё
 }
 ```
 
-Всё. Запустите проверку:
-
-```bash
-php soda quality src/
-```
-
----
-
-## `SodaRule` — базовый класс
+### Только нужные группы встроенных правил
 
 ```php
-abstract class SodaRule implements RuleChecker
+use Bunnivo\Soda\Plugins\StructuralPlugin;
+use Bunnivo\Soda\Plugins\ComplexityPlugin;
+
+protected function configure(SodaConfig $config): void
 {
-    abstract public function id(): string;               // уникальный ID правила
-    abstract protected function evaluate(string $file, array $metrics): array; // ваша логика
-
-    // Хелперы — возвращают violation или []
-    protected function exceeds(string $file, int|float $value, int|float $limit,
-        ?string $class = null, ?string $method = null, ?int $line = null): array;
-
-    protected function below(string $file, int|float $value, int|float $limit,
-        ?string $class = null, ?string $method = null, ?int $line = null): array;
+    $config->withoutBuiltins()               // отключить все встроенные
+           ->plugin(StructuralPlugin::class) // включить только структуру
+           ->plugin(ComplexityPlugin::class) // и сложность
+           ->rule(MyRule::class);            // + своё правило
 }
 ```
 
-`SodaRule` автоматически итерирует все файлы и собирает нарушения. Вы пишете только логику для одного файла.
-
-### Доступные ключи в `$metrics`
-
-| Ключ              | Тип            | Описание                                                     |
-|-------------------|----------------|--------------------------------------------------------------|
-| `file_loc`        | `int`          | LOC файла                                                    |
-| `classes_count`   | `int`          | Количество классов                                           |
-| `classes`         | `array`        | Данные по классам: `loc`, `methods`, `properties`, `dependencies`, `efferent_coupling`, `traits`, `interfaces`, `namespace`, `namespace_depth` |
-| `methods`         | `array`        | Данные по методам: `loc`, `args`                            |
-| `namespaces`      | `array`        | Неймспейс → количество классов                              |
-| `breathing`       | `array`        | Метрики дыхания: CBS, VBI, IRS, COL, LCF, WCD              |
-
-### Проверка на уровне классов
+### Полностью своя система правил
 
 ```php
-protected function evaluate(string $file, array $metrics): array
+protected function configure(SodaConfig $config): void
 {
-    $violations = [];
-
-    foreach ($metrics['classes'] as $class => $data) {
-        array_push($violations, ...$this->exceeds($file, $data['methods'], 20, class: $class));
-    }
-
-    return $violations;
+    $config->withoutBuiltins()     // ничего встроенного
+           ->plugin(MyPlugin::class);
 }
 ```
 
-### Проверка на уровне методов
+### Все встроенные явно (максимальная прозрачность)
 
 ```php
-protected function evaluate(string $file, array $metrics): array
+use Bunnivo\Soda\Plugins\StandardPlugin;
+
+protected function configure(SodaConfig $config): void
 {
-    $violations = [];
-
-    foreach ($metrics['methods'] as $method => $data) {
-        array_push($violations, ...$this->exceeds($file, $data['loc'], 50, method: $method));
-    }
-
-    return $violations;
+    $config->withoutBuiltins()
+           ->plugin(StandardPlugin::class)  // = все 4 группы
+           ->rule(MyRule::class);
 }
 ```
 
 ---
 
-## Несколько правил в одном файле — `SodaPlugin`
+## Встроенные плагины
 
-Когда правил несколько, объедините их в плагин:
+| Класс               | Что проверяет                                                     |
+|---------------------|-------------------------------------------------------------------|
+| `StructuralPlugin`  | LOC, классы, методы, зависимости, запахи кода, неймспейсы        |
+| `ComplexityPlugin`  | Цикломатическая сложность, вложенность, когнитивная плотность     |
+| `BreathingPlugin`   | CBS, VBI, IRS, COL — метрики читаемости кода                     |
+| `NamingPlugin`      | Избыточные названия, префиксы булевых методов                    |
+| `StandardPlugin`    | Все четыре группы вместе (удобный ярлык)                         |
+
+---
+
+## Создание собственного правила
+
+### Вариант 1: `SodaRule` — минимально
 
 ```php
-<?php
-
-use Bunnivo\Soda\Config\SodaPlugin;
-
-final class MyPlugin implements SodaPlugin
+final class MaxClassMethods extends SodaRule
 {
-    public function checkers(): array
+    public function id(): string { return 'max_class_methods'; }
+
+    protected function evaluate(string $file, array $metrics): array
     {
-        return [
-            new MaxFileLoc,
-            new MaxMethodCount,
-            new MinBreathingScore,
-        ];
-    }
-}
-```
+        $violations = [];
 
-Регистрация:
-
-```php
-$config->plugin(MyPlugin::class);
-```
-
-`plugin()` и `rule()` можно комбинировать:
-
-```php
-$config->plugin(MyPlugin::class)
-       ->rule(AnotherRule::class);
-```
-
----
-
-## Полный пример `soda.php` с правилами
-
-```php
-<?php
-
-use Bunnivo\Soda\Config\SodaConfig;
-use Bunnivo\Soda\Config\SodaConfigurator;
-
-class SodaRules extends SodaConfigurator
-{
-    protected function configure(SodaConfig $config): void
-    {
-        // стандартные правила
-        $config->structural()->maxMethodLength(100)->maxClassLength(500);
-        $config->complexity()->maxCyclomaticComplexity(10);
-
-        // пользовательские правила
-        $config->rule(MaxFileLoc::class);
-        $config->plugin(CompanyQualityPlugin::class);
-    }
-}
-
-return SodaConfigurator::entry(SodaRules::class);
-```
-
----
-
-## Правила создания
-
-| Требование                                 | Описание                                                       |
-|--------------------------------------------|----------------------------------------------------------------|
-| Расширяет `SodaRule` (или `RuleChecker`)  | `SodaRule` проще; `RuleChecker` — для полного контроля        |
-| `id()` возвращает уникальный snake_case    | Используется в отчёте нарушений                               |
-| `evaluate()` возвращает `list<Violation>`  | Используйте `exceeds()` / `below()` или `ViolationBuilder`   |
-| Класс должен существовать                  | Иначе `InvalidArgumentException` при старте                   |
-| Не зависит от других правил                | Каждое правило изолировано                                     |
-
-
-Soda поддерживает **систему плагинов**, позволяющую подключать пользовательские правила качества без изменения ядра.
-
----
-
-## Быстрый старт
-
-### 1. Создайте плагин
-
-Реализуйте интерфейс `SodaPlugin` и верните список экземпляров `RuleChecker`:
-
-```php
-<?php
-
-use Bunnivo\Soda\Config\SodaPlugin;
-
-final class MyPlugin implements SodaPlugin
-{
-    public function checkers(): array
-    {
-        return [
-            new MaxDocBlockLengthRule(),
-            new ForbiddenFunctionsRule(),
-        ];
-    }
-}
-```
-
-### 2. Создайте правило
-
-Реализуйте интерфейс `RuleChecker`. Метод `check()` получает `EvaluationContext` с метриками файла и конфигурацией, а возвращает коллекцию `Violation`:
-
-```php
-<?php
-
-use Bunnivo\Soda\Quality\EvaluationContext;
-use Bunnivo\Soda\Quality\Rule\RuleChecker;
-use Bunnivo\Soda\Quality\RuleChecker as RuleCheckerFluent;
-use Illuminate\Support\Collection;
-
-final class MaxDocBlockLengthRule implements RuleChecker
-{
-    private const string RULE_ID = 'max_docblock_length';
-    private const int    LIMIT   = 20;
-
-    public function check(EvaluationContext $context): Collection
-    {
-        $violations = collect();
-
-        foreach ($context->fileMetrics->methods() as $method) {
-            $violations->push(
-                ...RuleCheckerFluent::whenExceeded(self::RULE_ID)
-                    ->file($context->fileMetrics->filePath())
-                    ->class($method->className())
-                    ->method($method->name())
-                    ->forValue($method->docBlockLines())
-                    ->limit(self::LIMIT)
-                    ->result()
+        foreach ($metrics['classes'] as $class => $data) {
+            array_push($violations,
+                ...$this->exceeds($file, $data['methods'], 15, class: $class)
             );
         }
 
         return $violations;
     }
 }
+
+// Регистрация:
+$config->rule(MaxClassMethods::class);
 ```
 
-### 3. Подключите плагин в `soda.php`
+### Вариант 2: `RuleChecker` — полный контроль
+
+```php
+use Bunnivo\Soda\Quality\EvaluationContext;
+use Bunnivo\Soda\Quality\Rule\RuleChecker;
+use Illuminate\Support\Collection;
+
+final class MyAdvancedRule implements RuleChecker
+{
+    public function check(EvaluationContext $context): Collection
+    {
+        // $context->config          — конфигурация (пороги, правила)
+        // $context->projectMetrics  — метрики всего проекта
+        // $context->fileMetrics     — метрики по файлам
+        return collect([]);
+    }
+}
+```
+
+### Вариант 3: `SodaPlugin` — пакет правил
+
+```php
+final class MyCompanyPlugin implements SodaPlugin
+{
+    public function checkers(): array
+    {
+        return [
+            new MaxClassMethods,
+            new NoDebugCalls,
+            new RequireDocBlocks,
+        ];
+    }
+}
+
+// Регистрация:
+$config->plugin(MyCompanyPlugin::class);
+```
+
+---
+
+## Хелперы `SodaRule`
+
+```php
+// Нарушение, если value > limit
+$this->exceeds($file, $value, $limit, class: 'Foo', method: 'bar', line: 42);
+
+// Нарушение, если value < limit
+$this->below($file, $value, $limit);
+```
+
+Оба возвращают `list<Violation>` — пустой массив при отсутствии нарушения.
+
+### Доступные ключи `$metrics`
+
+| Ключ            | Тип     | Описание                                                              |
+|-----------------|---------|-----------------------------------------------------------------------|
+| `file_loc`      | `int`   | LOC файла                                                             |
+| `classes_count` | `int`   | Количество классов                                                    |
+| `classes`       | `array` | По классам: `loc`, `methods`, `properties`, `dependencies`, `efferent_coupling`, `traits`, `interfaces`, `namespace`, `namespace_depth` |
+| `methods`       | `array` | По методам: `loc`, `args`                                             |
+| `namespaces`    | `array` | Неймспейс → количество классов                                       |
+| `breathing`     | `array` | Метрики дыхания: CBS, VBI, IRS, COL, LCF, WCD                       |
+
+---
+
+## Полный пример `soda.php`
 
 ```php
 <?php
 
 use Bunnivo\Soda\Config\SodaConfig;
 use Bunnivo\Soda\Config\SodaConfigurator;
+use Bunnivo\Soda\Plugins\StructuralPlugin;
+use Bunnivo\Soda\Plugins\ComplexityPlugin;
 
 class SodaRules extends SodaConfigurator
 {
     protected function configure(SodaConfig $config): void
     {
-        // стандартные правила...
-        $config->structural()->maxMethodLength(100);
+        // Выбрать группы встроенных правил:
+        $config->withoutBuiltins()
+               ->plugin(StructuralPlugin::class)
+               ->plugin(ComplexityPlugin::class);
 
-        // подключение плагина
-        $config->plugin(MyPlugin::class);
+        // Настроить пороги:
+        $config->structural()
+               ->maxMethodLength(100)
+               ->maxClassLength(500)
+               ->maxArguments(3);
+
+        $config->complexity()
+               ->maxCyclomaticComplexity(10)
+               ->maxControlNesting(3);
+
+        // Добавить свои правила:
+        $config->rule(MaxFileLoc::class)
+               ->plugin(CompanyPlugin::class);
     }
 }
 
 return SodaConfigurator::entry(SodaRules::class);
-```
-
----
-
-## Интерфейсы
-
-### `SodaPlugin`
-
-```php
-interface SodaPlugin
-{
-    /** @return list<RuleChecker> */
-    public function checkers(): array;
-}
-```
-
-Один плагин может возвращать несколько правил. Правила выполняются независимо — ошибка в одном не влияет на остальные.
-
-### `RuleChecker`
-
-```php
-interface RuleChecker
-{
-    /** @return Collection<int, Violation> */
-    public function check(EvaluationContext $context): Collection;
-}
-```
-
-### `EvaluationContext`
-
-| Поле             | Тип                   | Описание                                         |
-|------------------|-----------------------|--------------------------------------------------|
-| `$config`        | `QualityConfig`       | Пороги и настройки из `soda.php`                |
-| `$projectMetrics`| `Result`              | Агрегированные метрики проекта (LOC, классы…)   |
-| `$fileMetrics`   | `FileMetrics`         | Метрики текущего анализируемого файла           |
-
----
-
-## Регистрация нескольких плагинов
-
-```php
-$config->plugin(SecurityPlugin::class);
-$config->plugin(ArchitecturePlugin::class);
-$config->plugin(NamingPlugin::class);
-```
-
-Метод `plugin()` — fluent, возвращает `$this`. Плагины подключаются в порядке регистрации и работают независимо друг от друга.
-
----
-
-## Правила создания плагинов
-
-| Требование                          | Описание                                                      |
-|-------------------------------------|---------------------------------------------------------------|
-| Реализует `SodaPlugin`             | Обязательно                                                   |
-| Возвращает `list<RuleChecker>`     | `checkers()` должен возвращать массив реализаций `RuleChecker`|
-| Не изменяет ядро                   | Плагин не должен модифицировать файлы в `src/`               |
-| Независимость                      | Плагины не должны зависеть друг от друга                      |
-| Класс-плагин должен существовать   | Иначе будет выброшен `InvalidArgumentException`              |
-
----
-
-## Пример: минималистичный плагин
-
-```php
-<?php
-
-use Bunnivo\Soda\Config\SodaPlugin;
-use Bunnivo\Soda\Quality\EvaluationContext;
-use Bunnivo\Soda\Quality\Rule\RuleChecker;
-use Illuminate\Support\Collection;
-
-final class NoDebugCallsRule implements RuleChecker
-{
-    public function check(EvaluationContext $context): Collection
-    {
-        // ваша логика анализа...
-        return collect();
-    }
-}
-
-final class MyCompanyPlugin implements SodaPlugin
-{
-    public function checkers(): array
-    {
-        return [new NoDebugCallsRule()];
-    }
-}
-```
-
-Зарегистрируйте в `soda.php`:
-
-```php
-$config->plugin(MyCompanyPlugin::class);
-```
-
-Запустите проверку:
-
-```bash
-php soda quality src/
 ```

@@ -31,11 +31,14 @@ final readonly class QualityEngine
     }
 
     /**
-     * @param list<RuleChecker> $extraCheckers Appended after built-in checkers (from the app's config/soda.php when present).
+     * @param list<RuleChecker> $extraCheckers  Appended after built-in checkers (plugins/rules from soda.php).
+     * @param bool              $noBuiltinRules When true, skip RuleRegistry::default() — only $extraCheckers run.
      */
-    public static function create(QualityConfig $config, array $extraCheckers = []): self
+    public static function create(QualityConfig $config, array $extraCheckers = [], bool $noBuiltinRules = false): self
     {
-        $checkers = [...RuleRegistry::default($config), ...$extraCheckers];
+        $checkers = $noBuiltinRules
+            ? $extraCheckers
+            : [...RuleRegistry::default($config), ...$extraCheckers];
 
         return new self($config, $checkers);
     }

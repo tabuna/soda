@@ -23,6 +23,7 @@ final readonly class QualityConfig
      * @param array<string, int|float>|null $rules           `null` = full defaults from {@see RuleCatalog}; `[]` = empty thresholds.
      * @param list<string>                  $disabledRuleIds
      * @param list<RuleChecker>             $pluginCheckers  Extra checkers registered via plugins in soda.php.
+     * @param bool                          $noBuiltinRules  When true, skip RuleRegistry::default() and use only plugin checkers.
      */
     public function __construct(
         ?array $rules = null,
@@ -32,6 +33,7 @@ final readonly class QualityConfig
         public array $disabledRuleIds = [],
         public QualityConfigRuleState $ruleState = new QualityConfigRuleState(),
         public array $pluginCheckers = [],
+        public bool $noBuiltinRules = false,
     ) {
         $this->rules = $rules ?? RuleCatalog::defaultThresholds();
     }
@@ -75,7 +77,7 @@ final readonly class QualityConfig
         $export($soda);
         [$mergedRules, $disabled, $ruleExceptions, $ruleOptions] = self::mergeRules($soda->toArray());
 
-        return new self($mergedRules, $disabled, new QualityConfigRuleState($ruleExceptions, $ruleOptions), $soda->pluginCheckers());
+        return new self($mergedRules, $disabled, new QualityConfigRuleState($ruleExceptions, $ruleOptions), $soda->pluginCheckers(), $soda->isWithoutBuiltins());
     }
 
     /**

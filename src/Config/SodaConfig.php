@@ -38,6 +38,8 @@ final class SodaConfig
      */
     private array $extraRules = [];
 
+    private bool $withoutBuiltins = false;
+
     public function __construct()
     {
         $this->structural = new StructuralConfig;
@@ -75,6 +77,35 @@ final class SodaConfig
         $this->disabledRuleIds[] = $ruleId;
 
         return $this;
+    }
+
+    /**
+     * Disable all built-in rules so only explicitly registered plugins/rules run.
+     *
+     * Use this when you want full control over which rule groups are active.
+     * Built-in groups can then be selectively re-added via {@see plugin()}.
+     *
+     * @example Start from scratch — only your rules:
+     *
+     *   $config->withoutBuiltins()->rule(MyRule::class);
+     *
+     * @example Cherry-pick built-in groups:
+     *
+     *   $config->withoutBuiltins()
+     *          ->plugin(StructuralPlugin::class)
+     *          ->plugin(ComplexityPlugin::class)
+     *          ->rule(MyRule::class);
+     */
+    public function withoutBuiltins(): self
+    {
+        $this->withoutBuiltins = true;
+
+        return $this;
+    }
+
+    public function isWithoutBuiltins(): bool
+    {
+        return $this->withoutBuiltins;
     }
 
     /**

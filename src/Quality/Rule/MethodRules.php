@@ -12,15 +12,13 @@ use Bunnivo\Soda\Quality\MethodChecker;
 use Bunnivo\Soda\Quality\MethodCheckInput;
 use Illuminate\Support\Collection;
 
-final readonly class MethodRules implements RuleChecker
+final class MethodRules implements RuleChecker
 {
-    public function __construct(
-        private MethodChecker $methodChecker,
-    ) {}
-
     #[\Override]
     public function check(EvaluationContext $context): Collection
     {
+        $checker = new MethodChecker($context->config);
+
         $nestingReturns = new MethodNestingReturns(
             $context->fileMetrics->nestingByMethod(),
             $context->fileMetrics->returnsByMethod(),
@@ -36,7 +34,7 @@ final readonly class MethodRules implements RuleChecker
         );
 
         return collect($context->fileMetrics->qualityMetrics())
-            ->flatMap(fn (array $data, string $file) => $this->methodChecker->check(new MethodCheckInput(
+            ->flatMap(fn (array $data, string $file) => $checker->check(new MethodCheckInput(
                 $file,
                 $data['methods'],
                 $methodMetrics,

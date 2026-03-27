@@ -8,19 +8,15 @@ use Bunnivo\Soda\Quality\ClassChecker;
 use Bunnivo\Soda\Quality\EvaluationContext;
 use Illuminate\Support\Collection;
 
-final readonly class ClassRules implements RuleChecker
+final class ClassRules implements RuleChecker
 {
-    public function __construct(
-        private ClassChecker $classChecker,
-    ) {}
-
     #[\Override]
     public function check(EvaluationContext $context): Collection
     {
-        $metrics = $context->fileMetrics->qualityMetrics();
+        $checker = new ClassChecker($context->config);
 
-        return collect($metrics)
-            ->flatMap(fn (array $data, string $file) => $this->classChecker->check($file, $data['classes']))
+        return collect($context->fileMetrics->qualityMetrics())
+            ->flatMap(fn (array $data, string $file) => $checker->check($file, $data['classes']))
             ->values();
     }
 }
