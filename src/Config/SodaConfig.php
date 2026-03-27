@@ -33,6 +33,11 @@ final class SodaConfig
      */
     private array $plugins = [];
 
+    /**
+     * @var list<class-string<RuleChecker>>
+     */
+    private array $extraRules = [];
+
     public function __construct()
     {
         $this->structural = new StructuralConfig;
@@ -103,7 +108,41 @@ final class SodaConfig
     }
 
     /**
-     * Instantiate all registered plugins and collect their rule checkers.
+     * Register a single rule checker directly — no plugin wrapper needed.
+     *
+     * This is the simplest way to add a custom rule. Extend {@see SodaRule} for
+     * a convenient base class with built-in helpers.
+     *
+     * @param class-string<RuleChecker> $ruleClass
+     *
+     * @throws \InvalidArgumentException when the class does not exist or does not implement {@see RuleChecker}
+     *
+     * @example
+     *   $config->rule(MyCustomRule::class);
+     */
+    public function rule(string $ruleClass): self
+    {
+        if ($ruleClass === '') {
+            throw new \InvalidArgumentException('Rule class name must be non-empty.');
+        }
+
+        if (! class_exists($ruleClass)) {
+            throw new \InvalidArgumentException(sprintf('Rule class not found: %s', $ruleClass));
+        }
+
+        if (! is_a($ruleClass, RuleChecker::class, true)) {
+            throw new \InvalidArgumentException(
+                sprintf('%s must implement %s.', $ruleClass, RuleChecker::class)
+            );
+        }
+
+        $this->extraRules[] = $ruleClass;
+
+        return $this;
+    }
+
+    /**
+     * Instantiate all registered plugins and inline rules, and collect their checkers.
      *
      * @return list<RuleChecker>
      *
@@ -116,6 +155,10 @@ final class SodaConfig
         foreach ($this->plugins as $pluginClass) {
             $plugin = new $pluginClass;
             array_push($checkers, ...$plugin->checkers());
+        }
+
+        foreach ($this->extraRules as $ruleClass) {
+            $checkers[] = new $ruleClass;
         }
 
         return $checkers;
