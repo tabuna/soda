@@ -87,6 +87,39 @@ foreach ($this->filterValid($items) as $item) {
 
 ---
 
+### max_try_catch_blocks (excessive exception handling)
+
+**What it counts:** number of `try { … } catch (…) { … }` statements in a method or top-level function (each `try` counts once; `finally` does not add a second count). Nested `try` inside the same method counts separately. `try` inside closures passed to `array_map` and similar is **not** attributed to the enclosing method.
+
+| Config value | Severity (default labels) | Meaning |
+|--------------|---------------------------|---------|
+| `2` | Warning at ≥3 blocks | Default: allow up to two `try/catch` per method |
+| `0` | Disabled | Rule off |
+
+```php
+// ❌ Bad (3+ try/catch in one method when max_try_catch_blocks is 2)
+function run() {
+    try {} catch (\Exception $e) {}
+    try {} catch (\Exception $e) {}
+    try {} catch (\Exception $e) {}
+}
+```
+
+```php
+// ✅ Good: consolidate error handling or extract helpers with a single try/catch boundary
+function run(): void
+{
+    try {
+        $this->stepOne();
+        $this->stepTwo();
+    } catch (ProcessException $e) {
+        $this->recover($e);
+    }
+}
+```
+
+---
+
 ## Cognitive Complexity (Breathing Metrics)
 
 These metrics measure how hard code is to **read and scan visually**. Config values use a **0–100 scale** where the internal metric is scaled (e.g. CBS 0.25 → config 25).
@@ -300,5 +333,6 @@ foreach ($this->filterValid($items) as $item) {
 | `min_code_oxygen_level` | `breathing` | 25–65 | `0` |
 | `max_weighted_cognitive_density` | `complexity` | 10–40 | `0` |
 | `max_logical_complexity_factor` | `complexity` | 20–50 | `0` |
+| `max_try_catch_blocks` | `complexity` | 2 (warn at 3+) | `0` |
 
 See [BREATHING_METRICS.md](BREATHING_METRICS.md) for overview.

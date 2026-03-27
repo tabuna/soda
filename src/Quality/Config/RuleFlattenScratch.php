@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality\Config;
 
 /**
- * Mutable accumulator while flattening nested `rules` from soda.json.
+ * Mutable accumulator while flattening nested `rules` payloads.
  */
 final class RuleFlattenScratch
 {

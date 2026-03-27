@@ -194,6 +194,43 @@ public function __construct(
 
 ---
 
+### max_efferent_coupling (Ce)
+
+**Efferent coupling:** number of **distinct** external classes/types the class or trait depends on (same type counted once).
+
+**Included (minimum set):** `extends`, `implements`, `use Trait`, property/param/return types (incl. promoted ctor), `catch` types, `new Class`, static calls `Class::…`, static property, `Class::CONST`, `instanceof Class`.
+
+**Not counted:** `self`, `static`; scalar/builtin types (`int`, `string`, …). The enclosing class itself is excluded.
+
+| Config value | Strictness |
+|--------------|------------|
+| ≤10 | Default (warning when Ce **>** 10) |
+| 15–20 | Lenient |
+| `0` | Disabled |
+
+```php
+// ❌ Bad (Ce > 10 with default limit)
+final class ReportBuilder
+{
+    public function __construct(
+        private Formatter $f,
+        private Exporter $e,
+        private Mailer $m,
+        // … many more distinct types across methods, properties, new …
+    ) {}
+}
+```
+
+```php
+// ✅ Good: fewer outward types, façade or aggregates
+final class ReportBuilder
+{
+    public function __construct(private ReportingPipeline $pipeline) {}
+}
+```
+
+---
+
 ### max_properties_per_class
 
 Maximum properties (fields) per class.

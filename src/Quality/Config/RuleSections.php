@@ -7,7 +7,7 @@ namespace Bunnivo\Soda\Quality\Config;
 use Bunnivo\Soda\Quality\RuleCatalog\RuleCatalog;
 
 /**
- * Defines rule sections for soda.json config structure.
+ * Defines rule sections for soda.php / merged rules payload.
  *
  * @internal
  */

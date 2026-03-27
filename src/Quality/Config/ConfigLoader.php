@@ -19,7 +19,13 @@ final class ConfigLoader
      */
     public function load(string $path): QualityConfig
     {
-        return QualityConfig::fromFile($path);
+        throw_unless(
+            str_ends_with($path, '.php'),
+            ConfigException::class,
+            sprintf('Config must be a .php file; JSON is no longer supported (%s).', $path)
+        );
+
+        return QualityConfig::fromPhpConfiguratorFile($path);
     }
 
     public function loadDefault(): QualityConfig

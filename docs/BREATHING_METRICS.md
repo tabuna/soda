@@ -147,37 +147,48 @@ $$
 
 ### VBI (Visual Breathing Index)
 
-Proportion of blank lines and block uniformity.
+Proportion of blank lines and block uniformity. Normalized so 1.0 is achievable for ideal code.
 
 $$
-\text{VBI} = \frac{N_{\text{blank}}}{N_{\text{lines}}} \times \left(1 - \frac{\sigma_{\text{block}}}{max_{\text{block}}}\right)
+\text{ratioComponent} = \min\left(1, \frac{N_{\text{blank}}/N_{\text{lines}}}{0.5}\right)
 $$
+
+Если maxBlock ≤ 2: blockFactor = 1 (все блоки короткие). Иначе: blockFactor = 1 − σ/maxBlock.
+
+$$
+\text{VBI} = \min\left(1, \text{ratioComponent} \times \text{blockFactor}\right)
+$$
+
+Ideal = 1 blank per 2 code lines (ratio ≥ 0.5) + uniform blocks. Minimal classes (≤15 lines) → VBI 1.0.
 
 | VBI   | Interpretation |
 |-------|-----------------|
 | 0–0.2 | Cramped         |
 | 0.2–0.4 | Normal       |
 | 0.4–0.6 | Good rhythm  |
+| 0.6–1.0 | Ideal (achievable) |
 
 ### IRS (Identifier Readability Score)
 
 $$
-\text{IRS} = 1 - \frac{\text{avgIdentifierLength} - 8}{20}
+\text{IRS} = 1 - \frac{\text{avgIdentifierLength} - 14}{20}
 $$
+
+Ideal = avg ≤ 14 chars → IRS = 1.0.
 
 | Length | Readability |
 |--------|-------------|
-| 3–8    | Optimal     |
-| 8–15   | Acceptable  |
-| &gt;15  | Overloaded   |
+| 3–14   | Optimal (IRS = 1.0 achievable) |
+| 12–20  | Acceptable  |
+| &gt;20  | Overloaded   |
 
 ### COL (Code Oxygen Level)
 
 $$
-\text{COL} = \frac{N_{\text{blank}} + N_{\text{shortBlocks}}}{N_{\text{lines}}}
+\text{COL} = \frac{N_{\text{blank}} + N_{\text{shortBlocks}} + \text{declarativeBonus}}{N_{\text{lines}}} + \text{sizeModifier}
 $$
 
-Short blocks = blocks ≤3 lines.
+Short blocks = blocks ≤3 lines. Result clamped to 0–1. Declarative arrays and size modifier can boost COL for well-structured code.
 
 | COL   | Interpretation |
 |-------|----------------|
@@ -245,3 +256,13 @@ Breathing rules live under `rules.breathing`; WCD and LCF under `rules.complexit
 | `max_logical_complexity_factor` | 35 | Config = internal×10 |
 
 See [COMPLEXITY_READABILITY_METRICS.md](COMPLEXITY_READABILITY_METRICS.md) for good/bad examples and config ranges.
+
+---
+
+## Further reading
+
+| Document | Content |
+|----------|---------|
+| [breathing/ARTICLE_CODE_BREATHING.md](breathing/ARTICLE_CODE_BREATHING.md) | Article: why code breathing matters |
+| [breathing/TALK_OUTLINE.md](breathing/TALK_OUTLINE.md) | Conference talk outline |
+| [breathing/EXAMPLES_BEFORE_AFTER.md](breathing/EXAMPLES_BEFORE_AFTER.md) | Before/after refactoring examples |

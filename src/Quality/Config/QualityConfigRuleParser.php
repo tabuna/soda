@@ -7,7 +7,7 @@ namespace Bunnivo\Soda\Quality\Config;
 use Bunnivo\Soda\Quality\RuleCatalog\RuleCatalog;
 
 /**
- * Internal rule parser for soda.json threshold and exception sections.
+ * Internal rule parser for nested `rules` threshold and exception sections.
  *
  * @internal
  */

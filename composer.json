@@ -59,6 +59,7 @@
         "phpstan": "phpstan analyse src --no-progress",
         "rector": "rector process src --no-progress-bar",
         "ci": [
+            "composer dump-autoload --optimize",
             "@pint",
             "@phpstan",
             "@rector",

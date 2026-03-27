@@ -51,45 +51,28 @@ Create a configuration file:
 php soda init
 ```
 
-Or create `soda.json` manually:
+Or add `soda.php` manually (see [docs/SODA_PHP_CONFIG.md](docs/SODA_PHP_CONFIG.md)) using `SodaConfigurator` and fluent calls in `configure()` for IDE autocomplete.
 
-```json
+```php
+class SodaRules extends SodaConfigurator
 {
-  "rules": {
-    "structural": {
-      "max_method_length": 100,
-      "max_class_length": 800,
-      "max_arguments": 3,
-      "max_methods_per_class": 40,
-      "max_file_loc": 1000,
-      "max_properties_per_class": 6,
-      "max_public_methods": 40,
-      "max_dependencies": 8,
-      "max_efferent_coupling": 10,
-      "max_classes_per_file": 1,
-      "max_namespace_depth": 4,
-      "max_classes_per_namespace": 16,
-      "max_traits_per_class": 100,
-      "max_interfaces_per_class": 100,
-      "max_classes_per_project": 2000
-    },
-    "complexity": {
-      "max_cyclomatic_complexity": 15,
-      "max_control_nesting": 3,
-      "max_weighted_cognitive_density": 40,
-      "max_logical_complexity_factor": 50,
-      "max_return_statements": 4,
-      "max_boolean_conditions": 3,
-      "max_try_catch_blocks": 2
-    },
-    "breathing": {
-      "min_code_breathing_score": 25,
-      "min_visual_breathing_index": 10,
-      "min_identifier_readability_score": 70,
-      "min_code_oxygen_level": 25
+    protected function configure(SodaConfig $config): void
+    {
+        $config->structural()
+            ->maxMethodLength(100)
+            ->maxClassLength(800)
+            ->maxArguments(3);
+
+        $config->complexity()
+            ->maxCyclomaticComplexity(15)
+            ->maxControlNesting(3);
+
+        $config->breathing()
+            ->minCodeBreathingScore(25);
     }
-  }
 }
+
+return SodaConfigurator::entry(SodaRules::class);
 ```
 
 Run the quality check:

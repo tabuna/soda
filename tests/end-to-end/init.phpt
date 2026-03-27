@@ -17,11 +17,11 @@ define('SODA_ENTRY_NO_EXIT', true);
 require __DIR__ . '/../../soda';
 
 chdir($cwd);
-if (file_exists($tmp . '/soda.json')) {
-    unlink($tmp . '/soda.json');
+if (file_exists($tmp . '/soda.php')) {
+    unlink($tmp . '/soda.php');
 }
 if (is_dir($tmp)) {
     rmdir($tmp);
 }
 --EXPECTF--
-Created soda.json
+Created soda.php

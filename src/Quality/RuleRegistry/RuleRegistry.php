@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality\RuleRegistry;
 
 use Bunnivo\Soda\Plugins\StandardPlugin;
-use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
 
 /**
@@ -22,7 +21,7 @@ final class RuleRegistry
     /**
      * @return list<RuleChecker>
      */
-    public static function default(QualityConfig $config): array
+    public static function default(): array
     {
         return (new StandardPlugin)->checkers();
     }

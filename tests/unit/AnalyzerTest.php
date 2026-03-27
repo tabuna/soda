@@ -16,7 +16,7 @@ final class AnalyzerTest extends TestCase
     public function testAnalyzeReturnsQualityResult(): void
     {
         $path = __DIR__.'/../quality-fixture/SimpleClass.php';
-        $result = Analyzer::analyze([$path], false, __DIR__.'/../quality-fixture/soda.json');
+        $result = Analyzer::analyze([$path], false, __DIR__.'/../quality-fixture/soda.php');
 
         $this->assertInstanceOf(QualityResult::class, $result);
         $this->assertTrue($result->violations->isEmpty());
@@ -26,7 +26,7 @@ final class AnalyzerTest extends TestCase
     {
         $path = __DIR__.'/../quality-fixture/SimpleClass.php';
         $result = Analyzer::file($path)
-            ->config(__DIR__.'/../quality-fixture/soda.json')
+            ->config(__DIR__.'/../quality-fixture/soda.php')
             ->run();
 
         $this->assertInstanceOf(QualityResult::class, $result);

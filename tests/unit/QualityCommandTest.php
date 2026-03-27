@@ -125,15 +125,17 @@ final class QualityCommandTest extends TestCase
         mkdir($dir, 0700, true);
         $php = $dir.'/T.php';
         file_put_contents($php, "<?php\n\nfinal class T {}\n");
-        $soda = $dir.'/soda.json';
-        file_put_contents($soda, json_encode([
-            'rules' => [
-                'structural' => [],
-                'complexity' => [],
-                'breathing'  => [],
-                'naming'     => [],
-            ],
-        ], JSON_THROW_ON_ERROR));
+        $soda = $dir.'/soda.php';
+        file_put_contents($soda, <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+use Bunnivo\Soda\Config\SodaConfig;
+
+return static function (SodaConfig $config): void {
+};
+PHP);
 
         try {
             $container = new Application();
@@ -179,15 +181,17 @@ final class Example
     }
 }
 PHP);
-        $soda = $dir.'/soda.json';
-        file_put_contents($soda, json_encode([
-            'rules' => [
-                'structural' => [],
-                'complexity' => [],
-                'breathing'  => [],
-                'naming'     => [],
-            ],
-        ], JSON_THROW_ON_ERROR));
+        $soda = $dir.'/soda.php';
+        file_put_contents($soda, <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+use Bunnivo\Soda\Config\SodaConfig;
+
+return static function (SodaConfig $config): void {
+};
+PHP);
 
         try {
             $container = new Application();
@@ -217,20 +221,18 @@ PHP);
     {
         $dir = sys_get_temp_dir().'/soda-quality-layer-mixing-'.uniqid();
         mkdir($dir.'/app/Services', 0700, true);
-        $soda = $dir.'/soda.json';
-        file_put_contents($soda, json_encode([
-            'rules' => [
-                'structural' => [
-                    'max_layer_dominance_percentage' => [
-                        'threshold' => 50,
-                        'min_files' => 4,
-                    ],
-                ],
-                'complexity' => [],
-                'breathing'  => [],
-                'naming'     => [],
-            ],
-        ], JSON_THROW_ON_ERROR));
+        $soda = $dir.'/soda.php';
+        file_put_contents($soda, <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+use Bunnivo\Soda\Config\SodaConfig;
+
+return static function (SodaConfig $config): void {
+    $config->structural()->maxLayerDominancePercentage(50, 4);
+};
+PHP);
 
         foreach (range(1, 5) as $index) {
             file_put_contents($dir.'/app/Services/User'.$index.'.php', "<?php\n\nnamespace App\\Services;\n\nclass User$index extends UserService {}\n");

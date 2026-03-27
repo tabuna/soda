@@ -13,19 +13,19 @@ use PHPUnit\Framework\TestCase;
 #[Small]
 final class ConfigLocatorPhpConfigTest extends TestCase
 {
-    public function testLocatesPhpConfigBesideSodaJson(): void
+    public function testLocatesPhpConfigBesideSodaPhp(): void
     {
         $root = sys_get_temp_dir().'/soda-locate-php-'.uniqid();
         mkdir($root.'/config', 0700, true);
         mkdir($root.'/src', 0700, true);
-        touch($root.'/soda.json');
+        touch($root.'/soda.php');
         file_put_contents($root.'/config/soda.php', "<?php return ['rules' => []];\n");
         $file = $root.'/src/Foo.php';
         touch($file);
 
         try {
             $locator = new ConfigLocator;
-            $phpPath = $locator->locatePhpConfig([$file], $root.'/soda.json');
+            $phpPath = $locator->locatePhpConfig([$file], $root.'/soda.php');
 
             $this->assertSame($root.'/config/soda.php', $phpPath);
         } finally {
@@ -33,7 +33,7 @@ final class ConfigLocatorPhpConfigTest extends TestCase
             rmdir($root.'/src');
             unlink($root.'/config/soda.php');
             rmdir($root.'/config');
-            unlink($root.'/soda.json');
+            unlink($root.'/soda.php');
             rmdir($root);
         }
     }

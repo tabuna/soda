@@ -15,7 +15,7 @@ use function is_readable;
  */
 final class ConfigLocator
 {
-    private const array CONFIG_NAMES = ['soda.json', '.soda.json', 'code-quality.json', '.code-quality.json'];
+    private const array CONFIG_NAMES = ['soda.php', '.soda.php'];
 
     private const int MAX_DEPTH = 10;
 
@@ -42,7 +42,7 @@ final class ConfigLocator
     }
 
     /**
-     * Optional PHP config in the **target project**: `config/soda.php` next to located `soda.json`, or found upward from scanned files (never vendor-only).
+     * Optional PHP config in the **target project**: `config/soda.php` next to located `soda.php`, or found upward from scanned files (never vendor-only).
      *
      * @psalm-param list<non-empty-string> $files
      *

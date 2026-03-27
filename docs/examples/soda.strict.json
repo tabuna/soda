@@ -8,25 +8,17 @@
       "max_file_loc": 700,
       "max_properties_per_class": 5,
       "max_public_methods": 20,
-      "max_todo_fixme_comments": 0,
-      "max_commented_out_code_lines": 0,
-      "max_empty_catch_blocks": 0,
-      "max_ask_then_tell_patterns": 0,
       "max_dependencies": 8,
       "max_efferent_coupling": 10,
       "max_classes_per_file": 1,
-      "max_namespace_depth": 5,
-      "max_classes_per_namespace": 15,
-      "max_layer_dominance_percentage": {
-        "threshold": 50,
-        "min_files": 4
-      },
+      "max_namespace_depth": 4,
+      "max_classes_per_namespace": 16,
       "max_traits_per_class": 10,
       "max_interfaces_per_class": 5,
       "max_classes_per_project": 300
     },
     "complexity": {
-      "max_cyclomatic_complexity": 10,
+      "max_cyclomatic_complexity": 8,
       "max_control_nesting": 3,
       "max_weighted_cognitive_density": 60,
       "max_logical_complexity_factor": 50,
@@ -37,19 +29,11 @@
     "breathing": {
       "min_visual_breathing_index": 70,
       "min_code_oxygen_level": 100,
-      "min_identifier_readability_score": 90,
+      "min_identifier_readability_score": 100,
       "min_code_breathing_score": 100
     },
     "naming": {
-      "avoid_redundant_naming": 80,
-      "boolean_methods_without_prefix": {
-        "threshold": 0,
-        "exceptions": {
-          "methods": [
-            "runningUnitTests"
-          ]
-        }
-      }
+      "avoid_redundant_naming": 80
     }
   }
 }

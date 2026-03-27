@@ -38,7 +38,7 @@ final readonly class QualityEngine
     {
         $checkers = $noBuiltinRules
             ? $extraCheckers
-            : [...RuleRegistry::default($config), ...$extraCheckers];
+            : [...RuleRegistry::default(), ...$extraCheckers];
 
         return new self($config, $checkers);
     }

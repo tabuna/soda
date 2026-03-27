@@ -35,7 +35,7 @@ final class RuleCatalog
     }
 
     /**
-     * Section → ordered rule ids (matches historical soda.json layout).
+     * Section → ordered rule ids (matches nested `rules` section layout).
      *
      * @return array<string, list<string>>
      */

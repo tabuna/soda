@@ -34,7 +34,7 @@ final class QualityCommand extends Command
         {--suffix= : Include files with names ending in suffix (default: .php)}
         {--exclude=* : Exclude files with path in their path}
         {--debug : Print debugging information}
-        {--config= : Path to soda.json}
+        {--config= : Path to soda.php (callable config)}
         {--report-json= : Write quality report to JSON file}
     ';
 

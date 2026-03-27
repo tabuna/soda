@@ -49,7 +49,7 @@ final class BuiltinPluginsTest extends TestCase
     public function testStandardPluginEqualsRegistryDefault(): void
     {
         $fromPlugin   = (new StandardPlugin)->checkers();
-        $fromRegistry = RuleRegistry::default(QualityConfig::default());
+        $fromRegistry = RuleRegistry::default();
 
         $pluginClasses   = array_map(fn ($c) => $c::class, $fromPlugin);
         $registryClasses = array_map(fn ($c) => $c::class, $fromRegistry);

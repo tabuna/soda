@@ -18,7 +18,7 @@ Options:
   analyse     Analyse PHP project size and collect metrics
   completion  Dump the shell completion script
   help        Display help for a command
-  init        Create soda.json with default quality rules
+  init        Create soda.php with default quality rules
   list        List commands
   quality     Analyse code quality and check against configured thresholds
  list

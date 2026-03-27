@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
+use Bunnivo\Soda\Config\FluentSodaConfiguratorEmitter;
 use Bunnivo\Soda\Quality\Config\RuleSections;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\Rule\LayerMixingChecker;
 
 use function file_put_contents;
 use function getcwd;
-
 use Illuminate\Console\Command;
-
-use function json_encode;
 
 final class InitCommand extends Command
 {
     protected $signature = 'init';
 
-    protected $description = 'Create soda.json with default quality rules';
+    protected $description = 'Create soda.php with default quality rules';
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     private function buildRulesConfig(): array
     {
         $defaults = QualityConfig::default()->rules;
@@ -65,18 +66,17 @@ final class InitCommand extends Command
             return $failure;
         }
 
-        $path = getcwd().'/soda.json';
-        $config = [
-            'rules' => $this->buildRulesConfig(),
-        ];
-        $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        if ($json === false || file_put_contents($path, $json) === false) {
-            $this->error($json === false ? 'Failed to encode config' : 'Failed to write soda.json');
+        $path = getcwd().'/soda.php';
+        $rules = $this->buildRulesConfig();
+        $content = FluentSodaConfiguratorEmitter::emitSodaPhpFile('SodaRules', $rules);
+
+        if (file_put_contents($path, $content) === false) {
+            $this->error('Failed to write soda.php');
 
             return self::FAILURE;
         }
 
-        $this->info('Created soda.json');
+        $this->info('Created soda.php');
 
         return self::SUCCESS;
     }
@@ -91,8 +91,8 @@ final class InitCommand extends Command
             return self::FAILURE;
         }
 
-        if (is_readable($cwd.'/soda.json')) {
-            $this->error('soda.json already exists');
+        if (is_readable($cwd.'/soda.php')) {
+            $this->error('soda.php already exists');
 
             return self::FAILURE;
         }

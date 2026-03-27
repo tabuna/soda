@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Commands;
 
 use Bunnivo\Soda\Application;
+use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\Report\RuleMetadata;
 use Illuminate\Console\Application as ConsoleApplication;
 use Illuminate\Console\OutputStyle;
@@ -23,7 +24,7 @@ final class InitCommandTest extends TestCase
     {
         $dir = sys_get_temp_dir().'/soda-init-test-'.uniqid();
         mkdir($dir, 0700, true);
-        $path = $dir.'/soda.json';
+        $path = $dir.'/soda.php';
 
         $cwd = getcwd();
         chdir($dir);
@@ -44,33 +45,16 @@ final class InitCommandTest extends TestCase
 
             $content = file_get_contents($path);
             $this->assertNotFalse($content);
+            $this->assertStringContainsString('extends SodaConfigurator', $content);
+            $this->assertStringContainsString('->maxMethodLength(', $content);
 
-            $data = json_decode($content, true);
-            $this->assertIsArray($data);
-            $this->assertArrayHasKey('rules', $data);
-            $this->assertIsArray($data['rules']);
+            $config = QualityConfig::fromPhpConfiguratorFile($path);
 
-            $this->assertArrayHasKey('structural', $data['rules']);
-            $this->assertArrayHasKey('complexity', $data['rules']);
-            $this->assertArrayHasKey('breathing', $data['rules']);
-            $this->assertArrayHasKey('naming', $data['rules']);
-            $this->assertSame(15, $data['rules']['structural']['max_classes_per_namespace']);
-            $this->assertSame(
-                [
-                    'threshold' => 50,
-                    'min_files' => 4,
-                ],
-                $data['rules']['structural']['max_layer_dominance_percentage'],
-            );
+            $this->assertSame(15, $config->getRule('max_classes_per_namespace'));
+            $this->assertSame(50, $config->getRule('max_layer_dominance_percentage'));
+            $this->assertSame(['min_files' => 4], $config->ruleOptions('max_layer_dominance_percentage'));
 
-            $createdRules = [];
-            foreach (['structural', 'complexity', 'breathing', 'naming'] as $section) {
-                foreach ($data['rules'][$section] ?? [] as $key => $value) {
-                    $createdRules[$key] = $value;
-                }
-            }
-
-            $createdRules = array_keys($createdRules);
+            $createdRules = array_keys($config->rules);
             $expectedKeys = RuleMetadata::default()->ruleKeys();
 
             foreach ($expectedKeys as $key) {
@@ -90,11 +74,11 @@ final class InitCommandTest extends TestCase
         }
     }
 
-    public function testInitFailsWhenSodaJsonAlreadyExists(): void
+    public function testInitFailsWhenSodaPhpAlreadyExists(): void
     {
         $dir = sys_get_temp_dir().'/soda-init-fail-'.uniqid();
         mkdir($dir, 0700, true);
-        file_put_contents($dir.'/soda.json', '{}');
+        file_put_contents($dir.'/soda.php', "<?php\nreturn static function (): void {};\n");
 
         $cwd = getcwd();
         chdir($dir);
@@ -113,7 +97,7 @@ final class InitCommandTest extends TestCase
             $this->assertSame(1, $exitCode);
         } finally {
             chdir($cwd);
-            unlink($dir.'/soda.json');
+            unlink($dir.'/soda.php');
             rmdir($dir);
         }
     }
