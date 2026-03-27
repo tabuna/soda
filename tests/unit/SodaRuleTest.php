@@ -138,6 +138,89 @@ final class SodaRuleTest extends TestCase
         (new SodaConfig)->rule(NotARuleChecker::class);
     }
 
+    // --- analyze() hook ---
+
+    public function testAnalyzeOutputIsMergedIntoMetrics(): void
+    {
+        $rule = new CustomMetricRule;
+        $violations = $rule->check($this->context(['file.php' => ['file_loc' => 10]]));
+
+        $this->assertCount(1, $violations);
+        $this->assertSame('custom_metric', $violations->first()->rule);
+    }
+
+    public function testAnalyzeOutputOverridesBuiltinMetricWithSameKey(): void
+    {
+        $rule = new OverrideBuiltinMetricRule;
+        $violations = $rule->check($this->context(['file.php' => ['file_loc' => 10]]));
+
+        // Rule overrides file_loc to 999 via analyze(), should trigger violation
+        $this->assertCount(1, $violations);
+    }
+
+    public function testDefaultAnalyzeReturnsEmptyArray(): void
+    {
+        $rule = new SimpleRule;
+        // No analyze() override — should not crash
+        $violations = $rule->check($this->context(['file.php' => ['file_loc' => 10]]));
+        $this->assertCount(0, $violations);
+    }
+
+    // --- contents() helper ---
+
+    public function testContentsReadsFileContent(): void
+    {
+        $file = $this->tempFile('<?php echo 1;');
+        $rule = new ContentsCapturingRule;
+        $rule->check($this->context([$file => ['file_loc' => 1]]));
+
+        $this->assertSame('<?php echo 1;', $rule->captured);
+        unlink($file);
+    }
+
+    public function testContentsReturnsEmptyStringForMissingFile(): void
+    {
+        $rule = new ContentsCapturingRule;
+        $rule->check($this->context(['/nonexistent/file.php' => ['file_loc' => 1]]));
+
+        $this->assertSame('', $rule->captured);
+    }
+
+    // --- parse() helper ---
+
+    public function testParseReturnsAstNodes(): void
+    {
+        $file = $this->tempFile('<?php class Foo {}');
+        $rule = new ParseCapturingRule;
+        $rule->check($this->context([$file => ['file_loc' => 1]]));
+
+        $this->assertNotEmpty($rule->captured);
+        $this->assertInstanceOf(\PhpParser\Node\Stmt\Class_::class, $rule->captured[0]);
+        unlink($file);
+    }
+
+    public function testParseReturnsEmptyForInvalidPhp(): void
+    {
+        $file = $this->tempFile('<?php >>>invalid syntax<<<');
+        $rule = new ParseCapturingRule;
+        $rule->check($this->context([$file => ['file_loc' => 1]]));
+
+        $this->assertSame([], $rule->captured);
+        unlink($file);
+    }
+
+    public function testFullCustomMetricsWorkflow(): void
+    {
+        // Simulate a rule that counts 'var_dump' occurrences from raw file
+        $file = $this->tempFile('<?php var_dump($x); var_dump($y); echo 1;');
+        $rule = new VarDumpCountRule;
+        $violations = $rule->check($this->context([$file => ['file_loc' => 3]]));
+
+        $this->assertCount(1, $violations);
+        $this->assertSame('no_var_dump', $violations->first()->rule);
+        unlink($file);
+    }
+
     // --- helpers ---
 
     /**
@@ -155,6 +238,15 @@ final class SodaRuleTest extends TestCase
         $result = new Result([], new CoreMetrics($loc, $complexity));
 
         return new EvaluationContext($config, $result, $fileMetrics);
+    }
+
+    private function tempFile(string $contents): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'soda_rule_test_');
+        assert($path !== false);
+        file_put_contents($path, $contents);
+
+        return $path;
     }
 }
 
@@ -203,6 +295,101 @@ final class SimpleRule extends SodaRule
 
     #[\Override]
     protected function evaluate(string $file, array $metrics): array { return []; }
+}
+
+final class CustomMetricRule extends SodaRule
+{
+    #[\Override]
+    public function id(): string { return 'custom_metric'; }
+
+    #[\Override]
+    protected function analyze(string $file): array
+    {
+        return ['my_count' => 10];
+    }
+
+    #[\Override]
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return $this->exceeds($file, $metrics['my_count'], 5);
+    }
+}
+
+final class OverrideBuiltinMetricRule extends SodaRule
+{
+    #[\Override]
+    public function id(): string { return 'override_builtin'; }
+
+    #[\Override]
+    protected function analyze(string $file): array
+    {
+        return ['file_loc' => 999]; // overrides the built-in file_loc = 10
+    }
+
+    #[\Override]
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return $this->exceeds($file, $metrics['file_loc'], 500);
+    }
+}
+
+final class ContentsCapturingRule extends SodaRule
+{
+    public string $captured = '';
+
+    #[\Override]
+    public function id(): string { return 'contents_capture'; }
+
+    #[\Override]
+    protected function analyze(string $file): array
+    {
+        $this->captured = $this->contents($file);
+
+        return [];
+    }
+
+    #[\Override]
+    protected function evaluate(string $file, array $metrics): array { return []; }
+}
+
+final class ParseCapturingRule extends SodaRule
+{
+    /** @var list<\PhpParser\Node> */
+    public array $captured = [];
+
+    #[\Override]
+    public function id(): string { return 'parse_capture'; }
+
+    #[\Override]
+    protected function analyze(string $file): array
+    {
+        $this->captured = $this->parse($file);
+
+        return [];
+    }
+
+    #[\Override]
+    protected function evaluate(string $file, array $metrics): array { return []; }
+}
+
+final class VarDumpCountRule extends SodaRule
+{
+    #[\Override]
+    public function id(): string { return 'no_var_dump'; }
+
+    #[\Override]
+    protected function analyze(string $file): array
+    {
+        preg_match_all('/var_dump\s*\(/', $this->contents($file), $m);
+
+        return ['var_dump_count' => count($m[0])];
+    }
+
+    #[\Override]
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return $this->exceeds($file, $metrics['var_dump_count'], 0);
+    }
 }
 
 final class NotARuleChecker

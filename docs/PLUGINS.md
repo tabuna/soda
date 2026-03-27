@@ -243,3 +243,94 @@ class SodaRules extends SodaConfigurator
 
 return SodaConfigurator::entry(SodaRules::class);
 ```
+
+---
+
+## Свои метрики в `analyze()`
+
+`SodaRule` даёт полную свободу в сборе данных — независимо от встроенного pipeline.
+
+### Как это работает
+
+```
+check(EvaluationContext)
+    ↓
+для каждого файла:
+    builtinMetrics = встроенные метрики (file_loc, classes, …)
+    customMetrics  = $this->analyze($file)    ← ваш код
+    metrics        = merge(builtinMetrics, customMetrics)
+    violations     = $this->evaluate($file, metrics)
+```
+
+Ключи из `analyze()` доступны в `evaluate()` наравне со встроенными. Вы можете даже переопределить встроенные ключи.
+
+### Пример: regex-проверка
+
+```php
+final class NoVarDumpRule extends SodaRule
+{
+    public function id(): string { return 'no_var_dump'; }
+
+    protected function analyze(string $file): array
+    {
+        preg_match_all('/var_dump\s*\(/', $this->contents($file), $m);
+        return ['var_dump_count' => count($m[0])];
+    }
+
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return $this->exceeds($file, $metrics['var_dump_count'], 0);
+    }
+}
+```
+
+### Пример: AST-проверка через PHP-Parser
+
+```php
+use PhpParser\Node\Stmt\Global_;
+
+final class NoGlobalKeywordRule extends SodaRule
+{
+    public function id(): string { return 'no_global_keyword'; }
+
+    protected function analyze(string $file): array
+    {
+        $count = count(array_filter(
+            $this->parse($file),
+            fn($node) => $node instanceof Global_
+        ));
+        return ['global_count' => $count];
+    }
+
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return $this->exceeds($file, $metrics['global_count'], 0);
+    }
+}
+```
+
+### Пример: полностью своя проверка без встроенных метрик
+
+```php
+final class FileSizeRule extends SodaRule
+{
+    public function id(): string { return 'max_file_size_kb'; }
+
+    protected function analyze(string $file): array
+    {
+        return ['file_size_kb' => (int) round(strlen($this->contents($file)) / 1024)];
+    }
+
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return $this->exceeds($file, $metrics['file_size_kb'], 50);
+    }
+}
+```
+
+### Хелперы для `analyze()`
+
+| Метод                        | Что делает                                      |
+|------------------------------|-------------------------------------------------|
+| `$this->contents($file)`     | Читает исходный код файла как строку            |
+| `$this->parse($file)`        | Парсит PHP файл в AST (`list<\PhpParser\Node>`) |
