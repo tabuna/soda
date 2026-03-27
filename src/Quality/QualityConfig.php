@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality;
 
+use Bunnivo\Soda\Config\SodaConfig;
 use Bunnivo\Soda\Quality\Config\QualityConfigRuleParser;
 use Bunnivo\Soda\Quality\Config\QualityConfigRuleState;
+use Bunnivo\Soda\Quality\Rule\RuleChecker;
 use Bunnivo\Soda\Quality\RuleCatalog\RuleCatalog;
 
-use function file_get_contents;
-use function is_array;
-use function json_decode;
-
-use JsonException;
+use function is_callable;
 
 final readonly class QualityConfig
 {
@@ -24,6 +22,7 @@ final readonly class QualityConfig
     /**
      * @param array<string, int|float>|null $rules           `null` = full defaults from {@see RuleCatalog}; `[]` = empty thresholds.
      * @param list<string>                  $disabledRuleIds
+     * @param list<RuleChecker>             $pluginCheckers  Extra checkers registered via plugins in soda.php.
      */
     public function __construct(
         ?array $rules = null,
@@ -32,6 +31,7 @@ final readonly class QualityConfig
          */
         public array $disabledRuleIds = [],
         public QualityConfigRuleState $ruleState = new QualityConfigRuleState(),
+        public array $pluginCheckers = [],
     ) {
         $this->rules = $rules ?? RuleCatalog::defaultThresholds();
     }
@@ -42,18 +42,40 @@ final readonly class QualityConfig
     }
 
     /**
+     * @param array<string, mixed> $data Root payload with `rules` sections (tests and tooling); file-based config is {@see self::fromPhpConfiguratorFile()}.
+     */
+    public static function fromRulesData(array $data): self
+    {
+        [$mergedRules, $disabled, $ruleExceptions, $ruleOptions] = self::mergeRules($data);
+
+        return new self($mergedRules, $disabled, new QualityConfigRuleState($ruleExceptions, $ruleOptions));
+    }
+
+    /**
+     * Loads thresholds from a PHP file that returns `callable(SodaConfig): void`.
+     *
      * @psalm-param non-empty-string $path
      *
      * @throws ConfigException
      */
-    public static function fromFile(string $path): self
+    public static function fromPhpConfiguratorFile(string $path): self
     {
         self::assertReadable($path);
-        $content = self::readContent($path);
-        $data = self::decodeJson($content, $path);
-        [$mergedRules, $disabled, $ruleExceptions, $ruleOptions] = self::mergeRules($data);
 
-        return new self($mergedRules, $disabled, new QualityConfigRuleState($ruleExceptions, $ruleOptions));
+        /** @var mixed $export */
+        $export = require $path;
+
+        throw_unless(
+            is_callable($export),
+            ConfigException::class,
+            sprintf('PHP config "%s" must return a callable(%s): void.', $path, SodaConfig::class)
+        );
+
+        $soda = new SodaConfig;
+        $export($soda);
+        [$mergedRules, $disabled, $ruleExceptions, $ruleOptions] = self::mergeRules($soda->toArray());
+
+        return new self($mergedRules, $disabled, new QualityConfigRuleState($ruleExceptions, $ruleOptions), $soda->pluginCheckers());
     }
 
     /**
@@ -62,46 +84,6 @@ final readonly class QualityConfig
     private static function assertReadable(string $path): void
     {
         throw_unless(is_readable($path), ConfigException::class, 'Config file not readable: '.$path);
-    }
-
-    /**
-     * @throws ConfigException
-     * @throws \Throwable
-     */
-    private static function readContent(string $path): string
-    {
-        $content = file_get_contents($path);
-
-        throw_if(
-            $content === false,
-            ConfigException::class,
-            'Cannot read config file: '.$path
-        );
-
-        return $content;
-    }
-
-    /**
-     * @throws ConfigException
-     *
-     * @return array<string, mixed>
-     */
-    private static function decodeJson(string $content, string $path): array
-    {
-        try {
-            $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $jsonException) {
-            throw new ConfigException(
-                sprintf('Invalid JSON in config "%s": %s', $path, $jsonException->getMessage()),
-                $jsonException->getCode(),
-                $jsonException,
-            );
-        }
-
-        throw_unless(is_array($data), ConfigException::class, 'Config must be a JSON object');
-
-        /** @var array<string, mixed> $data */
-        return $data;
     }
 
     /**

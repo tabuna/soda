@@ -30,6 +30,6 @@ final class QualityAnalyserConfigurationSession
 
         $phpConfigPath = $locator->locatePhpConfig($files, $jsonPath);
 
-        return QualityEngine::create($config, PhpSodaConfig::checkersFromPath($phpConfigPath));
+        return QualityEngine::create($config, [...PhpSodaConfig::checkersFromPath($phpConfigPath), ...$config->pluginCheckers]);
     }
 }
