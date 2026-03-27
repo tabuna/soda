@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Engine;
 
+use Bunnivo\Soda\Plugins\StandardPlugin;
 use Bunnivo\Soda\Quality\Config\ConfigLocator;
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
 use Bunnivo\Soda\Quality\Config\PhpSodaConfig;
@@ -32,8 +33,11 @@ final class QualityAnalyserConfigurationSession
 
         return QualityEngine::create(
             $config,
-            [...PhpSodaConfig::checkersFromPath($phpConfigPath), ...$config->pluginCheckers],
-            $config->noBuiltinRules,
+            [
+                ...($config->noBuiltinRules ? [] : (new StandardPlugin)->checkers()),
+                ...PhpSodaConfig::checkersFromPath($phpConfigPath),
+                ...$config->pluginCheckers,
+            ],
         );
     }
 }

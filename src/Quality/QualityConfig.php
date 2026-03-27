@@ -23,7 +23,7 @@ final readonly class QualityConfig
      * @param array<string, int|float>|null $rules           `null` = full defaults from {@see RuleCatalog}; `[]` = empty thresholds.
      * @param list<string>                  $disabledRuleIds
      * @param list<RuleChecker>             $pluginCheckers  Extra checkers registered via plugins in soda.php.
-     * @param bool                          $noBuiltinRules  When true, skip RuleRegistry::default() and use only plugin checkers.
+     * @param bool                          $noBuiltinRules  When true, the composition root skips StandardPlugin and uses only plugin checkers.
      */
     public function __construct(
         ?array $rules = null,

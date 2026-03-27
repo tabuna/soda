@@ -354,14 +354,14 @@ PHP;
      */
     public function testShortDeclarativeFilePassesMinCbs(): void
     {
-        $code = (string) file_get_contents(__DIR__.'/../../src/Quality/Rule/RuleRegistry.php');
+        $code = (string) file_get_contents(__DIR__.'/../../src/Plugins/StandardPlugin.php');
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
         $nodes = $parser->parse($code);
         $this->assertNotNull($nodes);
 
         $metrics = BreathingAnalyser::analyse($code, $nodes);
 
-        $this->assertGreaterThanOrEqual(0.40, $metrics->cbs(), 'RuleRegistry (declarative array) should have CBS >= 0.40');
+        $this->assertGreaterThanOrEqual(0.40, $metrics->cbs(), 'StandardPlugin (declarative array) should have CBS >= 0.40');
     }
 
     /**

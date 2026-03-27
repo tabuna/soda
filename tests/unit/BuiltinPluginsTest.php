@@ -17,7 +17,6 @@ use Bunnivo\Soda\Quality\Rule\BooleanMethodPrefixChecker;
 use Bunnivo\Soda\Quality\Rule\ClassRules;
 use Bunnivo\Soda\Quality\Rule\MethodRules;
 use Bunnivo\Soda\Quality\Rule\RedundantNamingChecker;
-use Bunnivo\Soda\Quality\RuleRegistry\RuleRegistry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
@@ -44,17 +43,6 @@ final class BuiltinPluginsTest extends TestCase
         $this->assertContains(BreathingChecker::class, $classNames);
         $this->assertContains(RedundantNamingChecker::class, $classNames);
         $this->assertContains(BooleanMethodPrefixChecker::class, $classNames);
-    }
-
-    public function testStandardPluginEqualsRegistryDefault(): void
-    {
-        $fromPlugin   = (new StandardPlugin)->checkers();
-        $fromRegistry = RuleRegistry::default();
-
-        $pluginClasses   = array_map(fn ($c) => $c::class, $fromPlugin);
-        $registryClasses = array_map(fn ($c) => $c::class, $fromRegistry);
-
-        $this->assertSame($pluginClasses, $registryClasses);
     }
 
     public function testStructuralPluginContainsClassRules(): void
@@ -105,19 +93,15 @@ final class BuiltinPluginsTest extends TestCase
 
     public function testQualityEngineWithoutBuiltinsUsesOnlyExtraCheckers(): void
     {
-        $config = QualityConfig::default();
-        $extra  = [new BreathingChecker];
-        $engine = QualityEngine::create($config, $extra, noBuiltinRules: true);
+        $engine = QualityEngine::create(QualityConfig::default(), [new BreathingChecker]);
 
-        // We can't inspect private $checkers directly, but we can verify it was constructed.
         $this->assertInstanceOf(QualityEngine::class, $engine);
     }
 
     public function testQualityEngineWithBuiltinsIncludesAllCheckers(): void
     {
-        $config = QualityConfig::default();
-        $extra  = [new BreathingChecker];
-        $engine = QualityEngine::create($config, $extra, noBuiltinRules: false);
+        $builtins = (new StandardPlugin)->checkers();
+        $engine   = QualityEngine::create(QualityConfig::default(), [...$builtins, new BreathingChecker]);
 
         $this->assertInstanceOf(QualityEngine::class, $engine);
     }

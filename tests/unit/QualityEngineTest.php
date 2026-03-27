@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Plugins\StandardPlugin;
 use Bunnivo\Soda\Quality\Engine\EvaluateInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
@@ -520,7 +521,7 @@ final class QualityEngineTest extends TestCase
         array $tryCatch = [],
     ): void {
         $configObj = new QualityConfig($config);
-        $engine = QualityEngine::create($configObj);
+        $engine = QualityEngine::create($configObj, (new StandardPlugin)->checkers());
 
         $classesOrTraits = $rule === 'max_classes_per_project' ? 10 : 1;
         $input = EvaluateInput::fromArrays($metrics, [
@@ -539,7 +540,7 @@ final class QualityEngineTest extends TestCase
     public function testDisabledRuleProducesNoViolation(): void
     {
         $config = new QualityConfig([]); // no rules
-        $engine = QualityEngine::create($config);
+        $engine = QualityEngine::create($config, (new StandardPlugin)->checkers());
 
         $metrics = [
             '/file.php' => [
@@ -573,7 +574,7 @@ final class QualityEngineTest extends TestCase
     public function testMaxClassesPerNamespaceCountsAcrossMultipleFiles(): void
     {
         $config = new QualityConfig(['max_classes_per_namespace' => 3]);
-        $engine = QualityEngine::create($config);
+        $engine = QualityEngine::create($config, (new StandardPlugin)->checkers());
 
         $baseClass = [
             'loc'               => 10,
