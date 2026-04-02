@@ -9,12 +9,8 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ReturnStatementsVisitor::class)]
-#[Small]
 final class ReturnStatementsVisitorTest extends TestCase
 {
     private function parseAndCollect(string $code): array

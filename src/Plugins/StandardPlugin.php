@@ -18,7 +18,6 @@ use Bunnivo\Soda\Quality\Rule\RuleChecker;
  *   $config->withoutBuiltins()
  *          ->plugin(StandardPlugin::class)
  *          ->rule(MyCustomRule::class);
- *
  * @example Start from scratch — only your rules:
  *
  *   $config->withoutBuiltins()

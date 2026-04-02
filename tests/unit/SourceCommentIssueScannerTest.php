@@ -4,15 +4,9 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Quality\Support\CommentedCodeDetector;
 use Bunnivo\Soda\Quality\Support\SourceCommentIssueScanner;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(SourceCommentIssueScanner::class)]
-#[CoversClass(CommentedCodeDetector::class)]
-#[Small]
 final class SourceCommentIssueScannerTest extends TestCase
 {
     public function testDetectsTodoAndFixmeComments(): void

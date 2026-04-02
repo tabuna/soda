@@ -33,6 +33,7 @@ final class ControlNestingVisitor extends NullableReturnVisitor
         $this->tracker = new NestingTracker();
     }
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         $syntaxKind = $node->getType();
@@ -61,6 +62,7 @@ final class ControlNestingVisitor extends NullableReturnVisitor
         }
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         $syntaxKind = $node->getType();

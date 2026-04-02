@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality\Support;
 
 use function array_pop;
+use function collect;
 use function count;
 use function explode;
 use function implode;
@@ -44,7 +45,7 @@ final class MetricsExtractor
             return $node->extends->getLast();
         }
 
-        $interface = $node->implements[0] ?? null;
+        $interface = collect($node->implements)->first();
 
         return $interface !== null ? $interface->getLast() : self::PLAIN_TYPE;
     }

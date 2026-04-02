@@ -36,17 +36,23 @@ final readonly class RuleMetadata
      */
     public function severity(string $rule): string
     {
-        return $this->rules[$rule]['severity'] ?? self::SEVERITY_WARNING;
+        $row = $this->rules[$rule] ?? [];
+
+        return $row['severity'] ?? self::SEVERITY_WARNING;
     }
 
     public function label(string $rule): string
     {
-        return $this->rules[$rule]['label'] ?? 'Unknown:';
+        $row = $this->rules[$rule] ?? [];
+
+        return $row['label'] ?? 'Unknown:';
     }
 
     public function comparison(string $rule): string
     {
-        return $this->rules[$rule]['comparison'] ?? self::COMPARISON_MAX;
+        $row = $this->rules[$rule] ?? [];
+
+        return $row['comparison'] ?? self::COMPARISON_MAX;
     }
 
     /**

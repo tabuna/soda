@@ -24,6 +24,10 @@ final class StructuralRuleSmellDefinitions
             self::warningRule('max_commented_out_code_lines', $sectionKey, 'Commented-out code lines:'),
             self::warningRule('max_empty_catch_blocks', $sectionKey, 'Empty catch blocks:'),
             self::warningRule('max_ask_then_tell_patterns', $sectionKey, 'Ask-then-tell patterns:'),
+            self::warningRule('only_list_arrays', $sectionKey, 'Nested array chains (list-only / strict opt-in):'),
+            self::warningRule('no_numeric_array_index', $sectionKey, 'Numeric array index:'),
+            self::warningRule('unused_methods', $sectionKey, 'Unused methods:'),
+            self::warningRule('useless_variable', $sectionKey, 'Useless variable:'),
         ];
     }
 

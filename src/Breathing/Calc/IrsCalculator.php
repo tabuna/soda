@@ -35,8 +35,7 @@ final class IrsCalculator
                 continue;
             }
 
-            $id = $token[0];
-            $text = $token[1];
+            [$id, $text] = $token;
 
             if ($id === T_VARIABLE) {
                 $text = ltrim($text, '$');

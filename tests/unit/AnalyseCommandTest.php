@@ -16,14 +16,10 @@ use Bunnivo\Soda\Application;
 use Illuminate\Console\Application as ConsoleApplication;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Events\Dispatcher;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-#[CoversClass(AnalyseCommand::class)]
-#[Small]
 final class AnalyseCommandTest extends TestCase
 {
     public function testReportJsonCreatesValidJsonFile(): void

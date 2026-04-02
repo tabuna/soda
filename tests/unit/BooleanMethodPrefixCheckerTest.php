@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
+use Bunnivo\Soda\Plugins\Rules\Naming\BooleanMethodPrefix;
 use Bunnivo\Soda\Quality\Config\QualityConfigRuleState;
 use Bunnivo\Soda\Quality\Engine\EvaluateInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
 use Bunnivo\Soda\Quality\QualityResult;
 use Bunnivo\Soda\Quality\Rule\BooleanMethodPrefixChecker;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(BooleanMethodPrefixChecker::class)]
-#[Small]
 final class BooleanMethodPrefixCheckerTest extends TestCase
 {
     public function testReportsBooleanMethodWithoutExpectedPrefix(): void
@@ -199,6 +196,32 @@ final class BooleanMethodPrefixCheckerTest extends TestCase
                 'methods'  => ['runningUnitTests'],
             ]]),
         );
+
+        $this->assertCount(0, $result->violations);
+    }
+
+    public function testDefaultIgnoreListExemptsDeleteMethod(): void
+    {
+        $engine = new QualityEngine(new QualityConfig([]), [new BooleanMethodPrefix()]);
+
+        $result = $engine->evaluate($this->createResult(), EvaluateInput::fromArrays(
+            $this->metricsForMethods([[
+                'name'                 => 'App\Application::delete',
+                'methodName'           => 'delete',
+                'class'                => 'App\Application',
+                'firstParamType'       => null,
+                'returnType'           => 'bool',
+                'line'                 => 10,
+                'isPublic'             => true,
+                'hasOverrideAttribute' => false,
+            ]], [[
+                'name'     => 'App\Application',
+                'kind'     => 'class',
+                'line'     => 3,
+                'inherits' => [],
+                'methods'  => ['delete'],
+            ]]),
+        ));
 
         $this->assertCount(0, $result->violations);
     }

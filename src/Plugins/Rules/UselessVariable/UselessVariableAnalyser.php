@@ -6,8 +6,14 @@ namespace Bunnivo\Soda\Plugins\Rules\UselessVariable;
 
 use Closure;
 use PhpParser\Node;
-use PhpParser\Node\Expr;
-use PhpParser\Node\Stmt;
+use PhpParser\Node\Expr\ArrowFunction;
+use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\Closure as ExprClosure;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Unset_;
 use PhpParser\NodeFinder;
 
 /**
@@ -17,7 +23,7 @@ use PhpParser\NodeFinder;
  *
  * Analysis scope: function / method bodies only (not top-level code).
  */
-final class UselessVariableAnalyser
+final readonly class UselessVariableAnalyser
 {
     private NodeFinder $finder;
 
@@ -27,7 +33,8 @@ final class UselessVariableAnalyser
     }
 
     /**
-     * @param  Node[]  $nodes  Top-level AST nodes from a parsed file.
+     * @param Node[] $nodes Top-level AST nodes from a parsed file.
+     *
      * @return list<array{line: int, variable: string, source: string}>
      */
     public function analyse(array $nodes): array
@@ -45,24 +52,19 @@ final class UselessVariableAnalyser
     // Scope collection
     // -------------------------------------------------------------------------
 
-    /** @return list<list<Node\Stmt>> */
+    /** @return list<list<Node>> */
     private function collectFunctionBodies(array $nodes): array
     {
-        $bodies = [];
-
+        /** @var list<Function_|ClassMethod> $scopes */
         $scopes = $this->finder->find(
             $nodes,
-            static fn (Node $n): bool => $n instanceof Stmt\Function_ || $n instanceof Stmt\ClassMethod,
+            fn (Node $n): bool => $n instanceof Function_ || $n instanceof ClassMethod,
         );
 
-        foreach ($scopes as $scope) {
-            /** @var Stmt\Function_|Stmt\ClassMethod $scope */
-            if ($scope->stmts !== null) {
-                $bodies[] = $scope->stmts;
-            }
-        }
-
-        return $bodies;
+        return array_values(array_filter(
+            array_map(fn (Function_|ClassMethod $s): ?array => $s->stmts, $scopes),
+            fn (?array $stmts): bool => $stmts !== null,
+        ));
     }
 
     // -------------------------------------------------------------------------
@@ -70,7 +72,8 @@ final class UselessVariableAnalyser
     // -------------------------------------------------------------------------
 
     /**
-     * @param  Node\Stmt[]  $stmts
+     * @param Node[] $stmts
+     *
      * @return list<array{line: int, variable: string, source: string}>
      */
     private function analyseScope(array $stmts): array
@@ -78,16 +81,10 @@ final class UselessVariableAnalyser
         $violations = [];
 
         foreach ($stmts as $i => $stmt) {
-            $assignment = $this->extractDirectAssignment($stmt);
+            $a = $this->extractDirectAssignment($stmt);
 
-            if ($assignment === null) {
-                continue;
-            }
-
-            ['var' => $var, 'source' => $source, 'line' => $line] = $assignment;
-
-            if ($this->isUseless($var, $source, array_slice($stmts, $i + 1))) {
-                $violations[] = ['line' => $line, 'variable' => '$' . $var, 'source' => '$' . $source];
+            if ($a !== null && $this->isUseless($a['var'], $a['source'], array_slice($stmts, $i + 1))) {
+                $violations[] = ['line' => $a['line'], 'variable' => '$'.$a['var'], 'source' => '$'.$a['source']];
             }
         }
 
@@ -97,22 +94,21 @@ final class UselessVariableAnalyser
     /** @return array{var: string, source: string, line: int}|null */
     private function extractDirectAssignment(Node $node): ?array
     {
-        if (! $node instanceof Stmt\Expression
-            || ! $node->expr instanceof Expr\Assign
-            || ! $node->expr->var instanceof Expr\Variable
-            || ! $node->expr->expr instanceof Expr\Variable
-        ) {
+        if (! ($node instanceof Expression
+            && $node->expr instanceof Assign
+            && $node->expr->var instanceof Variable
+            && $node->expr->expr instanceof Variable
+            && is_string($node->expr->var->name)
+            && is_string($node->expr->expr->name)
+        )) {
             return null;
         }
 
-        $varName    = $node->expr->var->name;
-        $sourceName = $node->expr->expr->name;
-
-        if (! is_string($varName) || ! is_string($sourceName)) {
-            return null;
-        }
-
-        return ['var' => $varName, 'source' => $sourceName, 'line' => $node->getStartLine()];
+        return [
+            'var'    => $node->expr->var->name,
+            'source' => $node->expr->expr->name,
+            'line'   => $node->getStartLine(),
+        ];
     }
 
     // -------------------------------------------------------------------------
@@ -124,10 +120,16 @@ final class UselessVariableAnalyser
     {
         return $this->isUsed($var, $after)
             && ! $this->isMutated($var, $after)
-            && ! $this->isPassedByRef($var, $after)
-            && ! $this->isInClosure($var, $after)
-            && ! $this->isObjectMutated($var, $after)
-            && ! $this->isSourceUnset($source, $after);
+            && ! $this->isEscaped($var, $source, $after);
+    }
+
+    /** @param Node[] $after */
+    private function isEscaped(string $var, string $source, array $after): bool
+    {
+        return $this->isPassedByRef($var, $after)
+            || $this->isInClosure($var, $after)
+            || $this->isObjectMutated($var, $after)
+            || $this->isSourceUnset($source, $after);
     }
 
     /** @param Node[] $nodes */
@@ -135,7 +137,7 @@ final class UselessVariableAnalyser
     {
         return $this->walkScope(
             $nodes,
-            static fn (Node $n): bool => $n instanceof Expr\Variable && $n->name === $var,
+            static fn (Node $n): bool => $n instanceof Variable && $n->name === $var,
         ) !== [];
     }
 
@@ -147,87 +149,108 @@ final class UselessVariableAnalyser
 
     private function isMutationNode(Node $node, string $var): bool
     {
-        if (($node instanceof Expr\PreInc || $node instanceof Expr\PostInc
-            || $node instanceof Expr\PreDec || $node instanceof Expr\PostDec)
-            && $node->var instanceof Expr\Variable && $node->var->name === $var
-        ) {
-            return true;
-        }
+        return $this->isIncDecOnVar($node, $var)
+            || $this->isAssignOpOnVar($node, $var)
+            || $this->isDirectAssignOnVar($node, $var);
+    }
 
-        if ($node instanceof Expr\AssignOp
-            && $node->var instanceof Expr\Variable && $node->var->name === $var
-        ) {
-            return true;
-        }
+    private function isIncDecOnVar(Node $node, string $var): bool
+    {
+        return in_array(get_class($node), [
+            'PhpParser\Node\Expr\PreInc',
+            'PhpParser\Node\Expr\PostInc',
+            'PhpParser\Node\Expr\PreDec',
+            'PhpParser\Node\Expr\PostDec',
+        ], true) && $node->var instanceof Variable && $node->var->name === $var;
+    }
 
-        if ($node instanceof Expr\Assign
-            && $node->var instanceof Expr\Variable && $node->var->name === $var
-        ) {
-            return true;
-        }
+    private function isAssignOpOnVar(Node $node, string $var): bool
+    {
+        return is_a($node, 'PhpParser\Node\Expr\AssignOp')
+            && $node->var instanceof Variable
+            && $node->var->name === $var;
+    }
 
-        return false;
+    private function isDirectAssignOnVar(Node $node, string $var): bool
+    {
+        return $node instanceof Assign
+            && $node->var instanceof Variable
+            && $node->var->name === $var;
     }
 
     /** @param Node[] $nodes */
     private function isPassedByRef(string $var, array $nodes): bool
     {
-        return $this->walkScope(
-            $nodes,
-            static fn (Node $n): bool => $n instanceof Node\Arg
-                && $n->byRef
-                && $n->value instanceof Expr\Variable
-                && $n->value->name === $var,
-        ) !== [];
+        return $this->walkScope($nodes, fn (Node $n): bool => $this->isArgByRef($n, $var)) !== [];
+    }
+
+    private function isArgByRef(Node $n, string $var): bool
+    {
+        return is_a($n, 'PhpParser\Node\Arg')
+            && $n->byRef
+            && $n->value instanceof Variable
+            && $n->value->name === $var;
     }
 
     /** @param Node[] $nodes */
     private function isInClosure(string $var, array $nodes): bool
     {
-        foreach ($this->walkScope($nodes, static fn (Node $n): bool => $n instanceof Expr\ArrowFunction) as $fn) {
-            assert($fn instanceof Expr\ArrowFunction);
-            if ($this->finder->find([$fn->expr], static fn (Node $n): bool => $n instanceof Expr\Variable && $n->name === $var) !== []) {
-                return true;
-            }
-        }
+        $arrowFns = $this->walkScope($nodes, static fn (Node $n): bool => $n instanceof ArrowFunction);
 
-        foreach ($this->walkScope($nodes, static fn (Node $n): bool => $n instanceof Expr\Closure) as $closure) {
-            assert($closure instanceof Expr\Closure);
-            foreach ($closure->uses as $use) {
-                if ($use->var instanceof Expr\Variable && $use->var->name === $var) {
-                    return true;
-                }
-            }
-        }
+        return array_filter($arrowFns, function (Node $fn) use ($var): bool {
+            assert($fn instanceof ArrowFunction);
 
-        return false;
+            return $this->finder->find([$fn->expr], static fn (Node $n): bool => $n instanceof Variable && $n->name === $var) !== [];
+        }) !== []
+            || $this->isVarCapturedInClosure($var, $nodes);
+    }
+
+    private function isVarCapturedInClosure(string $var, array $nodes): bool
+    {
+        return array_filter(
+            $this->walkScope($nodes, static fn (Node $n): bool => $n instanceof ExprClosure),
+            fn (Node $closure): bool => $this->hasCapturedVar($closure, $var),
+        ) !== [];
+    }
+
+    private function hasCapturedVar(ExprClosure $closure, string $var): bool
+    {
+        return array_filter(
+            $closure->uses,
+            static fn ($use): bool => $use->var instanceof Variable && $use->var->name === $var,
+        ) !== [];
     }
 
     /** @param Node[] $nodes */
     private function isObjectMutated(string $var, array $nodes): bool
     {
-        return $this->walkScope(
-            $nodes,
-            static fn (Node $n): bool => $n instanceof Expr\Assign
-                && $n->var instanceof Expr\PropertyFetch
-                && $n->var->var instanceof Expr\Variable
-                && $n->var->var->name === $var,
-        ) !== [];
+        return $this->walkScope($nodes, fn (Node $n): bool => $this->isPropAssignOnVar($n, $var)) !== [];
+    }
+
+    private function isPropAssignOnVar(Node $n, string $var): bool
+    {
+        return $n instanceof Assign
+            && is_a($n->var, 'PhpParser\Node\Expr\PropertyFetch')
+            && $n->var->var instanceof Variable
+            && $n->var->var->name === $var;
     }
 
     /** @param Node[] $nodes */
     private function isSourceUnset(string $source, array $nodes): bool
     {
-        foreach ($this->walkScope($nodes, static fn (Node $n): bool => $n instanceof Stmt\Unset_) as $unset) {
-            assert($unset instanceof Stmt\Unset_);
-            foreach ($unset->vars as $unsetVar) {
-                if ($unsetVar instanceof Expr\Variable && $unsetVar->name === $source) {
-                    return true;
-                }
-            }
-        }
+        return array_filter(
+            $this->walkScope($nodes, static fn (Node $n): bool => is_a($n, 'PhpParser\Node\Stmt\Unset_')),
+            fn (Node $unset): bool => $this->isVarInUnset($unset, $source),
+        ) !== [];
+    }
 
-        return false;
+    private function isVarInUnset(Node $unset, string $var): bool
+    {
+        /** @var Unset_ $unset */
+        return array_filter(
+            $unset->vars,
+            static fn ($v): bool => $v instanceof Variable && $v->name === $var,
+        ) !== [];
     }
 
     // -------------------------------------------------------------------------
@@ -238,10 +261,8 @@ final class UselessVariableAnalyser
      * Find nodes matching $predicate without crossing scope boundaries
      * (closures, arrow functions, nested functions / methods).
      *
-     * Scope-boundary nodes ARE tested against the predicate themselves but
-     * their children are NOT traversed.
+     * @param Node[] $nodes
      *
-     * @param  Node[]   $nodes
      * @return Node[]
      */
     private function walkScope(array $nodes, Closure $predicate): array
@@ -257,19 +278,27 @@ final class UselessVariableAnalyser
                 $found[] = $node;
             }
 
-            if ($this->isScopeBoundary($node)) {
-                continue;
+            if (! $this->isScopeBoundary($node)) {
+                array_push($found, ...$this->walkSubNodes($node, $predicate));
             }
+        }
 
-            foreach ($node->getSubNodeNames() as $subName) {
-                /** @phpstan-ignore property.dynamicName */
-                $sub = $node->$subName;
+        return $found;
+    }
 
-                if (is_array($sub)) {
-                    array_push($found, ...$this->walkScope($sub, $predicate));
-                } elseif ($sub instanceof Node) {
-                    array_push($found, ...$this->walkScope([$sub], $predicate));
-                }
+    /** @return Node[] */
+    private function walkSubNodes(Node $node, Closure $predicate): array
+    {
+        $found = [];
+
+        foreach ($node->getSubNodeNames() as $subName) {
+            /** @phpstan-ignore property.dynamicName */
+            $sub = $node->$subName;
+
+            if (is_array($sub)) {
+                array_push($found, ...$this->walkScope($sub, $predicate));
+            } elseif ($sub instanceof Node) {
+                array_push($found, ...$this->walkScope([$sub], $predicate));
             }
         }
 
@@ -278,9 +307,9 @@ final class UselessVariableAnalyser
 
     private function isScopeBoundary(Node $node): bool
     {
-        return $node instanceof Stmt\Function_
-            || $node instanceof Stmt\ClassMethod
-            || $node instanceof Expr\Closure
-            || $node instanceof Expr\ArrowFunction;
+        return $node instanceof Function_
+            || $node instanceof ClassMethod
+            || $node instanceof ExprClosure
+            || $node instanceof ArrowFunction;
     }
 }

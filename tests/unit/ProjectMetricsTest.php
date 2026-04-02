@@ -14,15 +14,11 @@ namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Breathing\BreathingMetrics;
 use Bunnivo\Soda\Structure\Metrics;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ProjectMetrics::class)]
 #[UsesClass(Result::class)]
 #[UsesClass(Metrics::class)]
-#[Small]
 final class ProjectMetricsTest extends TestCase
 {
     public function testAnalysesFiles(): void

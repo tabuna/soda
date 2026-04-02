@@ -5,15 +5,9 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Breathing\BreathingAnalyser;
-use Bunnivo\Soda\Breathing\BreathingMetrics;
 use PhpParser\ParserFactory;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(BreathingAnalyser::class)]
-#[CoversClass(BreathingMetrics::class)]
-#[Small]
 final class BreathingAnalyserTest extends TestCase
 {
     public function testAnalysesSimpleCode(): void

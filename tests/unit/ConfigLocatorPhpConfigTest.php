@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Tests;
 
 use Bunnivo\Soda\Quality\Config\ConfigLocator;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ConfigLocator::class)]
-#[Small]
 final class ConfigLocatorPhpConfigTest extends TestCase
 {
     public function testLocatesPhpConfigBesideSodaPhp(): void

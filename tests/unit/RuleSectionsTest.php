@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Quality\Config\RuleSections;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(RuleSections::class)]
-#[Small]
 final class RuleSectionsTest extends TestCase
 {
     public function testSectionNames(): void

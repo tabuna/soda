@@ -19,16 +19,15 @@ final class StructuralRuleLengthDefinitions
 {
     public static function entries(string $sectionKey): array
     {
-        $s = $sectionKey;
 
         return [
-            RuleDefinitionPack::tie(new RuleIdentity('max_method_length', $s), new RulePresentation('Method length:', 'error'), new RuleScoring(100)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_method_length', $sectionKey), new RulePresentation('Method length:', 'error'), new RuleScoring(100)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_class_length', $s), new RulePresentation('Class length:', 'error'), new RuleScoring(500)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_class_length', $sectionKey), new RulePresentation('Class length:', 'error'), new RuleScoring(500)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_arguments', $s), new RulePresentation('Arguments:', 'warning'), new RuleScoring(3)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_arguments', $sectionKey), new RulePresentation('Arguments:', 'warning'), new RuleScoring(3)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_methods_per_class', $s), new RulePresentation('Methods per class:', 'warning'), new RuleScoring(40)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_methods_per_class', $sectionKey), new RulePresentation('Methods per class:', 'warning'), new RuleScoring(40)),
         ];
     }
 }

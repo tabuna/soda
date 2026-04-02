@@ -70,11 +70,17 @@ final class PhpFileQualityExtractor
 
         $metrics = $primaryScanGroup->structureScan->result();
 
+        $classes = $metrics['classes'];
+
         foreach ($couplingNamingGroup->efferentCouplingVisitor->result() as $className => $ce) {
-            if (isset($metrics['classes'][$className])) {
-                $metrics['classes'][$className]['efferent_coupling'] = $ce;
+            if (isset($classes[$className])) {
+                $entry = $classes[$className];
+                $entry['efferent_coupling'] = $ce;
+                $classes[$className] = $entry;
             }
         }
+
+        $metrics['classes'] = $classes;
 
         $metrics['file_loc'] = $lines;
         $breathing = BreathingAnalyser::analyse($source, $nodes);

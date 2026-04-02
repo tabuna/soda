@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Flow;
 
+use function collect;
+
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Stmt\Do_;
@@ -24,7 +26,7 @@ final class ConditionExtractor
             $node instanceof ElseIf_      => $node->cond,
             $node instanceof While_       => $node->cond,
             $node instanceof Do_          => $node->cond,
-            $node instanceof For_         => $node->cond[0] ?? null,
+            $node instanceof For_         => collect($node->cond)->first(),
             $node instanceof Expr\Ternary => $node->cond,
             default                       => null,
         };

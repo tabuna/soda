@@ -24,11 +24,13 @@ final class MetricsVisitor extends NullableReturnVisitor
         $this->state = new MetricsState();
     }
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         $this->dispatchEnter($node);
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if ($node->getType() !== 'Stmt_Class' && $node->getType() !== 'Stmt_Trait') {

@@ -113,7 +113,9 @@ final class TokenWeightResolver
             return self::OPERATOR;
         }
 
-        return $this->weightForToken($token[0], $token[1]);
+        [$id, $text] = $token;
+
+        return $this->weightForToken($id, $text);
 
     }
 

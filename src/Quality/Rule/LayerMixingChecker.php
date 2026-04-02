@@ -75,7 +75,7 @@ final class LayerMixingChecker implements RuleChecker
 
         [$dominantType, $dominantCount] = $this->dominantType($summary['typeCounts']);
 
-        if ($dominantType === LayerMixingDirectoryAggregator::PLAIN_TYPE) {
+        if ($dominantType === LayerMixingDirectoryAggregator::PLAIN_TYPE || $this->isDirectoryNamedAfterType($directory, $dominantType, $summary['typeCounts'])) {
             return null;
         }
 
@@ -111,6 +111,31 @@ final class LayerMixingChecker implements RuleChecker
     private function shouldReportDirectory(array $summary, int $minFiles): bool
     {
         return $summary['fileCount'] >= $minFiles && count($summary['typeCounts']) > 1;
+    }
+
+    /**
+     * Returns true when the directory appears to be named after the dominant type,
+     * meaning dominance is expected rather than problematic mixing.
+     *
+     * Two cases:
+     *  1. Directory name contains the type name → "Fields/" with "Field" dominant.
+     *  2. Every non-Plain type ends with the directory's singular concept
+     *     → "Commands/" with "GeneratorCommand" + "Command" (all are commands).
+     *
+     * @param array<string, int> $typeCounts
+     */
+    private function isDirectoryNamedAfterType(string $directory, string $dominantType, array $typeCounts): bool
+    {
+        $dirName = strtolower(basename($directory));
+
+        if (str_contains($dirName, strtolower($dominantType))) {
+            return true;
+        }
+
+        $dirCore = rtrim($dirName, 's');
+        $nonPlain = array_keys(array_diff_key($typeCounts, [LayerMixingDirectoryAggregator::PLAIN_TYPE => 0]));
+
+        return array_filter($nonPlain, fn (string $t): bool => ! str_ends_with(strtolower($t), $dirCore)) === [];
     }
 
     /**

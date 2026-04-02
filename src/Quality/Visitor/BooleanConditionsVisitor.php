@@ -31,6 +31,7 @@ final class BooleanConditionsVisitor extends NullableReturnVisitor
         $this->recorder = new ConditionRecorder();
     }
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
@@ -56,6 +57,7 @@ final class BooleanConditionsVisitor extends NullableReturnVisitor
         }
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {

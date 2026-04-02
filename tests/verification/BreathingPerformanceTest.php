@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Verification;
 
 use Bunnivo\Soda\Breathing\BreathingAnalyser;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
@@ -15,7 +14,6 @@ use PHPUnit\Framework\TestCase;
  * Note: 100k lines test requires memory_limit >= 256M; run separately:
  *   php -d memory_limit=512M vendor/bin/phpunit --group performance
  */
-#[CoversClass(BreathingAnalyser::class)]
 #[Group('verification')]
 #[Group('performance')]
 final class BreathingPerformanceTest extends TestCase

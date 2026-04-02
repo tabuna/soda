@@ -4,83 +4,62 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use Bunnivo\Soda\Config\SodaConfig;
+use Bunnivo\Soda\Config\Soda;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxFileLoc;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxMethodLength;
 use Bunnivo\Soda\Quality\ConfigException;
 use Bunnivo\Soda\Quality\QualityConfig;
 use InvalidArgumentException;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(SodaConfig::class)]
-#[Small]
 final class SodaConfigTest extends TestCase
 {
-    public function testBasicFluentScenario(): void
+    public function testWithPluginsAcceptsRuleInstances(): void
     {
-        $c = new SodaConfig;
-        $c->structural()
-            ->maxMethodLength(100)
-            ->maxClassLength(800)
-            ->maxArguments(3);
-        $c->complexity()
-            ->maxCyclomaticComplexity(15)
-            ->maxControlNesting(3);
-        $c->breathing()
-            ->minCodeBreathingScore(25);
+        $soda = Soda::configure()
+            ->withPlugins([
+                new MaxMethodLength(80),
+                new MaxFileLoc(500),
+            ]);
 
-        $data = $c->toArray();
+        $checkers = $soda->pluginCheckers();
 
-        $this->assertSame(100, $data['rules']['structural']['max_method_length']);
-        $this->assertSame(800, $data['rules']['structural']['max_class_length']);
-        $this->assertSame(3, $data['rules']['structural']['max_arguments']);
-        $this->assertSame(15, $data['rules']['complexity']['max_cyclomatic_complexity']);
-        $this->assertSame(3, $data['rules']['complexity']['max_control_nesting']);
-        $this->assertSame(25, $data['rules']['breathing']['min_code_breathing_score']);
+        $this->assertCount(2, $checkers);
+        $this->assertInstanceOf(MaxMethodLength::class, $checkers[0]);
+        $this->assertInstanceOf(MaxFileLoc::class, $checkers[1]);
     }
 
-    public function testOverrideLastWinsInArray(): void
+    public function testWithPluginsIsChainable(): void
     {
-        $c = new SodaConfig;
-        $c->structural()->maxMethodLength(80)->maxMethodLength(120);
+        $soda = Soda::configure()
+            ->withPlugins([new MaxFileLoc(300)])
+            ->withPlugins([new MaxMethodLength(100)]);
 
-        $this->assertSame(120, $c->toArray()['rules']['structural']['max_method_length']);
+        $this->assertCount(2, $soda->pluginCheckers());
     }
 
-    public function testInvalidMaxMethodLengthThrows(): void
+    public function testWithPluginsRejectsInvalidType(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new SodaConfig)->structural()->maxMethodLength(0);
+        Soda::configure()->withPlugins([new \stdClass]);
     }
 
-    public function testDisableRuleProducesNullInSection(): void
-    {
-        $c = new SodaConfig;
-        $c->structural()->maxMethodLength(50);
-        $c->disableRule('max_method_length');
-
-        $this->assertNull($c->toArray()['rules']['structural']['max_method_length']);
-    }
-
-    public function testFromPhpConfiguratorFile(): void
+    public function testFromPhpConfiguratorFileLoadsInstance(): void
     {
         $path = sys_get_temp_dir().'/soda-php-cfg-'.uniqid().'.php';
         file_put_contents($path, <<<'PHP'
 <?php
-
 declare(strict_types=1);
-
-use Bunnivo\Soda\Config\SodaConfig;
-
-return static function (SodaConfig $config): void {
-    $config->structural()->maxMethodLength(77);
-};
+use Bunnivo\Soda\Config\Soda;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxMethodLength;
+return Soda::configure()->withPlugins([new MaxMethodLength(77)]);
 PHP);
 
         try {
             $qc = QualityConfig::fromPhpConfiguratorFile($path);
-            $this->assertSame(77, $qc->getRule('max_method_length'));
+            $this->assertCount(1, $qc->pluginCheckers);
+            $this->assertInstanceOf(MaxMethodLength::class, $qc->pluginCheckers[0]);
         } finally {
             unlink($path);
         }

@@ -12,12 +12,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Result::class)]
-#[Small]
 final class ResultTest extends TestCase
 {
     private function createResult(array $overrides = []): Result

@@ -26,7 +26,7 @@ final class ConfigLocator
      */
     public function locate(array $files, ?string $explicitPath = null): ?string
     {
-        if ($explicitPath !== null && $explicitPath !== '') {
+        if (($explicitPath ?? '') !== '') {
             return $explicitPath;
         }
 
@@ -50,12 +50,10 @@ final class ConfigLocator
      */
     public function locatePhpConfig(array $files, ?string $jsonConfigPath = null): ?string
     {
-        if ($jsonConfigPath !== null && $jsonConfigPath !== '') {
-            $beside = dirname($jsonConfigPath).'/config/soda.php';
+        $beside = ($jsonConfigPath ?? '') !== '' ? dirname((string) $jsonConfigPath).'/config/soda.php' : null;
 
-            if (is_readable($beside)) {
-                return $beside;
-            }
+        if ($beside !== null && is_readable($beside)) {
+            return $beside;
         }
 
         foreach ($this->uniqueParentDirs($files) as $dir) {
@@ -91,7 +89,7 @@ final class ConfigLocator
             foreach (self::CONFIG_NAMES as $name) {
                 $path = $current.'/'.$name;
 
-                if (is_readable($path)) {
+                if (is_readable($path) && $this->isExactFilename($path, $name)) {
                     return $path;
                 }
             }
@@ -108,8 +106,26 @@ final class ConfigLocator
         return $this->walkAncestors($dir, function (string $current) use ($relativePath): ?string {
             $path = $current.'/'.$relativePath;
 
-            return is_readable($path) ? $path : null;
+            if (! is_readable($path)) {
+                return null;
+            }
+
+            $filename = basename($relativePath);
+
+            return $this->isExactFilename($path, $filename) ? $path : null;
         });
+    }
+
+    /**
+     * Guards against case-insensitive filesystems (e.g. macOS): verifies the real
+     * file on disk has exactly the expected filename, not just a case-variant.
+     * Uses scandir() because realpath() preserves input casing on macOS HFS+.
+     */
+    private function isExactFilename(string $path, string $filename): bool
+    {
+        $entries = scandir(dirname($path));
+
+        return $entries !== false && in_array($filename, $entries, true);
     }
 
     /**

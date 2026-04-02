@@ -10,6 +10,7 @@ use Bunnivo\Soda\Quality\Report\Violation;
 use Bunnivo\Soda\Quality\Report\ViolationBuilder;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
 use Illuminate\Support\Collection;
+use PhpParser\Error;
 use PhpParser\Node;
 use PhpParser\ParserFactory;
 
@@ -40,7 +41,6 @@ use PhpParser\ParserFactory;
  *           return $this->exceeds($file, $metrics['file_loc'], 300);
  *       }
  *   }
- *
  * @example Rule that collects its own metrics (fully independent of built-in data):
  *
  *   final class NoVarDumpRule extends SodaRule
@@ -58,7 +58,6 @@ use PhpParser\ParserFactory;
  *           return $this->exceeds($file, $metrics['var_dump_count'], 0);
  *       }
  *   }
- *
  * @example Rule using the PHP-Parser AST:
  *
  *   final class NoGlobalKeywordRule extends SodaRule
@@ -128,15 +127,13 @@ abstract class SodaRule implements RuleChecker
         string $file,
         int|float $value,
         int|float $limit,
-        ?string $class = null,
-        ?string $method = null,
-        ?int $line = null,
+        ?ViolationAt $at = null,
     ): array {
         if ($value <= $limit) {
             return [];
         }
 
-        return [$this->buildViolation($file, $value, $limit, $class, $method, $line)];
+        return [$this->buildViolation($file, $value, $limit, $at)];
     }
 
     /**
@@ -148,15 +145,13 @@ abstract class SodaRule implements RuleChecker
         string $file,
         int|float $value,
         int|float $limit,
-        ?string $class = null,
-        ?string $method = null,
-        ?int $line = null,
+        ?ViolationAt $at = null,
     ): array {
         if ($value >= $limit) {
             return [];
         }
 
-        return [$this->buildViolation($file, $value, $limit, $class, $method, $line)];
+        return [$this->buildViolation($file, $value, $limit, $at)];
     }
 
     /**
@@ -189,7 +184,7 @@ abstract class SodaRule implements RuleChecker
 
         try {
             return (new ParserFactory)->createForNewestSupportedVersion()->parse($source) ?? [];
-        } catch (\PhpParser\Error) {
+        } catch (Error) {
             return [];
         }
     }
@@ -217,18 +212,16 @@ abstract class SodaRule implements RuleChecker
         string $file,
         int|float $value,
         int|float $limit,
-        ?string $class,
-        ?string $method,
-        ?int $line,
+        ?ViolationAt $at,
     ): Violation {
         return ViolationBuilder::of(
             $this->id(),
             $file,
             new Limits(max(1, (int) round($value)), max(1, (int) round($limit))),
         )
-            ->atClass($class)
-            ->atMethod($method)
-            ->atLine($line)
+            ->atClass($at?->class)
+            ->atMethod($at?->method)
+            ->atLine($at?->line)
             ->build();
     }
 }

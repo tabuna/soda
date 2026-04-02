@@ -16,35 +16,24 @@ use function str_starts_with;
  */
 final class BooleanMethodPrefixInspector
 {
-    private const array ALLOWED_PREFIXES = ['is', 'has', 'should', 'can', 'try'];
+    private const array DEFAULT_PREFIXES = ['is', 'has', 'should', 'can', 'try'];
 
-    /**
-     * @param array<string, true>                                                        $methodExceptions
-     * @param array<string, true>                                                        $classExceptions
-     * @param array<string, true>                                                        $fileExceptions
-     * @param array<string, array{inherits: list<string>, methods: array<string, true>}> $typeIndex
-     */
     private int $threshold = 0;
 
     /**
-     * @var array<string, true>
+     * Keyed exception sets: 'methods', 'classes', 'files' → map of name → true.
+     *
+     * @var array<string, array<string, true>>
      */
-    private array $methodExceptions = [];
-
-    /**
-     * @var array<string, true>
-     */
-    private array $classExceptions = [];
-
-    /**
-     * @var array<string, true>
-     */
-    private array $fileExceptions = [];
+    private array $except = [];
 
     /**
      * @var array<string, array{inherits: list<string>, methods: array<string, true>}>
      */
     private array $typeIndex = [];
+
+    /** @var list<string> */
+    private array $allowedPrefixes = self::DEFAULT_PREFIXES;
 
     private function __construct() {}
 
@@ -53,10 +42,18 @@ final class BooleanMethodPrefixInspector
         $exceptions = $context->config->ruleExceptions(BooleanMethodPrefixChecker::RULE);
         $self = new self;
         $self->threshold = (int) $context->config->getRule(BooleanMethodPrefixChecker::RULE);
-        $self->methodExceptions = array_fill_keys($exceptions['methods'], true);
-        $self->classExceptions = array_fill_keys($exceptions['classes'], true);
-        $self->fileExceptions = array_fill_keys($exceptions['files'], true);
+        $self->except = [
+            'methods' => array_fill_keys($exceptions['methods'] ?? [], true),
+            'classes' => array_fill_keys($exceptions['classes'] ?? [], true),
+            'files'   => array_fill_keys($exceptions['files'] ?? [], true),
+        ];
         $self->typeIndex = BooleanMethodTypeIndexBuilder::build($context);
+
+        if (isset($exceptions['prefixes']) && is_array($exceptions['prefixes'])) {
+            /** @var list<string> $prefixes */
+            $prefixes = array_values(array_filter($exceptions['prefixes'], is_string(...)));
+            $self->allowedPrefixes = $prefixes !== [] ? $prefixes : self::DEFAULT_PREFIXES;
+        }
 
         return $self;
     }
@@ -73,7 +70,8 @@ final class BooleanMethodPrefixInspector
      */
     public function violationsForFile(string $file, array $metrics): array
     {
-        if (isset($this->fileExceptions[$file])) {
+        $exceptFiles = $this->except['files'] ?? [];
+        if (isset($exceptFiles[$file])) {
             return [];
         }
 
@@ -135,10 +133,12 @@ final class BooleanMethodPrefixInspector
         $methodName = $methodData['methodName'] ?? null;
         $fullName = $methodData['name'] ?? null;
         $className = $methodData['class'] ?? null;
+        $exceptMethods = $this->except['methods'] ?? [];
+        $exceptClasses = $this->except['classes'] ?? [];
 
-        return (is_string($methodName) && isset($this->methodExceptions[$methodName]))
-            || (is_string($fullName) && isset($this->methodExceptions[$fullName]))
-            || (is_string($className) && isset($this->classExceptions[$className]));
+        return (is_string($methodName) && isset($exceptMethods[$methodName]))
+            || (is_string($fullName) && isset($exceptMethods[$fullName]))
+            || (is_string($className) && isset($exceptClasses[$className]));
     }
 
     /**
@@ -160,7 +160,7 @@ final class BooleanMethodPrefixInspector
 
     private function hasAllowedPrefix(string $methodName): bool
     {
-        foreach (self::ALLOWED_PREFIXES as $prefix) {
+        foreach ($this->allowedPrefixes as $prefix) {
             if (str_starts_with($methodName, $prefix)) {
                 return true;
             }

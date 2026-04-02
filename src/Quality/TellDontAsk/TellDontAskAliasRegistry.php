@@ -65,12 +65,16 @@ final class TellDontAskAliasRegistry
             return;
         }
 
+        $top = $this->scopes[$scopeIndex];
+
         if ($questions === []) {
-            unset($this->scopes[$scopeIndex][$variable]);
+            unset($top[$variable]);
+            $this->scopes[$scopeIndex] = $top;
 
             return;
         }
 
-        $this->scopes[$scopeIndex][$variable] = $questions;
+        $top[$variable] = $questions;
+        $this->scopes[$scopeIndex] = $top;
     }
 }

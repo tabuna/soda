@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\EfferentCoupling;
 
-use function array_key_last;
 use function array_pop;
+use function collect;
 use function count;
 use function strcasecmp;
 
@@ -52,7 +52,9 @@ final class EfferentCouplingGraph
             return null;
         }
 
-        return $this->frames[array_key_last($this->frames)]['name'];
+        $frame = collect($this->frames)->last();
+
+        return $frame !== null ? $frame['name'] : null;
     }
 
     /**
@@ -64,7 +66,9 @@ final class EfferentCouplingGraph
             return null;
         }
 
-        return $this->frames[array_key_last($this->frames)]['extends'];
+        $frame = collect($this->frames)->last();
+
+        return $frame !== null ? $frame['extends'] : null;
     }
 
     /**
@@ -82,7 +86,9 @@ final class EfferentCouplingGraph
             return;
         }
 
-        $this->deps[$owner][$fqcn] = true;
+        $edges = $this->deps[$owner] ?? [];
+        $edges[$fqcn] = true;
+        $this->deps[$owner] = $edges;
     }
 
     /**

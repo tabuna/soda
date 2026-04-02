@@ -17,7 +17,8 @@ final class BooleanMethodInheritanceProbe
     public static function hasDeclaredMethod(array $typeIndex, string $typeName, string $methodName): bool
     {
         $visited = [$typeName => true];
-        $pending = $typeIndex[$typeName]['inherits'] ?? [];
+        $typeRow = $typeIndex[$typeName] ?? [];
+        $pending = $typeRow['inherits'] ?? [];
 
         while ($pending !== []) {
             $ancestor = array_pop($pending);
@@ -36,7 +37,8 @@ final class BooleanMethodInheritanceProbe
                 continue;
             }
 
-            if (isset($ancestorType['methods'][$methodName])) {
+            $methods = $ancestorType['methods'] ?? [];
+            if (isset($methods[$methodName])) {
                 return true;
             }
 

@@ -59,6 +59,7 @@ final class TellDontAskVisitor extends NullableReturnVisitor
         $this->commandCollector = new TellDontAskCommandCollector($fingerprint);
     }
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         match ($node->getType()) {
@@ -78,6 +79,7 @@ final class TellDontAskVisitor extends NullableReturnVisitor
         };
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if (in_array($node->getType(), ['Stmt_Class', 'Stmt_Trait', 'Stmt_Enum'], true)) {

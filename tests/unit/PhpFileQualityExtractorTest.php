@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Quality\Engine\PhpFileQualityExtractor;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(PhpFileQualityExtractor::class)]
-#[Small]
 final class PhpFileQualityExtractorTest extends TestCase
 {
     public function testExtractReturnsExpectedShape(): void

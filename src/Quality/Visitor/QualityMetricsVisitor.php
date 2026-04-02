@@ -9,6 +9,7 @@ use function array_pop;
 use Bunnivo\Soda\Quality\Support\MetricsExtractor;
 use Bunnivo\Soda\Visitor\NullableReturnVisitor;
 
+use function collect;
 use function count;
 
 use PhpParser\Node;
@@ -71,6 +72,7 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
         private readonly int $fileLines
     ) {}
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         match (true) {
@@ -81,6 +83,7 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
         };
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if (! ($node instanceof Class_) && ! ($node instanceof Trait_)) {
@@ -108,10 +111,14 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
 
         $this->classStack[] = $name;
         $this->result['classes_count']++;
-        $this->result['classes'][$name] = MetricsExtractor::extract($node);
+        $classes = $this->result['classes'];
+        $classes[$name] = MetricsExtractor::extract($node);
+        $this->result['classes'] = $classes;
 
         if ($node instanceof Class_) {
-            $this->result['classTypes'][$name] = MetricsExtractor::classType($node);
+            $types = $this->result['classTypes'];
+            $types[$name] = MetricsExtractor::classType($node);
+            $this->result['classTypes'] = $types;
         }
 
         $this->updateNamespace($name);
@@ -119,10 +126,16 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
 
     private function updateNamespace(string $name): void
     {
-        $namespace = $this->result['classes'][$name]['namespace'] ?? '';
-        if ($namespace !== '') {
-            $this->result['namespaces'][$namespace] = ($this->result['namespaces'][$namespace] ?? 0) + 1;
+        $classes = $this->result['classes'];
+        $classRow = $classes[$name];
+        $namespace = $classRow['namespace'] ?? '';
+        if ($namespace === '') {
+            return;
         }
+
+        $namespaces = $this->result['namespaces'];
+        $namespaces[$namespace] = ($namespaces[$namespace] ?? 0) + 1;
+        $this->result['namespaces'] = $namespaces;
     }
 
     private function handleClassMethod(ClassMethod $node): void
@@ -135,13 +148,20 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
             return;
         }
 
-        $class = $this->classStack !== [] ? $this->classStack[array_key_last($this->classStack)] : 'unknown';
+        $class = $this->classStack !== [] ? collect($this->classStack)->last() : 'unknown';
         $name = $class.'::'.$node->name->toString();
         $loc = $node->getEndLine() - $node->getStartLine() + 1;
 
-        $this->result['methods'][$name] = ['loc' => $loc, 'args' => count($node->params)];
-        if (isset($this->result['classes'][$class])) {
-            $this->result['classes'][$class]['methods']++;
+        $methods = $this->result['methods'];
+        $methods[$name] = ['loc' => $loc, 'args' => count($node->params)];
+        $this->result['methods'] = $methods;
+
+        $classes = $this->result['classes'];
+        if (isset($classes[$class])) {
+            $row = $classes[$class];
+            $row['methods']++;
+            $classes[$class] = $row;
+            $this->result['classes'] = $classes;
         }
     }
 
@@ -154,7 +174,9 @@ final class QualityMetricsVisitor extends NullableReturnVisitor
         }
 
         $loc = $node->getEndLine() - $node->getStartLine() + 1;
-        $this->result['methods'][$name] = ['loc' => $loc, 'args' => count($node->params)];
+        $methods = $this->result['methods'];
+        $methods[$name] = ['loc' => $loc, 'args' => count($node->params)];
+        $this->result['methods'] = $methods;
     }
 
     /**

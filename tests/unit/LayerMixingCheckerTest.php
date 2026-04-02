@@ -9,13 +9,10 @@ use Bunnivo\Soda\Quality\Engine\EvaluateInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
 use Bunnivo\Soda\Quality\QualityResult;
+use Bunnivo\Soda\Quality\Report\Violation;
 use Bunnivo\Soda\Quality\Rule\LayerMixingChecker;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(LayerMixingChecker::class)]
-#[Small]
 final class LayerMixingCheckerTest extends TestCase
 {
     public function testReportsLayerMixingWhenNonPlainTypeDominatesDirectory(): void
@@ -37,6 +34,7 @@ final class LayerMixingCheckerTest extends TestCase
         $this->assertCount(1, $result->violations);
         $violation = $result->violations->first();
         $this->assertSame('max_layer_dominance_percentage', $violation->rule);
+        $this->assertInstanceOf(Violation::class, $violation);
         $this->assertSame(['value' => 63, 'threshold' => 50], $violation->limits());
         $this->assertStringContainsString('UserService dominates 62.5%', $violation->context->message ?? '');
         $this->assertStringContainsString('Controller=2, Plain=1', $violation->context->message ?? '');

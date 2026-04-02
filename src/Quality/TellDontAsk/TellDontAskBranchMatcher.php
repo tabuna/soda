@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\TellDontAsk;
 
-use function explode;
+use Illuminate\Support\Str;
+
 use function str_contains;
 
 /**
@@ -15,7 +16,7 @@ final class TellDontAskBranchMatcher
     public static function currentClassName(?string $methodName): ?string
     {
         return $methodName !== null && str_contains($methodName, '::')
-            ? explode('::', $methodName, 2)[0]
+            ? Str::before($methodName, '::')
             : null;
     }
 

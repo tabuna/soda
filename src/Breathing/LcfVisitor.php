@@ -26,6 +26,7 @@ final class LcfVisitor extends NullableReturnVisitor
 
     private int $depthMax = 0;
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         if ($node instanceof If_ || $node instanceof Switch_) {
@@ -42,6 +43,7 @@ final class LcfVisitor extends NullableReturnVisitor
         }
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if ($this->hasBody($node)) {

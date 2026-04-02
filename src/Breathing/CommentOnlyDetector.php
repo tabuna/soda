@@ -46,9 +46,10 @@ final class CommentOnlyDetector
                 continue;
             }
 
-            if (self::isCodeToken($token[0])) {
-                $line = $token[2];
-                $lastLine = $line + substr_count($token[1], "\n");
+            [$id, $content, $line] = $token;
+
+            if (self::isCodeToken($id)) {
+                $lastLine = $line + substr_count($content, "\n");
 
                 for ($l = $line; $l <= $lastLine; $l++) {
                     $linesWithCode[$l] = true;

@@ -8,12 +8,8 @@ use Bunnivo\Soda\Quality\Engine\EvaluateInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
 use Bunnivo\Soda\Quality\Rule\BreathingChecker;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(BreathingChecker::class)]
-#[Small]
 final class BreathingCheckerTest extends TestCase
 {
     private function createResult(): Result

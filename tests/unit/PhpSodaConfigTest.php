@@ -7,12 +7,8 @@ namespace Bunnivo\Soda\Tests;
 use Bunnivo\Soda\Quality\Config\PhpSodaConfig;
 use Bunnivo\Soda\Quality\ConfigException;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(PhpSodaConfig::class)]
-#[Small]
 final class PhpSodaConfigTest extends TestCase
 {
     public function testReturnsEmptyWhenPathMissing(): void

@@ -6,7 +6,6 @@ namespace Bunnivo\Soda\Verification;
 
 use Bunnivo\Soda\Breathing\BreathingAnalyser;
 use PhpParser\ParserFactory;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +19,6 @@ use PHPUnit\Framework\TestCase;
  * - Edge case testing
  * - Formula correctness
  */
-#[CoversClass(BreathingAnalyser::class)]
 #[Group('verification')]
 final class BreathingVerificationTest extends TestCase
 {

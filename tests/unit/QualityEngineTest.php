@@ -16,13 +16,9 @@ use Bunnivo\Soda\Plugins\StandardPlugin;
 use Bunnivo\Soda\Quality\Engine\EvaluateInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\QualityEngine;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(QualityEngine::class)]
-#[Small]
 final class QualityEngineTest extends TestCase
 {
     private function createResult(int $classesOrTraits = 1): Result

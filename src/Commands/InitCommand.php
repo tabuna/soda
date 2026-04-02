@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Commands;
 
-use Bunnivo\Soda\Config\FluentSodaConfiguratorEmitter;
+use Bunnivo\Soda\Config\SodaInitFileEmitter;
 use Bunnivo\Soda\Quality\Config\RuleSections;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\Rule\LayerMixingChecker;
 
 use function file_put_contents;
 use function getcwd;
+
 use Illuminate\Console\Command;
 
 final class InitCommand extends Command
@@ -47,12 +48,14 @@ final class InitCommand extends Command
             $value = $overrides[$ruleKey] ?? $defaults[$ruleKey] ?? null;
 
             if ($value !== null) {
-                $rules[$section][$ruleKey] = $ruleKey === LayerMixingChecker::RULE
+                $bucket = $rules[$section] ?? [];
+                $bucket[$ruleKey] = $ruleKey === LayerMixingChecker::RULE
                     ? [
                         'threshold' => $value,
                         'min_files' => LayerMixingChecker::DEFAULT_MIN_FILES,
                     ]
                     : $value;
+                $rules[$section] = $bucket;
             }
         }
 
@@ -68,7 +71,7 @@ final class InitCommand extends Command
 
         $path = getcwd().'/soda.php';
         $rules = $this->buildRulesConfig();
-        $content = FluentSodaConfiguratorEmitter::emitSodaPhpFile('SodaRules', $rules);
+        $content = SodaInitFileEmitter::emit($rules);
 
         if (file_put_contents($path, $content) === false) {
             $this->error('Failed to write soda.php');

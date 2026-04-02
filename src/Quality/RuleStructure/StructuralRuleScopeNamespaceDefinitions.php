@@ -19,14 +19,13 @@ final class StructuralRuleScopeNamespaceDefinitions
 {
     public static function entries(string $sectionKey): array
     {
-        $s = $sectionKey;
 
         return [
-            RuleDefinitionPack::tie(new RuleIdentity('max_namespace_depth', $s), new RulePresentation('Namespace depth:', 'warning'), new RuleScoring(4)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_namespace_depth', $sectionKey), new RulePresentation('Namespace depth:', 'warning'), new RuleScoring(4)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_classes_per_namespace', $s), new RulePresentation('Classes per namespace:', 'warning'), new RuleScoring(15)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_classes_per_namespace', $sectionKey), new RulePresentation('Classes per namespace:', 'warning'), new RuleScoring(15)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_layer_dominance_percentage', $s), new RulePresentation('Layer mixing:', 'error'), new RuleScoring(50)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_layer_dominance_percentage', $sectionKey), new RulePresentation('Layer mixing:', 'error'), new RuleScoring(50)),
         ];
     }
 }

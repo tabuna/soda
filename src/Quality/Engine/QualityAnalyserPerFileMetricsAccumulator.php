@@ -49,23 +49,33 @@ final class QualityAnalyserPerFileMetricsAccumulator
         $this->qualityMetricsByFile[$file] = $extracted['metrics'];
 
         foreach ($extracted['complexity']->asArray() as $item) {
-            $this->methodKeyedMetricBuckets['complexity'][$item->name()] = $item->cyclomaticComplexity();
+            $complexity = $this->methodKeyedMetricBuckets['complexity'];
+            $complexity[$item->name()] = $item->cyclomaticComplexity();
+            $this->methodKeyedMetricBuckets['complexity'] = $complexity;
         }
 
         foreach ($extracted['nesting'] as $method => $data) {
-            $this->methodKeyedMetricBuckets['nesting'][$method] = array_merge($data, ['file' => $file]);
+            $nesting = $this->methodKeyedMetricBuckets['nesting'];
+            $nesting[$method] = array_merge($data, ['file' => $file]);
+            $this->methodKeyedMetricBuckets['nesting'] = $nesting;
         }
 
         foreach ($extracted['returns'] as $method => $count) {
-            $this->methodKeyedMetricBuckets['returns'][$method] = $count;
+            $returns = $this->methodKeyedMetricBuckets['returns'];
+            $returns[$method] = $count;
+            $this->methodKeyedMetricBuckets['returns'] = $returns;
         }
 
         foreach ($extracted['booleanConditions'] as $method => $conditions) {
-            $this->methodKeyedMetricBuckets['booleanConditions'][$method] = $conditions;
+            $boolean = $this->methodKeyedMetricBuckets['booleanConditions'];
+            $boolean[$method] = $conditions;
+            $this->methodKeyedMetricBuckets['booleanConditions'] = $boolean;
         }
 
         foreach ($extracted['tryCatch'] as $method => $count) {
-            $this->methodKeyedMetricBuckets['tryCatch'][$method] = $count;
+            $tryCatch = $this->methodKeyedMetricBuckets['tryCatch'];
+            $tryCatch[$method] = $count;
+            $this->methodKeyedMetricBuckets['tryCatch'] = $tryCatch;
         }
     }
 

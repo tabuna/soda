@@ -2,16 +2,20 @@
 
 declare(strict_types=1);
 
-use Bunnivo\Soda\Config\SodaConfig;
+use Bunnivo\Soda\Config\Soda;
+use Bunnivo\Soda\Plugins\Rules\Complexity\MaxCyclomaticComplexity;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxArguments;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxClassLength;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxFileLoc;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxMethodLength;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxMethodsPerClass;
 
-return static function (SodaConfig $config): void {
-    $config->structural()
-        ->maxMethodLength(120)
-        ->maxClassLength(500)
-        ->maxArguments(16)
-        ->maxMethodsPerClass(21)
-        ->maxFileLoc(400);
-
-    $config->complexity()
-        ->maxCyclomaticComplexity(26);
-};
+return Soda::configure()
+    ->withPlugins([
+        new MaxMethodLength(120),
+        new MaxClassLength(500),
+        new MaxArguments(16),
+        new MaxMethodsPerClass(21),
+        new MaxFileLoc(400),
+        new MaxCyclomaticComplexity(26),
+    ]);

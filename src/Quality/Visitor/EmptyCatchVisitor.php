@@ -6,9 +6,7 @@ namespace Bunnivo\Soda\Quality\Visitor;
 
 use Bunnivo\Soda\Quality\Support\MethodVisitorTrait;
 use Bunnivo\Soda\Visitor\NullableReturnVisitor;
-
-use function explode;
-
+use Illuminate\Support\Str;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt\Catch_;
@@ -38,6 +36,7 @@ final class EmptyCatchVisitor extends NullableReturnVisitor
 
     private ?string $currentClass = null;
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
@@ -67,6 +66,7 @@ final class EmptyCatchVisitor extends NullableReturnVisitor
         }
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
@@ -103,7 +103,7 @@ final class EmptyCatchVisitor extends NullableReturnVisitor
 
         $this->currentMethod = $this->resolveMethodName($node);
         $this->currentClass = $this->currentMethod !== null && str_contains($this->currentMethod, '::')
-            ? explode('::', $this->currentMethod, 2)[0]
+            ? Str::before($this->currentMethod, '::')
             : null;
     }
 }

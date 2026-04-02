@@ -10,13 +10,8 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(RedundantNamingVisitor::class)]
-#[CoversClass(RedundantNamingAnalyser::class)]
-#[Small]
 final class RedundantNamingTest extends TestCase
 {
     private function parseAndAnalyse(string $code): array

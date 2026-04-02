@@ -45,8 +45,10 @@ final class RuleCatalog
 
         foreach (self::orderedDefinitions() as $definition) {
             $identity = $definition->fields->identity;
-            $out[$identity->section] ??= [];
-            $out[$identity->section][] = $identity->id;
+            $section = $identity->section;
+            $list = $out[$section] ?? [];
+            $list[] = $identity->id;
+            $out[$section] = $list;
         }
 
         return $out;

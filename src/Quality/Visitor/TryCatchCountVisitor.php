@@ -31,6 +31,7 @@ final class TryCatchCountVisitor extends NullableReturnVisitor
      */
     private array $tryCatchByMethod = [];
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {
@@ -86,6 +87,7 @@ final class TryCatchCountVisitor extends NullableReturnVisitor
         }
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Enum_) {

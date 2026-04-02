@@ -132,10 +132,12 @@ final class SourceCommentIssueScanner
             return;
         }
 
-        $issues['commentedCode'][] = [
+        $commented = $issues['commentedCode'] ?? [];
+        $commented[] = [
             'line' => $commentLine['line'],
             'text' => $normalized,
         ];
+        $issues['commentedCode'] = $commented;
     }
 
     /**
@@ -146,15 +148,17 @@ final class SourceCommentIssueScanner
      */
     private static function appendTodoIssue(string $normalized, int $line, array &$issues): void
     {
-        if (preg_match('/\b(TODO|FIXME)\b/i', $normalized, $matches) !== 1) {
+        if (preg_match('/\b(?<kind>TODO|FIXME)\b/i', $normalized, $matches) !== 1) {
             return;
         }
 
-        $issues['todoFixme'][] = [
+        $todo = $issues['todoFixme'] ?? [];
+        $todo[] = [
             'line' => $line,
-            'kind' => strtoupper($matches[1]),
+            'kind' => strtoupper($matches['kind']),
             'text' => $normalized,
         ];
+        $issues['todoFixme'] = $todo;
     }
 
     private static function isCommentDelimiterOnly(string $line): bool

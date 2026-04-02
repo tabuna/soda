@@ -7,12 +7,8 @@ namespace Bunnivo\Soda\Tests;
 use Bunnivo\Soda\Plugins\Rules\UselessVariable\UselessVariableAnalyser;
 use PhpParser\Node;
 use PhpParser\ParserFactory;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(UselessVariableAnalyser::class)]
-#[Small]
 final class UselessVariableRuleTest extends TestCase
 {
     private UselessVariableAnalyser $analyser;
@@ -29,7 +25,7 @@ final class UselessVariableRuleTest extends TestCase
     /** @return Node[] */
     private function parse(string $code): array
     {
-        return (new ParserFactory)->createForNewestSupportedVersion()->parse('<?php ' . $code) ?? [];
+        return (new ParserFactory)->createForNewestSupportedVersion()->parse('<?php '.$code) ?? [];
     }
 
     /** @return list<array{line: int, variable: string, source: string}> */

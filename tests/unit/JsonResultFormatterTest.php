@@ -14,14 +14,10 @@ namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Formatter\JsonResultFormatter;
 use Bunnivo\Soda\Structure\Metrics;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(JsonResultFormatter::class)]
 #[UsesClass(Result::class)]
-#[Small]
 final class JsonResultFormatterTest extends TestCase
 {
     public function testFormatsResultAsArray(): void

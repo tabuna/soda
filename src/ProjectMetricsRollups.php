@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda;
 
-use function explode;
-
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use SebastianBergmann\Complexity\ComplexityCollection;
 
 /**
@@ -37,7 +36,7 @@ final class ProjectMetricsRollups
     {
         $items = $complexity->isMethod();
         $classesOrTraits = collect($items)
-            ->map(fn ($item) => explode('::', $item->name())[0])
+            ->map(fn ($item) => Str::before($item->name(), '::'))
             ->unique()
             ->count();
         $stats = ComplexityStatistics::from($items);
@@ -57,7 +56,7 @@ final class ProjectMetricsRollups
     public static function classStats(ComplexityCollection $complexity): array
     {
         $values = collect($complexity->isMethod())
-            ->groupBy(fn ($item) => explode('::', $item->name())[0])
+            ->groupBy(fn ($item) => Str::before($item->name(), '::'))
             ->map(fn (Collection $group) => $group->sum(fn ($item) => $item->cyclomaticComplexity()))
             ->values();
 

@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Quality\Engine\QualityEngineNamespaceAggregator;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(QualityEngineNamespaceAggregator::class)]
-#[Small]
 final class QualityEngineNamespaceAggregatorTest extends TestCase
 {
     public function testAggregatesCountsAcrossFilesForSameNamespace(): void

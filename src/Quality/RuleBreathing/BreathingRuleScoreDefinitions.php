@@ -19,12 +19,19 @@ final class BreathingRuleScoreDefinitions
 {
     public static function entries(string $sectionKey): array
     {
-        $b = $sectionKey;
 
         return [
-            RuleDefinitionPack::tie(new RuleIdentity('min_code_breathing_score', $b), new RulePresentation('Code Breathing Score:', 'warning', 'min'), new RuleScoring(100)),
+            RuleDefinitionPack::tie(
+                new RuleIdentity('min_code_breathing_score', $sectionKey),
+                new RulePresentation('Code Breathing Score:', 'warning', 'min'),
+                new RuleScoring(100)
+            ),
 
-            RuleDefinitionPack::tie(new RuleIdentity('min_visual_breathing_index', $b), new RulePresentation('Visual Breathing Index:', 'warning', 'min'), new RuleScoring(70)),
+            RuleDefinitionPack::tie(
+                new RuleIdentity('min_visual_breathing_index', $sectionKey),
+                new RulePresentation('Visual Breathing Index:', 'warning', 'min'),
+                new RuleScoring(70)
+            ),
         ];
     }
 }

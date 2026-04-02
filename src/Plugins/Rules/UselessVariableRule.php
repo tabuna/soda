@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Plugins\Rules;
 
 use Bunnivo\Soda\Config\SodaRule;
+use Bunnivo\Soda\Config\ViolationAt;
 use Bunnivo\Soda\Plugins\Rules\UselessVariable\UselessVariableAnalyser;
 
 /**
@@ -24,11 +25,13 @@ use Bunnivo\Soda\Plugins\Rules\UselessVariable\UselessVariableAnalyser;
  */
 final class UselessVariableRule extends SodaRule
 {
+    #[\Override]
     public function id(): string
     {
         return 'useless_variable';
     }
 
+    #[\Override]
     protected function analyze(string $file): array
     {
         $found = (new UselessVariableAnalyser)->analyse($this->parse($file));
@@ -36,12 +39,13 @@ final class UselessVariableRule extends SodaRule
         return ['useless_variables' => $found];
     }
 
+    #[\Override]
     protected function evaluate(string $file, array $metrics): array
     {
         $violations = [];
 
         foreach ($metrics['useless_variables'] ?? [] as $v) {
-            array_push($violations, ...$this->exceeds($file, 1, 0, line: $v['line']));
+            array_push($violations, ...$this->exceeds($file, 1, 0, new ViolationAt(line: $v['line'])));
         }
 
         return $violations;

@@ -4,114 +4,28 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Config;
 
-use Bunnivo\Soda\Quality\Config\RuleSections;
-use Bunnivo\Soda\Quality\ConfigException;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
 
 /**
- * PHP quality thresholds DSL (callable entrypoint); merges into the same internal shape as nested `rules` payloads.
+ * Configuration container for `soda.php`.
  *
- * @phpstan-type RulesPayload array{rules?: array<string, array<string, mixed>>}
+ * Start with {@see Soda::configure()} and add rule instances directly:
+ *
+ * @example
+ *   return Soda::configure()
+ *       ->withPlugins([
+ *           new MaxFileLoc(700),
+ *           new MaxMethodLength(100),
+ *           new MaxCyclomaticComplexity(10),
+ *       ]);
  */
 final class SodaConfig
 {
-    private readonly StructuralConfig $structural;
-
-    private readonly ComplexityConfig $complexity;
-
-    private readonly BreathingConfig $breathing;
-
-    private readonly NamingConfig $naming;
-
-    /**
-     * @var list<string>
-     */
-    private array $disabledRuleIds = [];
-
-    /**
-     * @var list<class-string<SodaPlugin>>
-     */
-    private array $plugins = [];
-
-    /**
-     * @var list<class-string<RuleChecker>>
-     */
-    private array $extraRules = [];
-
-    private bool $withoutBuiltins = false;
-
-    public function __construct()
-    {
-        $this->structural = new StructuralConfig;
-        $this->complexity = new ComplexityConfig;
-        $this->breathing = new BreathingConfig;
-        $this->naming = new NamingConfig;
-    }
-
-    public function structural(): StructuralConfig
-    {
-        return $this->structural;
-    }
-
-    public function complexity(): ComplexityConfig
-    {
-        return $this->complexity;
-    }
-
-    public function breathing(): BreathingConfig
-    {
-        return $this->breathing;
-    }
-
-    public function naming(): NamingConfig
-    {
-        return $this->naming;
-    }
-
-    public function disableRule(string $ruleId): self
-    {
-        if ($ruleId === '') {
-            throw new \InvalidArgumentException('Rule id must be non-empty.');
-        }
-
-        $this->disabledRuleIds[] = $ruleId;
-
-        return $this;
-    }
-
-    /**
-     * Disable all built-in rules so only explicitly registered plugins/rules run.
-     *
-     * Use this when you want full control over which rule groups are active.
-     * Built-in groups can then be selectively re-added via {@see plugin()}.
-     *
-     * @example Start from scratch — only your rules:
-     *
-     *   $config->withoutBuiltins()->rule(MyRule::class);
-     *
-     * @example Cherry-pick built-in groups:
-     *
-     *   $config->withoutBuiltins()
-     *          ->plugin(StructuralPlugin::class)
-     *          ->plugin(ComplexityPlugin::class)
-     *          ->rule(MyRule::class);
-     */
-    public function withoutBuiltins(): self
-    {
-        $this->withoutBuiltins = true;
-
-        return $this;
-    }
-
-    public function isWithoutBuiltins(): bool
-    {
-        return $this->withoutBuiltins;
-    }
+    /** @var list<RuleChecker> */
+    private array $checkers = [];
 
     /**
      * Register a plugin by its class name.
-     *
-     * The plugin will be instantiated once when {@see pluginCheckers()} is called.
      *
      * @param class-string<SodaPlugin> $pluginClass
      *
@@ -119,9 +33,7 @@ final class SodaConfig
      */
     public function plugin(string $pluginClass): self
     {
-        if ($pluginClass === '') {
-            throw new \InvalidArgumentException('Plugin class name must be non-empty.');
-        }
+        throw_if($pluginClass === '', \InvalidArgumentException::class, 'Plugin class name must be non-empty.');
 
         if (! class_exists($pluginClass)) {
             throw new \InvalidArgumentException(sprintf('Plugin class not found: %s', $pluginClass));
@@ -133,29 +45,23 @@ final class SodaConfig
             );
         }
 
-        $this->plugins[] = $pluginClass;
+        array_push($this->checkers, ...(new $pluginClass)->checkers());
 
         return $this;
     }
 
     /**
-     * Register a single rule checker directly — no plugin wrapper needed.
+     * Register a single rule checker by class name.
      *
-     * This is the simplest way to add a custom rule. Extend {@see SodaRule} for
-     * a convenient base class with built-in helpers.
+     * Prefer {@see withPlugins()} with an instance when the rule needs constructor args.
      *
      * @param class-string<RuleChecker> $ruleClass
      *
      * @throws \InvalidArgumentException when the class does not exist or does not implement {@see RuleChecker}
-     *
-     * @example
-     *   $config->rule(MyCustomRule::class);
      */
     public function rule(string $ruleClass): self
     {
-        if ($ruleClass === '') {
-            throw new \InvalidArgumentException('Rule class name must be non-empty.');
-        }
+        throw_if($ruleClass === '', \InvalidArgumentException::class, 'Rule class name must be non-empty.');
 
         if (! class_exists($ruleClass)) {
             throw new \InvalidArgumentException(sprintf('Rule class not found: %s', $ruleClass));
@@ -167,74 +73,57 @@ final class SodaConfig
             );
         }
 
-        $this->extraRules[] = $ruleClass;
+        $this->checkers[] = new $ruleClass;
 
         return $this;
     }
 
     /**
-     * Instantiate all registered plugins and inline rules, and collect their checkers.
+     * Register rule or plugin **instances** directly.
      *
-     * @return list<RuleChecker>
+     * This is the primary API. Pass any mix of {@see SodaPlugin} and
+     * {@see RuleChecker} instances. Each rule class carries its own threshold
+     * via its constructor — no global config object required.
      *
-     * @throws ConfigException
+     * @param array<SodaPlugin|RuleChecker> $plugins
+     *
+     * @throws \InvalidArgumentException when an element implements neither interface
+     *
+     * @example
+     *   return Soda::configure()
+     *       ->withPlugins([
+     *           new MaxFileLoc(700),
+     *           new MaxCyclomaticComplexity(10),
+     *           new UselessVariableRule(),
+     *       ]);
      */
-    public function pluginCheckers(): array
+    public function withPlugins(array $plugins): self
     {
-        $checkers = [];
-
-        foreach ($this->plugins as $pluginClass) {
-            $plugin = new $pluginClass;
-            array_push($checkers, ...$plugin->checkers());
+        foreach ($plugins as $plugin) {
+            if ($plugin instanceof SodaPlugin) {
+                array_push($this->checkers, ...$plugin->checkers());
+            } elseif ($plugin instanceof RuleChecker) {
+                $this->checkers[] = $plugin;
+            } else {
+                throw new \InvalidArgumentException(sprintf(
+                    'Each entry in withPlugins() must implement %s or %s, got %s.',
+                    SodaPlugin::class,
+                    RuleChecker::class,
+                    get_debug_type($plugin),
+                ));
+            }
         }
 
-        foreach ($this->extraRules as $ruleClass) {
-            $checkers[] = new $ruleClass;
-        }
-
-        return $checkers;
+        return $this;
     }
 
     /**
-     * @return RulesPayload
+     * Returns all registered checkers in registration order.
+     *
+     * @return list<RuleChecker>
      */
-    public function toArray(): array
+    public function pluginCheckers(): array
     {
-        /** @var array<string, array<string, mixed>> $rules */
-        $rules = [];
-
-        foreach (RuleSections::sectionNames() as $section) {
-            $block = $this->sectionConfig($section)->toSectionArray();
-
-            if ($block !== []) {
-                $rules[$section] = $block;
-            }
-        }
-
-        $map = RuleSections::ruleToSection();
-
-        foreach ($this->disabledRuleIds as $ruleId) {
-            $section = $map[$ruleId] ?? null;
-
-            if ($section === null) {
-                continue;
-            }
-
-            $rules[$section] ??= [];
-            $rules[$section][$ruleId] = null;
-        }
-
-        return ['rules' => $rules];
-    }
-
-    private function sectionConfig(string $section): RuleSectionConfig
-    {
-        return match ($section) {
-            RuleSections::STRUCTURAL   => $this->structural,
-            RuleSections::COMPLEXITY   => $this->complexity,
-            RuleSections::BREATHING    => $this->breathing,
-            RuleSections::NAMING       => $this->naming,
-            default                    => throw new \InvalidArgumentException('Unknown section: '.$section),
-        };
+        return $this->checkers;
     }
 }

@@ -8,8 +8,8 @@ use Bunnivo\Soda\Quality\MethodCheckInput;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\Report\Violation;
 use Bunnivo\Soda\Quality\RuleChecker;
+use Illuminate\Support\Str;
 
-use function explode;
 use function str_contains;
 
 /**
@@ -30,7 +30,7 @@ final readonly class CallableRuleViolationAssembler
     {
         $callableLabel = [
             'fullName' => $callableName,
-            'class'    => str_contains($callableName, '::') ? explode('::', $callableName)[0] : null,
+            'class'    => str_contains($callableName, '::') ? Str::before($callableName, '::') : null,
             'loc'      => $callableShape['loc'],
             'args'     => $callableShape['args'],
         ];

@@ -8,12 +8,8 @@ use Bunnivo\Soda\Quality\Config\RuleSections;
 use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\Report\RuleMetadata;
 use Bunnivo\Soda\Quality\RuleCatalog\RuleCatalog;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(RuleCatalog::class)]
-#[Small]
 final class RuleCatalogTest extends TestCase
 {
     public function testDefinitionsMatchDefaultConfigKeys(): void

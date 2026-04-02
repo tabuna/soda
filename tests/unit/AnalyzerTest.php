@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Quality\QualityResult;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Analyzer::class)]
-#[Small]
 final class AnalyzerTest extends TestCase
 {
     public function testAnalyzeReturnsQualityResult(): void

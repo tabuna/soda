@@ -19,14 +19,13 @@ final class StructuralRuleScopeShapeDefinitions
 {
     public static function entries(string $sectionKey): array
     {
-        $s = $sectionKey;
 
         return [
-            RuleDefinitionPack::tie(new RuleIdentity('max_traits_per_class', $s), new RulePresentation('Traits per class:', 'warning'), new RuleScoring(10)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_traits_per_class', $sectionKey), new RulePresentation('Traits per class:', 'warning'), new RuleScoring(10)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_interfaces_per_class', $s), new RulePresentation('Interfaces per class:', 'warning'), new RuleScoring(5)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_interfaces_per_class', $sectionKey), new RulePresentation('Interfaces per class:', 'warning'), new RuleScoring(5)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_classes_per_project', $s), new RulePresentation('Classes per project:', 'error'), new RuleScoring(300)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_classes_per_project', $sectionKey), new RulePresentation('Classes per project:', 'error'), new RuleScoring(300)),
         ];
     }
 }

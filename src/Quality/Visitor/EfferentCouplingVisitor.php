@@ -36,6 +36,7 @@ final class EfferentCouplingVisitor extends NullableReturnVisitor
         $this->memberScanner = EfferentCouplingMemberScanner::wiredToTypeSink($this->types);
     }
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_) {
@@ -51,6 +52,7 @@ final class EfferentCouplingVisitor extends NullableReturnVisitor
         $this->memberScanner->enter($node);
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         $this->classScanner->leave($node);

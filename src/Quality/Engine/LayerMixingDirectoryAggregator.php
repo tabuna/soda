@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bunnivo\Soda\Quality\Engine;
 
 use function array_unique;
+use function collect;
 use function count;
 use function dirname;
 
@@ -36,9 +37,13 @@ final class LayerMixingDirectoryAggregator
                 'typeCounts' => [],
             ];
 
-            $directories[$directory]['fileCount']++;
+            $row = $directories[$directory];
+            $row['fileCount']++;
             $type = self::fileType($metrics['classTypes'] ?? []);
-            $directories[$directory]['typeCounts'][$type] = ($directories[$directory]['typeCounts'][$type] ?? 0) + 1;
+            $counts = $row['typeCounts'];
+            $counts[$type] = ($counts[$type] ?? 0) + 1;
+            $row['typeCounts'] = $counts;
+            $directories[$directory] = $row;
         }
 
         return collect($directories);
@@ -55,6 +60,6 @@ final class LayerMixingDirectoryAggregator
 
         $uniqueTypes = array_unique(array_values($classTypes));
 
-        return count($uniqueTypes) === 1 ? $uniqueTypes[0] : self::MIXED_TYPE;
+        return count($uniqueTypes) === 1 ? collect($uniqueTypes)->first() : self::MIXED_TYPE;
     }
 }

@@ -9,9 +9,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\ParserFactory;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,8 +24,6 @@ use PHPUnit\Framework\TestCase;
  *
  * @see https://github.com/sebastianbergmann/complexity
  */
-#[CoversClass(EnumAwareComplexityVisitor::class)]
-#[Small]
 final class EnumAwareComplexityVisitorTest extends TestCase
 {
     private function parseAndCollect(string $code): array

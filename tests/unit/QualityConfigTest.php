@@ -15,12 +15,8 @@ namespace Bunnivo\Soda;
 use Bunnivo\Soda\Quality\Config\ConfigResolver;
 use Bunnivo\Soda\Quality\ConfigException;
 use Bunnivo\Soda\Quality\QualityConfig;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(QualityConfig::class)]
-#[Small]
 final class QualityConfigTest extends TestCase
 {
     public function testDefaultConfig(): void
@@ -44,8 +40,8 @@ final class QualityConfigTest extends TestCase
         $path = __DIR__.'/../config-fixtures/explicit-soda.php';
         $config = QualityConfig::fromPhpConfiguratorFile($path);
 
-        $this->assertSame(30, $config->getRule('max_method_length'));
-        $this->assertSame(600, $config->getRule('max_class_length'));
+        $this->assertNotEmpty($config->pluginCheckers);
+        $this->assertTrue($config->noBuiltinRules);
     }
 
     public function testFromPhpConfiguratorThrowsWhenNotReadable(): void
@@ -61,7 +57,8 @@ final class QualityConfigTest extends TestCase
         $path = __DIR__.'/../config-fixtures/explicit-soda.php';
         $config = ConfigResolver::resolveConfig([__FILE__], $path);
 
-        $this->assertSame(30, $config->getRule('max_method_length'));
+        $this->assertNotEmpty($config->pluginCheckers);
+        $this->assertTrue($config->noBuiltinRules);
     }
 
     public function testResolveFindsSodaPhp(): void
@@ -71,20 +68,16 @@ final class QualityConfigTest extends TestCase
         $sodaPath = $dir.'/soda.php';
         file_put_contents($sodaPath, <<<'PHP'
 <?php
-
 declare(strict_types=1);
-
-use Bunnivo\Soda\Config\SodaConfig;
-
-return static function (SodaConfig $config): void {
-    $config->structural()->maxMethodLength(90);
-};
+use Bunnivo\Soda\Config\Soda;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxMethodLength;
+return Soda::configure()->withPlugins([new MaxMethodLength(90)]);
 PHP
         );
 
         try {
             $config = ConfigResolver::resolveConfig([$dir.'/dummy.php']);
-            $this->assertSame(90, $config->getRule('max_method_length'));
+            $this->assertNotEmpty($config->pluginCheckers);
         } finally {
             unlink($sodaPath);
             rmdir($dir);

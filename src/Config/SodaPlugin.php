@@ -22,7 +22,6 @@ use Bunnivo\Soda\Quality\Rule\RuleChecker;
  *           return [new MyFirstRule(), new MySecondRule()];
  *       }
  *   }
- *
  * @example Registering in soda.php:
  *
  *   $config->plugin(MyPlugin::class);

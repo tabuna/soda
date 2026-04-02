@@ -14,4 +14,8 @@ final readonly class EvaluationContext
         public EvaluationContext\FileMetrics $fileMetrics,
     ) {}
 
+    public function withConfig(QualityConfig $config): self
+    {
+        return new self($config, $this->projectMetrics, $this->fileMetrics);
+    }
 }

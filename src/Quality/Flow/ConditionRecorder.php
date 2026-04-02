@@ -37,10 +37,13 @@ final class ConditionRecorder
         if ($cond instanceof Expr) {
             $count = BooleanOperandCounter::count($cond);
             if ($count > 0) {
-                $this->conditionsByMethod[$this->currentMethod][] = [
+                $key = $this->currentMethod;
+                $list = $this->conditionsByMethod[$key] ?? [];
+                $list[] = [
                     'line'  => $cond->getStartLine(),
                     'count' => $count,
                 ];
+                $this->conditionsByMethod[$key] = $list;
             }
         }
     }

@@ -22,15 +22,11 @@ use Bunnivo\Soda\Result;
 use Illuminate\Console\Application as ConsoleApplication;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Events\Dispatcher;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-#[CoversClass(QualityCommand::class)]
-#[Small]
 final class QualityCommandTest extends TestCase
 {
     /** REMOVE_WHEN sebastian/complexity adds Enum support (see EnumAwareComplexityVisitorTest) */
@@ -227,19 +223,18 @@ PHP);
 
 declare(strict_types=1);
 
-use Bunnivo\Soda\Config\SodaConfig;
+use Bunnivo\Soda\Config\Soda;
+use Bunnivo\Soda\Plugins\Rules\Structural\MaxLayerDominancePercentage;
 
-return static function (SodaConfig $config): void {
-    $config->structural()->maxLayerDominancePercentage(50, 4);
-};
+return Soda::configure()->withPlugins([new MaxLayerDominancePercentage(50, 4)]);
 PHP);
 
         foreach (range(1, 5) as $index) {
-            file_put_contents($dir.'/app/Services/User'.$index.'.php', "<?php\n\nnamespace App\\Services;\n\nclass User$index extends UserService {}\n");
+            file_put_contents($dir.'/app/Services/User'.$index.'.php', "<?php\n\nnamespace App\\Services;\n\nclass User{$index} extends UserService {}\n");
         }
 
         foreach (range(1, 2) as $index) {
-            file_put_contents($dir.'/app/Services/Controller'.$index.'.php', "<?php\n\nnamespace App\\Services;\n\nclass Controller$index extends Controller {}\n");
+            file_put_contents($dir.'/app/Services/Controller'.$index.'.php', "<?php\n\nnamespace App\\Services;\n\nclass Controller{$index} extends Controller {}\n");
         }
 
         file_put_contents($dir.'/app/Services/Plain.php', "<?php\n\nnamespace App\\Services;\n\nclass Plain {}\n");

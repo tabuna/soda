@@ -28,7 +28,12 @@ final class WcdCalculator
         $weightedSum = 0.0;
 
         foreach ($tokens as $token) {
-            $text = is_array($token) ? $token[1] : $token;
+            if (is_array($token)) {
+                [, $text] = $token;
+            } else {
+                $text = $token;
+            }
+
             $weightedSum += (float) strlen($text) * $resolver->weight($token);
         }
 

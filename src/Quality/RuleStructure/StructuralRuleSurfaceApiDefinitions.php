@@ -19,12 +19,11 @@ final class StructuralRuleSurfaceApiDefinitions
 {
     public static function entries(string $sectionKey): array
     {
-        $s = $sectionKey;
 
         return [
-            RuleDefinitionPack::tie(new RuleIdentity('max_public_methods', $s), new RulePresentation('Public methods:', 'warning'), new RuleScoring(20)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_public_methods', $sectionKey), new RulePresentation('Public methods:', 'warning'), new RuleScoring(20)),
 
-            RuleDefinitionPack::tie(new RuleIdentity('max_dependencies', $s), new RulePresentation('Dependencies:', 'warning'), new RuleScoring(8)),
+            RuleDefinitionPack::tie(new RuleIdentity('max_dependencies', $sectionKey), new RulePresentation('Dependencies:', 'warning'), new RuleScoring(8)),
         ];
     }
 }

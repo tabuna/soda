@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Naming;
 
+use function collect;
 use function ltrim;
 
 use PhpParser\Node;
@@ -82,11 +83,13 @@ final class RedundantNamingMethodResultFactory
      */
     private static function firstParamType(array $params): ?string
     {
-        if ($params === [] || $params[0]->type === null) {
+        $first = collect($params)->first();
+
+        if ($first === null || $first->type === null) {
             return null;
         }
 
-        return RedundantNamingPhpTypeLabel::fromTypeNode($params[0]->type);
+        return RedundantNamingPhpTypeLabel::fromTypeNode($first->type);
     }
 
     private static function returnTypeLabel(Node\Identifier|Node\Name|Node\ComplexType|null $returnType): ?string

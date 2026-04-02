@@ -6,13 +6,9 @@ namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Quality\Report\Violation;
 use Bunnivo\Soda\Quality\RuleChecker;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(RuleChecker::class)]
-#[Small]
 final class RuleCheckerTest extends TestCase
 {
     #[DataProvider('noViolationProvider')]

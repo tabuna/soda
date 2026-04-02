@@ -54,7 +54,11 @@ final readonly class QualityConfig
     }
 
     /**
-     * Loads thresholds from a PHP file that returns `callable(SodaConfig): void`.
+     * Loads thresholds from a PHP file that returns a {@see SodaConfig} instance.
+     *
+     * The file must return:
+     *   - A {@see SodaConfig} instance (new style: `return Soda::configure()->withPlugins([...])`)
+     *   - A `callable(SodaConfig): void` (legacy callable style — no rule thresholds, only plugins)
      *
      * @psalm-param non-empty-string $path
      *
@@ -67,17 +71,31 @@ final readonly class QualityConfig
         /** @var mixed $export */
         $export = require $path;
 
-        throw_unless(
-            is_callable($export),
-            ConfigException::class,
-            sprintf('PHP config "%s" must return a callable(%s): void.', $path, SodaConfig::class)
-        );
+        if ($export instanceof SodaConfig) {
+            return new self(
+                rules: [],
+                pluginCheckers: $export->pluginCheckers(),
+                noBuiltinRules: true,
+            );
+        }
 
-        $soda = new SodaConfig;
-        $export($soda);
-        [$mergedRules, $disabled, $ruleExceptions, $ruleOptions] = self::mergeRules($soda->toArray());
+        if (is_callable($export)) {
+            $soda = new SodaConfig;
+            $export($soda);
 
-        return new self($mergedRules, $disabled, new QualityConfigRuleState($ruleExceptions, $ruleOptions), $soda->pluginCheckers(), $soda->isWithoutBuiltins());
+            return new self(
+                rules: [],
+                pluginCheckers: $soda->pluginCheckers(),
+                noBuiltinRules: true,
+            );
+        }
+
+        throw new ConfigException(sprintf(
+            'PHP config "%s" must return a %s instance or a callable(%s): void.',
+            $path,
+            SodaConfig::class,
+            SodaConfig::class,
+        ));
     }
 
     /**

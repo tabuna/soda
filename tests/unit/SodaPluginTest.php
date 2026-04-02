@@ -10,13 +10,8 @@ use Bunnivo\Soda\Quality\EvaluationContext;
 use Bunnivo\Soda\Quality\Rule\RuleChecker;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(SodaPlugin::class)]
-#[CoversClass(SodaConfig::class)]
-#[Small]
 final class SodaPluginTest extends TestCase
 {
     public function testPluginCheckersAreReturnedFromSodaConfig(): void

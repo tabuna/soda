@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bunnivo\Soda\Quality\Naming;
 
+use function collect;
+
 use Illuminate\Support\Str;
 
 use function similar_text;
@@ -45,7 +47,7 @@ final readonly class MethodRedundancyChecker
      */
     private function checkAddLike(array $words, ?string $paramShortName, array $methodData): ?array
     {
-        $firstWord = $words[0] ?? '';
+        $firstWord = collect($words)->first() ?? '';
         $finalSimilarity = $this->addLikeSimilarity($words, $paramShortName);
 
         return (! $this->isAddLike($firstWord) || $paramShortName === null || $finalSimilarity === null)
@@ -89,7 +91,7 @@ final readonly class MethodRedundancyChecker
      */
     private function checkAddLikeFromClassContext(array $words, array $methodData): ?array
     {
-        $firstWord = $words[0] ?? '';
+        $firstWord = collect($words)->first() ?? '';
         $className = $methodData['class'] ?? null;
         $nameAfterPrefix = implode('', array_slice($words, 1));
         $entity = $className !== null ? $this->entityFromClass($this->shortClassName($className)) : null;
@@ -120,10 +122,10 @@ final readonly class MethodRedundancyChecker
 
     private function entityFromClass(string $classShort): ?string
     {
-        $suffix = array_values(array_filter(
+        $suffix = collect(array_filter(
             self::CLASS_ENTITY_SUFFIXES,
             fn (string $s) => str_ends_with($classShort, $s),
-        ))[0] ?? null;
+        ))->first();
 
         return $suffix === null ? null : (($e = substr($classShort, 0, -strlen($suffix))) !== '' ? $e : null);
     }
@@ -141,7 +143,7 @@ final readonly class MethodRedundancyChecker
     private function checkGetAllLike(array $words, ?string $returnShortName, array $methodData): ?array
     {
         $methodName = $methodData['methodName'];
-        $firstWord = $words[0] ?? '';
+        $firstWord = collect($words)->first() ?? '';
         $nameAfterPrefix = implode('', array_slice($words, 1));
         $similarity = $this->getAllSimilarity($nameAfterPrefix, $returnShortName);
 
@@ -194,7 +196,7 @@ final readonly class MethodRedundancyChecker
      */
     private function findRedundant(array $words, string $typeShortName, int $startIndex): ?array
     {
-        $typeFirst = ($this->splitCamelCase($typeShortName))[0] ?? '';
+        $typeFirst = collect($this->splitCamelCase($typeShortName))->first() ?? '';
 
         if (strlen($typeFirst) < $this->minWordLength) {
             return null;

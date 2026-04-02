@@ -6,18 +6,13 @@ namespace Bunnivo\Soda\Commands;
 
 use Bunnivo\Soda\Application;
 use Bunnivo\Soda\Quality\QualityConfig;
-use Bunnivo\Soda\Quality\Report\RuleMetadata;
 use Illuminate\Console\Application as ConsoleApplication;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Events\Dispatcher;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-#[CoversClass(InitCommand::class)]
-#[Small]
 final class InitCommandTest extends TestCase
 {
     public function testInitCreatesFileWithAllPossibleRules(): void
@@ -45,25 +40,19 @@ final class InitCommandTest extends TestCase
 
             $content = file_get_contents($path);
             $this->assertNotFalse($content);
-            $this->assertStringContainsString('extends SodaConfigurator', $content);
-            $this->assertStringContainsString('->maxMethodLength(', $content);
+            $this->assertStringContainsString('Soda::configure()', $content);
+            $this->assertStringContainsString('->withPlugins([', $content);
+            $this->assertStringContainsString('new MaxMethodLength(', $content);
+            $this->assertStringContainsString('new MaxLayerDominancePercentage(', $content);
+            $this->assertStringContainsString('new OnlyListArraysAllowed(', $content);
+            $this->assertStringContainsString('new NoNumericArrayIndex(', $content);
+            $this->assertStringContainsString('new NoUnusedMethods(', $content);
+            $this->assertStringContainsString('new UselessVariableRule(', $content);
 
             $config = QualityConfig::fromPhpConfiguratorFile($path);
 
-            $this->assertSame(15, $config->getRule('max_classes_per_namespace'));
-            $this->assertSame(50, $config->getRule('max_layer_dominance_percentage'));
-            $this->assertSame(['min_files' => 4], $config->ruleOptions('max_layer_dominance_percentage'));
-
-            $createdRules = array_keys($config->rules);
-            $expectedKeys = RuleMetadata::default()->ruleKeys();
-
-            foreach ($expectedKeys as $key) {
-                $this->assertContains($key, $createdRules, 'Init config missing rule: '.$key);
-            }
-
-            foreach ($createdRules as $key) {
-                $this->assertContains($key, $expectedKeys, 'Init config has unknown rule: '.$key);
-            }
+            $this->assertNotEmpty($config->pluginCheckers);
+            $this->assertTrue($config->noBuiltinRules);
         } finally {
             chdir($cwd);
             if (is_file($path)) {

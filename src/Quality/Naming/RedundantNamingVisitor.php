@@ -55,6 +55,7 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
      */
     private array $types = [];
 
+    #[\Override]
     protected function doEnterNode(Node $node): void
     {
         if ($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Interface_) {
@@ -74,6 +75,7 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
         }
     }
 
+    #[\Override]
     protected function doLeaveNode(Node $node): void
     {
         if (($node instanceof Class_ || $node instanceof Trait_ || $node instanceof Interface_) && $this->classStack !== []) {
@@ -99,10 +101,12 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
         ];
 
         if (! $node instanceof Interface_) {
-            $this->result['classes'][] = [
+            $classes = $this->result['classes'];
+            $classes[] = [
                 'class' => $name,
                 'line'  => $node->getStartLine(),
             ];
+            $this->result['classes'] = $classes;
         }
     }
 
@@ -115,14 +119,20 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
 
         $class = $this->currentClassName();
         if ($class !== null && isset($this->types[$class])) {
-            $this->types[$class]['methods'][] = $methodName;
+            $typeRow = $this->types[$class];
+            $methods = $typeRow['methods'];
+            $methods[] = $methodName;
+            $typeRow['methods'] = $methods;
+            $this->types[$class] = $typeRow;
         }
 
         if ($node->getAttribute('parent') instanceof Interface_) {
             return;
         }
 
-        $this->result['methods'][] = RedundantNamingMethodResultFactory::fromClassMethod($node, $class);
+        $methods = $this->result['methods'];
+        $methods[] = RedundantNamingMethodResultFactory::fromClassMethod($node, $class);
+        $this->result['methods'] = $methods;
     }
 
     private function enterFunction(Function_ $node): void
@@ -133,7 +143,9 @@ final class RedundantNamingVisitor extends NullableReturnVisitor
             return;
         }
 
-        $this->result['methods'][] = $methodResult;
+        $methods = $this->result['methods'];
+        $methods[] = $methodResult;
+        $this->result['methods'] = $methods;
     }
 
     /**

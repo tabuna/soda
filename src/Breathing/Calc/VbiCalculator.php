@@ -26,9 +26,8 @@ final class VbiCalculator
         }
 
         $rawRatio = (float) $data->nBlank() / (float) $nLines;
-        /** @var list<int> $blocksList */
-        $blocksList = $blocks;
-        $blockFactor = self::blockFactor($data, $blocksList);
+        /** @var list<int> $blocks */
+        $blockFactor = self::blockFactor($data, $blocks);
 
         $ratioComponent = min(1.0, $rawRatio / self::IDEAL_BLANK_RATIO);
 

@@ -7,24 +7,22 @@ namespace Bunnivo\Soda\Tests;
 use Bunnivo\Soda\ComplexityMetrics;
 use Bunnivo\Soda\Config\SodaConfig;
 use Bunnivo\Soda\Config\SodaRule;
+use Bunnivo\Soda\Config\ViolationAt;
 use Bunnivo\Soda\CoreMetrics;
 use Bunnivo\Soda\LocMetrics;
 use Bunnivo\Soda\Quality\EvaluationContext;
 use Bunnivo\Soda\Quality\EvaluationContext\FileMetrics;
 use Bunnivo\Soda\Quality\EvaluationContext\MethodMetricsData;
 use Bunnivo\Soda\Quality\EvaluationContext\QualityCore;
+use Bunnivo\Soda\Quality\QualityConfig;
 use Bunnivo\Soda\Quality\Report\Violation;
-use Bunnivo\Soda\Quality\Rule\RuleChecker;
 use Bunnivo\Soda\Result;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
+use PhpParser\Node;
+use PhpParser\Node\Stmt\Class_;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(SodaRule::class)]
-#[CoversClass(SodaConfig::class)]
-#[Small]
 final class SodaRuleTest extends TestCase
 {
     // --- SodaRule base class ---
@@ -195,7 +193,7 @@ final class SodaRuleTest extends TestCase
         $rule->check($this->context([$file => ['file_loc' => 1]]));
 
         $this->assertNotEmpty($rule->captured);
-        $this->assertInstanceOf(\PhpParser\Node\Stmt\Class_::class, $rule->captured[0]);
+        $this->assertInstanceOf(Class_::class, $rule->captured[0]);
         unlink($file);
     }
 
@@ -231,7 +229,7 @@ final class SodaRuleTest extends TestCase
         $core = new QualityCore($qualityMetrics, []);
         $fileMetrics = new FileMetrics($core, collect(), new MethodMetricsData);
 
-        $config = \Bunnivo\Soda\Quality\QualityConfig::default();
+        $config = QualityConfig::default();
 
         $loc = new LocMetrics(['directories' => 0, 'files' => 0, 'linesOfCode' => 0, 'commentLinesOfCode' => 0, 'nonCommentLinesOfCode' => 0, 'logicalLinesOfCode' => 0]);
         $complexity = new ComplexityMetrics(['functions' => 0, 'funcLowest' => 0, 'funcAverage' => 0.0, 'funcHighest' => 0, 'classesOrTraits' => 0, 'methods' => 0, 'methodLowest' => 0, 'methodAverage' => 0.0, 'methodHighest' => 0]);
@@ -255,7 +253,10 @@ final class SodaRuleTest extends TestCase
 final class ExceedsTestRule extends SodaRule
 {
     #[\Override]
-    public function id(): string { return 'test_exceeds'; }
+    public function id(): string
+    {
+        return 'test_exceeds';
+    }
 
     #[\Override]
     protected function evaluate(string $file, array $metrics): array
@@ -267,7 +268,10 @@ final class ExceedsTestRule extends SodaRule
 final class BelowTestRule extends SodaRule
 {
     #[\Override]
-    public function id(): string { return 'test_below'; }
+    public function id(): string
+    {
+        return 'test_below';
+    }
 
     #[\Override]
     protected function evaluate(string $file, array $metrics): array
@@ -279,28 +283,40 @@ final class BelowTestRule extends SodaRule
 final class ExceedsWithContextRule extends SodaRule
 {
     #[\Override]
-    public function id(): string { return 'test_exceeds_ctx'; }
+    public function id(): string
+    {
+        return 'test_exceeds_ctx';
+    }
 
     #[\Override]
     protected function evaluate(string $file, array $metrics): array
     {
-        return $this->exceeds($file, $metrics['file_loc'], 500, class: 'MyClass', method: 'myMethod', line: 42);
+        return $this->exceeds($file, $metrics['file_loc'], 500, new ViolationAt(class: 'MyClass', method: 'myMethod', line: 42));
     }
 }
 
 final class SimpleRule extends SodaRule
 {
     #[\Override]
-    public function id(): string { return 'simple'; }
+    public function id(): string
+    {
+        return 'simple';
+    }
 
     #[\Override]
-    protected function evaluate(string $file, array $metrics): array { return []; }
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return [];
+    }
 }
 
 final class CustomMetricRule extends SodaRule
 {
     #[\Override]
-    public function id(): string { return 'custom_metric'; }
+    public function id(): string
+    {
+        return 'custom_metric';
+    }
 
     #[\Override]
     protected function analyze(string $file): array
@@ -318,7 +334,10 @@ final class CustomMetricRule extends SodaRule
 final class OverrideBuiltinMetricRule extends SodaRule
 {
     #[\Override]
-    public function id(): string { return 'override_builtin'; }
+    public function id(): string
+    {
+        return 'override_builtin';
+    }
 
     #[\Override]
     protected function analyze(string $file): array
@@ -338,7 +357,10 @@ final class ContentsCapturingRule extends SodaRule
     public string $captured = '';
 
     #[\Override]
-    public function id(): string { return 'contents_capture'; }
+    public function id(): string
+    {
+        return 'contents_capture';
+    }
 
     #[\Override]
     protected function analyze(string $file): array
@@ -349,16 +371,22 @@ final class ContentsCapturingRule extends SodaRule
     }
 
     #[\Override]
-    protected function evaluate(string $file, array $metrics): array { return []; }
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return [];
+    }
 }
 
 final class ParseCapturingRule extends SodaRule
 {
-    /** @var list<\PhpParser\Node> */
+    /** @var list<Node> */
     public array $captured = [];
 
     #[\Override]
-    public function id(): string { return 'parse_capture'; }
+    public function id(): string
+    {
+        return 'parse_capture';
+    }
 
     #[\Override]
     protected function analyze(string $file): array
@@ -369,13 +397,19 @@ final class ParseCapturingRule extends SodaRule
     }
 
     #[\Override]
-    protected function evaluate(string $file, array $metrics): array { return []; }
+    protected function evaluate(string $file, array $metrics): array
+    {
+        return [];
+    }
 }
 
 final class VarDumpCountRule extends SodaRule
 {
     #[\Override]
-    public function id(): string { return 'no_var_dump'; }
+    public function id(): string
+    {
+        return 'no_var_dump';
+    }
 
     #[\Override]
     protected function analyze(string $file): array
@@ -394,5 +428,8 @@ final class VarDumpCountRule extends SodaRule
 
 final class NotARuleChecker
 {
-    public function check(): Collection { return collect(); }
+    public function check(): Collection
+    {
+        return collect();
+    }
 }

@@ -13,12 +13,8 @@ declare(strict_types=1);
 namespace Bunnivo\Soda;
 
 use Bunnivo\Soda\Structure\Metrics;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Metrics::class)]
-#[Small]
 final class StructureMetricsTest extends TestCase
 {
     private function createMetrics(array $overrides = []): Metrics
